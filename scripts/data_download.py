@@ -1,64 +1,90 @@
+import requests
 import os
-import ftplib
-from datetime import datetime
+import time
+from urllib.parse import urljoin
 
-def download_fars_data(output_dir):
+def download_file(url, output_dir):
     """
-    Download FARS data from the NHTSA FTP site.
+    Downloads a file from a URL to the specified output directory.
     
-    :param output_dir: Directory to save downloaded files
+    Args:
+        url (str): URL of the file to download
+        output_dir (str): Directory where the file will be saved
+    
+    Returns:
+        str: Path to the downloaded file or None if the download failed
     """
-    # Ensure output directory exists
+    # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
-    # FTP connection details
-    ftp_server = 'ftp.nhtsa.dot.gov'
-    ftp_path = '/FARS'
+    # Get the filename from the URL
+    filename = url.split('/')[-1]
+    output_path = os.path.join(output_dir, filename)
+    
+    # Check if the file already exists
+    if os.path.exists(output_path):
+        print(f"File {filename} already exists in {output_dir}, skipping download.")
+        return output_path
     
     try:
-        # Establish FTP connection
-        with ftplib.FTP(ftp_server) as ftp:
-            print(f"Connecting to FTP server: {ftp_server}")
-            ftp.login()
-            ftp.set_pasv(True)  # Enable passive mode
-            print("Login successful")
-            print("Current directory:", ftp.pwd())
-            ftp.cwd(ftp_path)
-            print(f"Changed directory to: {ftp_path}")
-            items = ftp.nlst()
-            print("Available files and directories:", items)
-            
-            # Get current year for potential default download
-            current_year = datetime.now().year
-            
-            # Download method (you can customize this)
-            def download_file(filename):
-                local_filepath = os.path.join(output_dir, filename)
-                with open(local_filepath, 'wb') as local_file:
-                    ftp.retrbinary(f'RETR {filename}', local_file.write)
-                print(f"Downloaded: {filename}")
-            
-            # Example: Download all files (modify as needed)
-            for item in items:
-                try:
-                    # Check if the item is a file
-                    if ftp.size(item) is not None:  # If size is None, it's likely a directory
-                        download_file(item)
-                    else:
-                        print(f"Skipping directory: {item}")
-                except Exception as file_error:
-                    print(f"Error processing {item}: {file_error}")
+        print(f"Downloading {filename} from {url}...")
+        
+        # Download the file
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        
+        # Save the file
+        with open(output_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        print(f"Successfully downloaded {filename} to {output_dir}")
+        return output_path
     
-    except ftplib.all_errors as e:
-        print(f"FTP error occurred: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {url}: {e}")
+        return None
 
-# Specify the output directory relative to the script's location
-script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
-output_directory = os.path.join(script_dir, '..', 'data', 'raw')  # Move up one level to data/raw
+def download_fars_data(years, base_dir="data/raw"):
+    """
+    Downloads FARS data for the specified years.
+    
+    Args:
+        years (list): List of years to download data for
+        base_dir (str): Base directory to save downloaded files
+    """
+    base_url = "https://static.nhtsa.gov/nhtsa/downloads/FARS/"
+    
+    for year in years:
+        year_str = str(year)
+        
+        # Construct the URL for the year's National CSV file
+        file_url = urljoin(base_url, f"{year_str}/National/FARS{year_str}NationalCSV.zip")
+        
+        # Create year-specific output directory
+        year_dir = os.path.join(base_dir, year_str)
+        
+        # Download the file
+        print(f"\nProcessing year {year_str}...")
+        downloaded_file = download_file(file_url, year_dir)
+        
+        if downloaded_file:
+            print(f"FARS data for {year_str} downloaded successfully.")
+        else:
+            print(f"Failed to download FARS data for {year_str}.")
+        
+        # Add a small delay to avoid overwhelming the server
+        time.sleep(1)
 
-# Run the download function
-if __name__ == '__main__':
-    download_fars_data(output_directory)
-    print("FARS data download complete.")
+if __name__ == "__main__":
+    # Years to download
+    years_to_download = range(1975, 2023)  # From 1975 to 2022
+    
+    # Ensure path separators are correct for the operating system
+    base_dir = os.path.join("data", "raw")
+    
+    # Download data
+    download_fars_data(years_to_download, base_dir)
+    
+    print("\nDownload process completed.")
