@@ -1,0 +1,45 @@
+pedestrian-safety-mapper/
+│
+├── data/
+│   ├── raw/           # Original downloaded FARS data
+│   ├── processed/     # Cleaned and transformed data
+│   └── samples/       # Small sample datasets for testing
+│
+├── docs/              # Project documentation
+│   ├── design/        # Design mockups, wireframes
+│   └── research/      # Research notes, references
+│
+├── src/               # Source code
+│   ├── backend/       # Server-side code
+│   │   ├── app.py     # Main application file
+│   │   ├── models/    # Database models
+│   │   └── utils/     # Utility functions
+│   │
+│   ├── frontend/      # Client-side code
+│   │   ├── index.html # Main HTML file
+│   │   ├── css/       # Stylesheets
+│   │   ├── js/        # JavaScript files
+│   │   └── assets/    # Images, icons
+│   │
+│   └── data_processing/  # Data cleaning and transformation scripts
+│
+├── tests/             # Unit tests and integration tests
+│   ├── backend/
+│   └── frontend/
+│
+├── notebooks/         # Jupyter notebooks for data exploration
+│
+├── config/            # Configuration files
+│   ├── development.yml
+│   ├── production.yml
+│   └── database.yml
+│
+├── scripts/           # Utility scripts
+│   ├── data_download.py
+│   └── deployment.sh
+│
+├── requirements.txt   # Python dependencies
+├── package.json       # Node.js dependencies
+├── README.md          # Project overview
+├── LICENSE            # MIT License
+└── .gitignore         # Git ignore file
