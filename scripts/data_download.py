@@ -50,6 +50,7 @@ def download_fars_data(years, base_dir="data/raw"):
     """
     Downloads FARS data for the specified years in both CSV and SAS formats.
     For years 1978 and onwards, also downloads Puerto Rico data.
+    For years 1982 and onwards, also downloads Auxiliary files.
     
     Args:
         years (list): List of years to download data for
@@ -62,6 +63,13 @@ def download_fars_data(years, base_dir="data/raw"):
         
         # Create year-specific output directory
         year_dir = os.path.join(base_dir, year_str)
+        
+        # Base file types to download
+        file_types = [""]  # Standard files (empty string means no suffix)
+        
+        # Add Auxiliary files for years 1982 and onwards
+        if year >= 1982:
+            file_types.append("Auxiliary")
         
         # File formats to download
         formats = [
@@ -80,23 +88,27 @@ def download_fars_data(years, base_dir="data/raw"):
         
         for region in regions:
             region_url_part = region.replace(" ", "%20")  # URL encode spaces
+            region_file_part = region.replace(" ", "")    # Remove spaces for filename
             
-            for format_info in formats:
-                # Construct the URL for the file
-                file_url = urljoin(base_url, f"{year_str}/{region_url_part}/FARS{year_str}{region.replace(' ', '')}"+
-                                  f"{format_info['suffix']}.zip")
-                
-                # Download the file
-                print(f"Attempting to download {region} {format_info['description']} for {year_str}...")
-                downloaded_file = download_file(file_url, year_dir)
-                
-                if downloaded_file:
-                    print(f"FARS {region} {format_info['description']} for {year_str} downloaded successfully.")
-                else:
-                    print(f"Failed to download FARS {region} {format_info['description']} for {year_str}.")
-                
-                # Add a small delay to avoid overwhelming the server
-                time.sleep(1)
+            for file_type in file_types:
+                for format_info in formats:
+                    # Construct the URL for the file
+                    file_url = urljoin(base_url, f"{year_str}/{region_url_part}/FARS{year_str}{region_file_part}{file_type}{format_info['suffix']}.zip")
+                    
+                    # Create description for logging
+                    type_desc = f" {file_type}" if file_type else ""
+                    
+                    # Download the file
+                    print(f"Attempting to download {region}{type_desc} {format_info['description']} for {year_str}...")
+                    downloaded_file = download_file(file_url, year_dir)
+                    
+                    if downloaded_file:
+                        print(f"FARS {region}{type_desc} {format_info['description']} for {year_str} downloaded successfully.")
+                    else:
+                        print(f"Failed to download FARS {region}{type_desc} {format_info['description']} for {year_str}.")
+                    
+                    # Add a small delay to avoid overwhelming the server
+                    time.sleep(1)
 
 if __name__ == "__main__":
     # Years to download
@@ -109,4 +121,3 @@ if __name__ == "__main__":
     download_fars_data(years_to_download, base_dir)
     
     print("\nDownload process completed.")
-    
