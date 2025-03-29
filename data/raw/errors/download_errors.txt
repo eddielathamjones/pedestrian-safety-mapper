@@ -7,21 +7,8 @@ Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downl
 URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCSV.zip
 Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCSV.zip
 
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoCSV.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoCSV.zip
 
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoSAS.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoSAS.zip
+# 1996 CSV Error
+projected url: URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCSV.zip
 
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCSV.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCSV.zip
-
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoCSV.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoCSV.zip
-
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoSAS.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1979/Puerto%20Rico/FARS1979PuertoRicoSAS.zip
-
-URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/Puerto%20Rico/FARS1996PuertoRicoAuxiliaryCVS.zip
-Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/Puerto%20Rico/FARS1996PuertoRicoAuxiliaryCVS.zip
-
+actual url: https://static.nhtsa.gov/nhtsa/downloads/FARS/1996/National/FARS1996NationalAuxiliaryCVS.zip
