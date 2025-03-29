@@ -22,7 +22,7 @@ def download_file(url, output_dir):
     output_path = os.path.join(output_dir, filename)
     
     # Check if the file already exists
-    if os.path.exists(output_path):
+    if (os.path.exists(output_path)):
         print(f"File {filename} already exists in {output_dir}, skipping download.")
         return output_path
     
@@ -44,6 +44,15 @@ def download_file(url, output_dir):
     
     except requests.exceptions.RequestException as e:
         print(f"Error downloading {url}: {e}")
+        
+        # Log the error to a file
+        error_log_dir = os.path.join("data", "raw", "errors")
+        os.makedirs(error_log_dir, exist_ok=True)  # Ensure the directory exists
+        error_log_path = os.path.join(error_log_dir, "download_errors.txt")
+        
+        with open(error_log_path, "a") as error_log:
+            error_log.write(f"URL: {url}\nError: {e}\n\n")
+        
         return None
 
 def download_fars_data(years, base_dir="data/raw"):
