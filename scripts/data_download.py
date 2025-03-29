@@ -22,7 +22,7 @@ def download_file(url, output_dir):
     output_path = os.path.join(output_dir, filename)
     
     # Check if the file already exists
-    if (os.path.exists(output_path)):
+    if os.path.exists(output_path):
         print(f"File {filename} already exists in {output_dir}, skipping download.")
         return output_path
     
@@ -40,6 +40,15 @@ def download_file(url, output_dir):
                     f.write(chunk)
         
         print(f"Successfully downloaded {filename} to {output_dir}")
+        
+        # Special case: Fix the incorrect filename for 1996 Auxiliary CSV
+        if "1996" in url and "AuxiliaryCVS.zip" in filename:
+            corrected_filename = filename.replace("CVS", "CSV")
+            corrected_output_path = os.path.join(output_dir, corrected_filename)
+            os.rename(output_path, corrected_output_path)
+            print(f"Renamed {filename} to {corrected_filename}")
+            return corrected_output_path
+        
         return output_path
     
     except requests.exceptions.RequestException as e:
@@ -101,8 +110,12 @@ def download_fars_data(years, base_dir="data/raw"):
             
             for file_type in file_types:
                 for format_info in formats:
-                    # Construct the URL for the file
-                    file_url = urljoin(base_url, f"{year_str}/{region_url_part}/FARS{year_str}{region_file_part}{file_type}{format_info['suffix']}.zip")
+                    # Special case for 1996 Auxiliary CSV file
+                    if year == 1996 and file_type == "Auxiliary" and format_info["suffix"] == "CSV":
+                        file_url = urljoin(base_url, f"{year_str}/{region_url_part}/FARS{year_str}{region_file_part}{file_type}CVS.zip")
+                    else:
+                        # Construct the URL for the file
+                        file_url = urljoin(base_url, f"{year_str}/{region_url_part}/FARS{year_str}{region_file_part}{file_type}{format_info['suffix']}.zip")
                     
                     # Create description for logging
                     type_desc = f" {file_type}" if file_type else ""
