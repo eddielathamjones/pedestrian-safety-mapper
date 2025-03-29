@@ -48,7 +48,7 @@ def download_file(url, output_dir):
 
 def download_fars_data(years, base_dir="data/raw"):
     """
-    Downloads FARS data for the specified years.
+    Downloads FARS data for the specified years in both CSV and SAS formats.
     
     Args:
         years (list): List of years to download data for
@@ -59,23 +59,32 @@ def download_fars_data(years, base_dir="data/raw"):
     for year in years:
         year_str = str(year)
         
-        # Construct the URL for the year's National CSV file
-        file_url = urljoin(base_url, f"{year_str}/National/FARS{year_str}NationalCSV.zip")
-        
         # Create year-specific output directory
         year_dir = os.path.join(base_dir, year_str)
         
-        # Download the file
+        # File formats to download
+        formats = [
+            {"suffix": "CSV", "description": "CSV format"},
+            {"suffix": "SAS", "description": "SAS format"}
+        ]
+        
         print(f"\nProcessing year {year_str}...")
-        downloaded_file = download_file(file_url, year_dir)
         
-        if downloaded_file:
-            print(f"FARS data for {year_str} downloaded successfully.")
-        else:
-            print(f"Failed to download FARS data for {year_str}.")
-        
-        # Add a small delay to avoid overwhelming the server
-        time.sleep(1)
+        for format_info in formats:
+            # Construct the URL for the file
+            file_url = urljoin(base_url, f"{year_str}/National/FARS{year_str}National{format_info['suffix']}.zip")
+            
+            # Download the file
+            print(f"Attempting to download {format_info['description']} for {year_str}...")
+            downloaded_file = download_file(file_url, year_dir)
+            
+            if downloaded_file:
+                print(f"FARS {format_info['description']} for {year_str} downloaded successfully.")
+            else:
+                print(f"Failed to download FARS {format_info['description']} for {year_str}.")
+            
+            # Add a small delay to avoid overwhelming the server
+            time.sleep(1)
 
 if __name__ == "__main__":
     # Years to download
