@@ -1,0 +1,42 @@
+
+==========================
+FARS Auxiliary Files
+--------------------
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets: 
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+These files are joined by the standard key variables.
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+For User Manuals, please go to: ftp://ftp.nhtsa.dot.gov/FARS/FARS-Doc/FARS_Auxiliary_Analytical_User_Manuals.zip
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+===================
+#   Update Notes  #
+===================
+09/28/2018: DBF format file is discontinuted. Only CSV and SAS version of FARS data will be available.
+10/22/2019: This is the release of FARS 2018 annual file.
+	Starting from 2018, DRUG related information is stored in DRUG.xxx file instead of in PERSON.xxx file.
+10/30/2019: acc_aux file is updated for National CSV and SAS zip files.
+08/14/2020: The National accident.csv file has been updated for the variable "Longitute" precision from 4-digit to 8-digits.
+12/18/2020: This is the release of FARS 2018 final files. 
+ 	- Starting from this file release, the CSV files contain the (ID, TEXT) value for look-up data variables.
+ 	- Starting from this file release, VINDecode files are not published any more.
+03/02/2022: The following updates are made for 2018 final files:
+	1. Publish VPICDECODE and VPICTRAILERDECODE files. These files are created using NHTSA's vPIC tool and contains the vPIC decode results for cleanly decoded VINs. 
+   	   For detailed information about this file, please refer to "Product Information Catalog and Vehicle Listing (vPIC) Analytical User's Manual, 2020" 
+	2. Update Race and Hispanic Origin for Louisiana
+	3. PER_AUX, VEH_AUX and ACC_AUX files are updated
+	4. MIACC, MIDRVACC, and MIPER files are updated
+	5. Update many cases for roadway related data elements for the States DE, KS, and NY.
+		DE: Land Use, National Highway System, Functional System
+		KS: Land Use, National Highway System, Functional System, Route Signing, Ownership, Trafficway Identifier
+		NY: Land Use, National Highway System, Functional System, Route Signing, Ownership, Trafficway Identifier
+   	6. Starting from this file release, the FARS file directory structure has been changed beginning 1982. 
+	   Auxiliary files are zipped separately from the rest of the FARS files. 
+	   For each year, there are two folders, one for national and one for Puerto Rico. 
+	   In each folder, there are four zip files 
+		- one zip file for Auxiliary SAS files 
+		- one zip file for Auxiliary CSV files
+		- one zip file for non-Auxiliary SAS files
+		- one zip file for non-Auxiliary CSV files

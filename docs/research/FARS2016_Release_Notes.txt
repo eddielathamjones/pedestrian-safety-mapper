@@ -1,0 +1,50 @@
+
+==========================
+FARS Auxiliary Files
+--------------------
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets: 
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+These files are joined by the standard key variables.
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+For User Manuals, please go to: ftp://ftp.nhtsa.dot.gov/FARS/FARS-Doc/FARS_Auxiliary_Analytical_User_Manuals.zip
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+===================
+#   Update Notes  #
+===================
+07/07/2017: files are released with FARS 2016 annual data.
+09/27/2018: files are released for FARS 2016 final data.Starting from 9/27/2018, there are 2 zip files for two different file formats in each folder: SAS and CSV.  NHTSA discontinued supporting for DBF format.
+10/22/2019: This is an updated FARS 2016 final data. The followings were updated:
+   1.	Corrected BAC and Roadway data for North Carolina
+	+ REVISED ALCOHOL TEST STATUS, TEST TYPE AND TEST RESULTS BASED ON INFORMATION FROM THE NC OFFICE OF THE CHIEF MEDICAL EXAMINER; 
+	+ REVISED TRAFFIC ID 1 & 2 TO SEPARATE NORTH CAROLINA STATE ROUTES FROM SECONDARY STATE ROUTES.  
+		- SECONDARY STATE ROUTES PRE-FIXED BY SSR-.  
+		- NORTH CAROLINA ROUTES REMAIN PRE-FIXED BY SR-.  
+		- SECONDARY STATE ROUTE ROUTE SIGNING REVISED TO 8-OTHER, FUNCTIONAL SYSTEM, NHS AND MILE POINT REVISED ACCORDING TO NC DOT ROADWAY INVENTORY USING NC DOT  SPATIAL DATA VIEWER; 
+   2.	Updated vehicle body type and GVWR information. 
+	+ REVISED BODY TYPE TO CORRESPOND TO GVWR INDICATED BY DECODED VIN; 
+	+ REVISED MOTOR CARRIER IDENTIFICATION NUMBER, GVWR/GCWR, VEHICLE CONFIGURATION AND CARGO BODY TYPE TO CORRESPOND TO THE REQUIREMENTS OF CODING MEDIUM/HEAVY BODY TYPES
+
+10/30/2019: acc_aux file is updated for National CSV and SAS zip files. 
+08/14/2020: The National accident.csv file has been updated for the variable "Longitute" precision from 4-digit to 8-digits.
+12/18/2020:
+   1. ACCIDENT SAS file is updated to include STATENAME, COUNTYNAME and CITYNAME.
+   2. VEHICLE files: Florida Case #918 Vehicle #2: UNDERRIDE/OVERRIDE value is changed from 0 to 1-Underride (Compartment Intrusion).
+   3. ACCIDENT files are updated for Maine Case #136.  The CITY code was erroneously entered as 3700 (HOLDEN) instead of 0850 (BREWER).
+   4. Starting from this file release, the CSV files contain the (ID, TEXT) value for look-up data variables.
+   5. Starting from this file release, VINDecode files are not published any more.
+03/02/2022:
+   1. Publish VPICDECODE and VPICTRAILERDECODE files. These files are created using NHTSA's vPIC tool and contains the vPIC decode results for cleanly decoded VINs. 
+      For detailed information about this file, please refer to "Product Information Catalog and Vehicle Listing (vPIC) Analytical User's Manual, 2020" 
+   2. PER_AUX, VEH_AUX and ACC_AUX files are updated
+   3. Starting from this file release, the FARS file directory structure has been changed beginning 1982. 
+	Auxiliary files are zipped separately from the rest of the FARS files. 
+	For each year, there are two folders, one for national and one for Puerto Rico. 
+	In each folder, there are four zip files 
+		- one zip file for Auxiliary SAS files 
+		- one zip file for Auxiliary CSV files
+		- one zip file for non-Auxiliary SAS files
+		- one zip file for non-Auxiliary CSV files
+   

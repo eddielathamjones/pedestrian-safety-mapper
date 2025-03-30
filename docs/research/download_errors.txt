@@ -1,0 +1,120 @@
+[2025-03-29 21:16:08]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813556
+Target Path: docs/research/NHTSA_Publication_813556.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813556 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:08]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813545
+Target Path: docs/research/NHTSA_Publication_813545.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813545 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:09]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813546
+Target Path: docs/research/NHTSA_Publication_813546.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813546 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:09]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813547
+Target Path: docs/research/NHTSA_Publication_813547.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813547 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:10]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+Target Path: docs/research/FARS2016_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:11]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+Target Path: docs/research/FARS2017_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:12]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+Target Path: docs/research/FARS2018_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-29 21:16:13]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+Target Path: docs/research/FARS2019_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:48]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813556
+Target Path: docs/research/NHTSA_Publication_813556.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813556 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:49]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813545
+Target Path: docs/research/NHTSA_Publication_813545.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813545 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:49]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813546
+Target Path: docs/research/NHTSA_Publication_813546.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813546 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:50]
+URL: https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813547
+Target Path: docs/research/NHTSA_Publication_813547.pdf
+Error: HTTPSConnectionPool(host='crashstats.nhtsa.dot.gov', port=443): Max retries exceeded with url: /Api/Public/ViewPublication/813547 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:55]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+Target Path: docs/research/FARS2016_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:56]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+Target Path: docs/research/FARS2017_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:58]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+Target Path: docs/research/FARS2018_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:10:59]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+Target Path: docs/research/FARS2019_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:12:19]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+Target Path: docs/research/FARS2016_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2016/FARS2016%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:12:20]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+Target Path: docs/research/FARS2017_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2017/FARS2017%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:12:21]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+Target Path: docs/research/FARS2018_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2018/FARS2018%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+
+[2025-03-30 08:12:22]
+URL: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+Target Path: docs/research/FARS2019_Release_Notes.txt
+Error: 404 Client Error: Not Found for url: https://static.nhtsa.gov/nhtsa/downloads/FARS/2019/FARS2019%20Release%20Notes.txt
+--------------------------------------------------------------------------------
+

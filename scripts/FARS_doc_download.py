@@ -3,9 +3,23 @@ import os
 import requests
 import sys
 import time
+from datetime import datetime
+import certifi
 
 # Create the destination directory if it doesn't exist
 os.makedirs('docs/research', exist_ok=True)
+
+def log_error(url, output_path, error):
+    """Log download errors to a file"""
+    error_log_path = os.path.join('docs/research', 'download_errors.txt')
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    with open(error_log_path, 'a', encoding='utf-8') as f:
+        f.write(f"[{timestamp}]\n")
+        f.write(f"URL: {url}\n")
+        f.write(f"Target Path: {output_path}\n")
+        f.write(f"Error: {str(error)}\n")
+        f.write("-" * 80 + "\n\n")
 
 def download_file(url, output_path):
     """
@@ -14,8 +28,8 @@ def download_file(url, output_path):
     try:
         print(f"Downloading: {url}")
         
-        # Make the request with stream=True to download in chunks
-        response = requests.get(url, stream=True, allow_redirects=True)
+        # Make the request with stream=True and verify=False to skip SSL verification
+        response = requests.get(url, stream=True, allow_redirects=True, verify=False)
         response.raise_for_status()  # Raise an exception for HTTP errors
         
         # Get total file size if available
@@ -56,6 +70,7 @@ def download_file(url, output_path):
     except Exception as e:
         print(f"\n❌ Failed to download: {url}")
         print(f"Error: {e}")
+        log_error(url, output_path, e)
         return False
 
 # List of URLs and their corresponding output filenames
@@ -78,7 +93,11 @@ files_to_download = [
 
 # Add annual release notes from 2012-2022
 for year in range(2012, 2023):
-    url = f"https://static.nhtsa.gov/nhtsa/downloads/FARS/{year}/FARS{year}%20Release%20Notes.txt"
+    # Use 'Note' instead of 'Notes' for years 2016-2019
+    if 2016 <= year <= 2019:
+        url = f"https://static.nhtsa.gov/nhtsa/downloads/FARS/{year}/FARS{year}%20Release%20Note.txt"
+    else:
+        url = f"https://static.nhtsa.gov/nhtsa/downloads/FARS/{year}/FARS{year}%20Release%20Notes.txt"
     output_path = f"docs/research/FARS{year}_Release_Notes.txt"
     files_to_download.append((url, output_path))
 
