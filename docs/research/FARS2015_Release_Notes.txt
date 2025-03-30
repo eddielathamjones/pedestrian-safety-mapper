@@ -1,0 +1,78 @@
+===================================
+FARS National and Puerto Rico Files
+-----------------------------------
+The FARS Files directory structure has been modified and made consistent across all years, beginning with 1975.  
+In each folder, there are two zip files, one in SAS format and one in CSV format.
+
+==========================
+FARS Auxiliary Files
+--------------------
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets: 
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+These files are joined by the standard key variables.
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+For User Manuals, please go to: ftp://ftp.nhtsa.dot.gov/FARS/FARS-Doc/FARS_Auxiliary_Analytical_User_Manuals.zip
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+Updates
+---------
+9/12/2016: 
+the Accident and Vehicles files are updated since the variables DR_DRINK and DRUNK_DR needed 
+    to be updated because of the updates to Alcohol Test Results.
+
+9/12/2016: 
+the CSV files are regenerated due to the conversion issues for longitude,latitude.
+
+1/11/2017: 
+Updated with the FARS final data for 2015.
+
+9/22/2017: 
+Derived Indian Reservation data elements have been added to the Accident level auxiliary file – ACC_AUX.*. 
+    The first data year of availability for the following new Indian Reservation related data elements is 2001:
+    BIA – 1 indicates that the crash occurred on Tribal lands. The geographic location data collected in FARS was used in conjunction with spatial data on the Bureau of Indian Affairs (BIA) land boundaries to identify Tribal lands.
+    SPJ_INDIAN – derived from FARS special jurisdiction (SP_JUR=3) element. 1 indicates that the crash occurred on an Indian Reservation.
+    *INDIAN_RES – 1 indicates either BIA=1 or SPJ_INDIAN=1. This provides a more accurate representation of fatal crashes occurring on Tribal lands.
+    *Use the INDIAN_RES data element to obtain the most complete data.
+
+    ACC_AUX.* datasets can be merged with other FARS datasets by ST_CASE to obtain additional information on the crash.
+
+9/27/2018: 
+there will be 2 zip files for two different file formats in each folder: SAS and CSV. NHTSA discontinued supporting for DBF format.
+    There are updates to multiple States in this set of files:
+    FL - LAND USE "not in state trafficway inventory" revised with actual data (n=99) / FUNCTIONAL SYSTEM/NHS/OWNERSHIP/MILEPOINT revised as needed
+    ID - LAND USE "not in state trafficway inventory" revised with actual data (n=14)/ FUNCTIONAL SYSTEM/NHS/OWNERSHIP/MILEPOINT revised as needed
+    NJ - LAND USE "not in state trafficway inventory" revised with actual data (n=47)/ FUNCTIONAL SYSTEM/NHS/OWNERSHIP/MILEPOINT revised as needed
+    TX - LAND USE "not in state trafficway inventory" revised with actual data (n=795)/ FUNCTIONAL SYSTEM/NHS/OWNERSHIP/MILEPOINT revised as needed
+    ID - CITY coded within city limits instead of '0000' - changed to 0000
+    IN - Case 53 - revised CRASH EVENTS TABLE to correct SOE error/FHE/MHE
+    MA - case 304 - deleted - not FARS, already entered in NTS
+    MT - case 154 - revised CRASH EVENTS TABLE/V1 Model & Body Type / V1 Precrash CRITICAL CATEGORY & CRITICAL EVENT
+    •	METHOD OF ALCOHOL DETERMINATION
+    •	METHOD OF DRUG DETERMINATION
+    •	POLICE REPORTED ALCOHOL DETERMINATION
+    •	POLICE REPORTED DRUG DETERMINATION
+    •	EMS TIME AT HOSPITAL - 9999 changed to 9996 (n=1); 9999 changed to 8888 (n=18)
+    IL – Many updates to various data fields, such as age, BAC data, work zone related, restraint usages related, etc.
+
+8/14/2020: 
+The National accident.csv file has been updated for the variable "Longitute" precision from 4-digit to 8-digits.
+
+3/2/2022: 
+1. Starting from this file release, the CSV files contain the (ID, TEXT) value for look-up data variables.
+2. Starting from this file release, the FARS file directory structure has been changed beginning 1982. 
+    Auxiliary files are zipped separately from the rest of the FARS files. 
+    For each year, there are two folders, one for national and one for Puerto Rico. 
+    In each folder, there are four zip files 
+    - one zip file for Auxiliary SAS files 
+    - one zip file for Auxiliary CSV files
+    - one zip file for non-Auxiliary SAS files
+    - one zip file for non-Auxiliary CSV files
+3. PER_AUX, VEH_AUX and ACC_AUX files are updated for both National and Puerto Rico
+
+04/03/2023: 
+Added vPICDecode CSV and SAS files. The vPICDecode and vPICTrailerDecode files are created using NHTSA's vPIC tool 
+and contain the vPIC decode results for cleanly decoded VINs. For detailed information about these files, please 
+refer to "Product Information Catalog and Vehicle Listing (vPIC) Analytical User's Manual, 2021" 
+https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813348 

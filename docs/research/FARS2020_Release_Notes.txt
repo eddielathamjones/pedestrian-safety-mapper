@@ -1,0 +1,41 @@
+
+==========================
+FARS Auxiliary Files
+--------------------
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets: 
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+These files are joined by the standard key variables.
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+For User Manuals, please go to: ftp://ftp.nhtsa.dot.gov/FARS/FARS-Doc/FARS_Auxiliary_Analytical_User_Manuals.zip
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+===================
+#   Update Notes  #
+===================
+03/02/2022: 
+This is the first release of the 2020 FARS annual file.
+    1. Publish VPICDECODE and VPICTRAILERDECODE files. These files are created using NHTSA's vPIC tool and contains the vPIC decode results for cleanly decoded VINs. 
+       For detailed information about this file, please refer to "Product Information Catalog and Vehicle Listing (vPIC) Analytical User's Manual, 2020" 
+    2. ADS related data fields are discontinued.
+    3. Starting from this file release, the FARS file directory structure has been changed beginning 1982. 
+       Auxiliary files are zipped separately from the rest of the FARS files. 
+       For each year, there are two folders, one for national and one for Puerto Rico. 
+       In each folder, there are four zip files 
+        - one zip file for Auxiliary SAS files 
+        - one zip file for Auxiliary CSV files
+        - one zip file for non-Auxiliary SAS files
+        - one zip file for non-Auxiliary CSV files
+
+03/08/2022: 
+ACCIDENT.CSV file for Puerto Rico is updated to add the missing WEATHER column.
+
+04/03/2023: 
+This is the first release of the 2020 FARS final file.
+
+4/01/2024: The following updates have been made to the files:
+updated three auxiliary files and MIACC, MIDRVACC, and MIPER files for both SAS and CSV.
+
+
+

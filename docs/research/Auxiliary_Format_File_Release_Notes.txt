@@ -1,0 +1,23 @@
+
+==========================
+FARS Auxiliary Files
+LAST CHANGE: 4/12/2024
+--------------------------
+
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets.
+
+They contain data elements that have been standardized to allow for simpler use of the data and for trending analysis.
+
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+
+These files are joined by the standard key variables.
+
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+    Format files are available for SAS Viya 64-bit environments or simply run Auxiliary_Formats.sas program file to create the format catalog file. 
+
+An updated FARS Auxiliary Analytical User Manual is pending and will be available soon.

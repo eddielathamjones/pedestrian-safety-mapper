@@ -1,0 +1,65 @@
+===================================
+FARS National and Puerto Rico Files
+-----------------------------------
+The FARS Files directory structure has been modified and made consistent across all years, beginning with 1975.  
+DBF format has been replaced with CSV format.
+There are two folders, one for national and one for Puerto Rico. 
+
+====================
+FARS Auxiliary Files
+--------------------
+The FARS Auxiliary files are datasets that are derived from the standard FARS datasets: 
+1. Accident -> Acc_Aux
+2. Vehicle -> Veh_Aux
+3. Person -> Per_Aux
+These files are joined by the standard key variables.
+Please read the following document for additional details: http://www-nrd.nhtsa.dot.gov/Pubs/811364.pdf
+For User Manuals, please go to: ftp://ftp.nhtsa.dot.gov/FARS/FARS-Doc/FARS_Auxiliary_Analytical_User_Manuals.zip
+For SAS Format Catalog, please go to: ftp://ftp.nhtsa.dot.gov/FARS/Auxiliary_FARS_Files_Formats
+
+===================
+Revision History
+
+07/03/2013:
+PBTYPE	In 2010, NHTSA added new pre-crash data elements for pedestrians and bicyclists (non-motorist) to the data collected in the Fatality Analysis Reporting System (FARS) and the National Automotive Sampling System (NASS) General Estimates System (GES).  These data are intended for countermeasure research and development. However, NHTSA’s National Center for Statistics and Analysis (NCSA) quality control team has identified inconsistencies between the new non-motorist data elements and comparable pre-existing FARS elements that can lead to different results. Consequently, NHTSA has removed the pbtype table from the 2010 and 2011 FARS and NASS GES files while research is conducted on how improvements can be made.  This pbtype table includes some non-motorist data (see below). The following data elements have been removed:  
+    PB30 – Crash Type - Pedestrian
+    PB31 – Crash Type Location - Pedestrian
+    PB32 – Pedestrian Position
+    PB33 – Pedestrian Initial Direction of Travel
+    PB34 – Motorist Direction 
+    PB35 – Motorist Maneuver
+    PB36 – Intersection Leg 
+    PB37 – Pedestrian Scenario
+    PB38 – Crash Group – Pedestrian
+    PB30B – Crash Type - Bicycle
+    PB31B – Crash Location - Bicycle
+    PB32B – Bicyclist Position
+    PB33B – Bicyclist Direction
+    PB38B – Crash Group - Bicyclist	
+
+9/22/2017: 
+Derived Indian Reservation data elements have been added to the Accident level auxiliary file – ACC_AUX.*. 
+The first data year of availability for the following new Indian Reservation related data elements is 2001:
+BIA – 1 indicates that the crash occurred on Tribal lands. The geographic location data collected in FARS was used in conjunction with spatial data on the Bureau of Indian Affairs (BIA) land boundaries to identify Tribal lands.
+SPJ_INDIAN – derived from FARS special jurisdiction (SP_JUR=3) element. 1 indicates that the crash occurred on an Indian Reservation.
+*INDIAN_RES – 1 indicates either BIA=1 or SPJ_INDIAN=1. This provides a more accurate representation of fatal crashes occurring on Tribal lands.
+*Use the INDIAN_RES data element to obtain the most complete data.
+
+ACC_AUX.* datasets can be merged with other FARS datasets by ST_CASE to obtain additional information on the crash.
+
+03/02/2022: 
+1. PER_AUX, VEH_AUX and ACC_AUX files are updated
+2. Starting from this file release, the FARS file directory structure has been changed beginning 1982. 
+   Auxiliary files are zipped separately from the rest of the FARS files. 
+   For each year, there are two folders, one for national and one for Puerto Rico. 
+   In each folder, there are four zip files 
+    - one zip file for Auxiliary SAS files 
+    - one zip file for Auxiliary CSV files
+    - one zip file for non-Auxiliary SAS files
+    - one zip file for non-Auxiliary CSV files
+
+04/03/2023: 
+Added vPICDecode CSV and SAS files. The vPICDecode files are created using NHTSA's vPIC tool and contain the vPIC 
+decode results for cleanly decoded VINs. For detailed information about these files, please refer to "Product 
+Information Catalog and Vehicle Listing (vPIC) Analytical User's Manual, 2021" 
+https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813348 
