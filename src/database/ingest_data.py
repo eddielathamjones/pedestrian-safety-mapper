@@ -237,7 +237,9 @@ class FARSIngester:
             f"{base_name.upper()}.csv",
             f"{base_name.upper()}.CSV",
             f"{base_name.lower()}.csv",
-            f"{base_name.lower()}.CSV"
+            f"{base_name.lower()}.CSV",
+            f"{base_name.title()}.csv",  # Title case (e.g., Person.csv)
+            f"{base_name.title()}.CSV"   # Title case with uppercase extension
         ]
 
         # Add any alternatives (e.g., MIPER.CSV for person.csv)
