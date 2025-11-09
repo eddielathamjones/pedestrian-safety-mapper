@@ -201,6 +201,7 @@ class FARSIngester:
                 'st_case': self.safe_int(row.get('ST_CASE')),
                 'year': year,
                 'crash_date': row['crash_date'],
+                'crash_datetime': None,  # Will be computed if needed
                 'month': self.safe_int(row.get('MONTH')),
                 'month_name': row.get('MONTHNAME', ''),
                 'day': self.safe_int(row.get('DAY')),
@@ -241,6 +242,12 @@ class FARSIngester:
                 'weather_name': row.get('WEATHERNAME', ''),
                 'school_bus_related': self.safe_bool(row.get('SCH_BUS'), [1, '1']),
                 'rail_crossing': row.get('RAIL', ''),
+                'notification_hour': self.safe_int(row.get('NOT_HOUR')),
+                'notification_minute': self.safe_int(row.get('NOT_MIN')),
+                'arrival_hour': self.safe_int(row.get('ARR_HOUR')),
+                'arrival_minute': self.safe_int(row.get('ARR_MIN')),
+                'hospital_arrival_hour': self.safe_int(row.get('HOSP_HR')),
+                'hospital_arrival_minute': self.safe_int(row.get('HOSP_MN')),
                 'total_fatalities': self.safe_int(row.get('FATALS'), 0),
                 'pedestrian_fatalities': self.safe_int(row.get('PEDS'), 0),
                 'total_vehicles': self.safe_int(row.get('VE_TOTAL'), 0),
@@ -256,8 +263,37 @@ class FARSIngester:
         # Insert data into database
         self.con.execute("BEGIN TRANSACTION;")
         try:
-            # Insert with NULL geom
+            # Add missing columns with defaults
             crashes_df['geom'] = None
+            crashes_df['ingestion_timestamp'] = None  # Will use database DEFAULT
+
+            # Ensure column order matches table definition
+            column_order = [
+                'crash_id', 'state', 'state_name', 'st_case', 'year',
+                'crash_date', 'crash_datetime', 'month', 'month_name', 'day', 'day_name', 'day_of_week',
+                'hour', 'minute', 'latitude', 'longitude', 'geom',
+                'county', 'county_name', 'city', 'city_name',
+                'rural_urban', 'rural_urban_name',
+                'route_type', 'route_name',
+                'functional_system', 'functional_system_name',
+                'road_owner', 'road_owner_name', 'national_highway_system',
+                'manner_of_collision', 'manner_of_collision_name',
+                'first_harmful_event', 'first_harmful_event_name',
+                'relation_to_junction', 'relation_to_junction_name',
+                'intersection_type', 'intersection_type_name',
+                'relation_to_roadway', 'relation_to_roadway_name',
+                'work_zone', 'work_zone_name',
+                'light_condition', 'light_condition_name',
+                'weather', 'weather_name',
+                'school_bus_related', 'rail_crossing',
+                'notification_hour', 'notification_minute',
+                'arrival_hour', 'arrival_minute',
+                'hospital_arrival_hour', 'hospital_arrival_minute',
+                'total_fatalities', 'pedestrian_fatalities', 'total_vehicles', 'total_persons',
+                'ingestion_timestamp', 'data_source'
+            ]
+            crashes_df = crashes_df[column_order]
+
             self.con.execute("""
                 INSERT INTO crashes
                 SELECT * FROM crashes_df
@@ -344,15 +380,27 @@ class FARSIngester:
                 'injury_severity': injury_severity,
                 'injury_severity_name': row.get('INJ_SEVNAME', ''),
                 'is_fatal': is_fatal,
+                'death_date': None,  # Could be computed from DEATH_DA, DEATH_MO, DEATH_YR
+                'death_time': None,  # Could be computed from DEATH_HR, DEATH_MN
                 'hours_to_death': self.safe_int(row.get('LAG_HRS')),
                 'minutes_to_death': self.safe_int(row.get('LAG_MINS')),
                 'died_at_scene': self.safe_bool(row.get('DOA'), [1, '1']),
+                'transported_by': self.safe_int(row.get('HOSPITAL')),
+                'transported_by_name': row.get('HOSPITALNAME', ''),
+                'ems_arrival_time': None,  # Could be computed from ARR_HOUR, ARR_MIN
+                'hospital_arrival_time': None,  # Could be computed from HOSP_HR, HOSP_MN
                 'seating_position': self.safe_int(row.get('SEAT_POS')),
                 'seating_position_name': row.get('SEAT_POSNAME', ''),
                 'restraint_system_use': self.safe_int(row.get('REST_USE')),
                 'restraint_system_use_name': row.get('REST_USENAME', ''),
+                'restraint_misuse': self.safe_int(row.get('REST_MIS')),
+                'helmet_use': self.safe_int(row.get('HELM_USE')),
+                'airbag_deployment': self.safe_int(row.get('AIR_BAG')),
+                'airbag_deployment_name': row.get('AIR_BAGNAME', ''),
+                'ejection': self.safe_int(row.get('EJECTION')),
+                'ejection_name': row.get('EJECTIONNAME', ''),
                 'drinking': self.safe_bool(row.get('DRINKING'), [1, '1']),
-                'alcohol_test_result': self.safe_float(row.get('ALC_RES')),
+                'alcohol_test_result': self.safe_float(row.get('ALC_RES')) if self.safe_float(row.get('ALC_RES'), 0) < 10 else None,  # Filter out special codes (e.g., 996 = Test Not Given)
                 'drug_involvement': self.safe_bool(row.get('DRUGS'), [1, '1']),
                 'work_related_injury': self.safe_bool(row.get('WORK_INJ'), [1, '1'])
             }
@@ -361,6 +409,27 @@ class FARSIngester:
         # Insert into database
         print(f"  💾 Inserting {len(persons_data)} person records...")
         persons_df = pd.DataFrame(persons_data)
+
+        # Add ingestion_timestamp
+        persons_df['ingestion_timestamp'] = None
+
+        # Ensure column order matches table definition
+        column_order = [
+            'person_id', 'crash_id', 'state', 'st_case', 'vehicle_number', 'person_number', 'year',
+            'person_type', 'person_type_name', 'is_pedestrian', 'is_bicyclist', 'is_non_motorist',
+            'age', 'age_name', 'sex', 'sex_name', 'hispanic_origin', 'race',
+            'injury_severity', 'injury_severity_name', 'is_fatal',
+            'death_date', 'death_time', 'hours_to_death', 'minutes_to_death', 'died_at_scene',
+            'transported_by', 'transported_by_name', 'ems_arrival_time', 'hospital_arrival_time',
+            'seating_position', 'seating_position_name',
+            'restraint_system_use', 'restraint_system_use_name', 'restraint_misuse',
+            'helmet_use', 'airbag_deployment', 'airbag_deployment_name',
+            'ejection', 'ejection_name',
+            'drinking', 'alcohol_test_result', 'drug_involvement',
+            'work_related_injury', 'ingestion_timestamp'
+        ]
+        persons_df = persons_df[column_order]
+
         self.con.execute("INSERT INTO persons SELECT * FROM persons_df")
 
         print(f"  ✅ Inserted {len(persons_data)} person records")
