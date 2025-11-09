@@ -483,8 +483,12 @@ class FARSIngester:
                 'bicyclist_location_name': row.get('BIKELOCNAME', ''),
                 'pedestrian_position': self.safe_int(row.get('PEDPOS')),
                 'pedestrian_position_name': row.get('PEDPOSNAME', ''),
+                'bicyclist_position': self.safe_int(row.get('BIKEPOS')),
+                'bicyclist_position_name': row.get('BIKEPOSNAME', ''),
                 'pedestrian_direction': self.safe_int(row.get('PEDDIR')),
                 'pedestrian_direction_name': row.get('PEDDIRNAME', ''),
+                'bicyclist_direction': self.safe_int(row.get('BIKEDIR')),
+                'bicyclist_direction_name': row.get('BIKEDIRNAME', ''),
                 'motorist_direction': self.safe_int(row.get('MOTDIR')),
                 'motorist_direction_name': row.get('MOTDIRNAME', ''),
                 'motorist_maneuver': self.safe_int(row.get('MOTMAN')),
@@ -501,6 +505,34 @@ class FARSIngester:
         # Insert into database
         print(f"  💾 Inserting {len(ped_data)} pedestrian detail records...")
         ped_df = pd.DataFrame(ped_data)
+
+        # Add ingestion_timestamp
+        ped_df['ingestion_timestamp'] = None
+
+        # Ensure column order matches table definition
+        column_order = [
+            'ped_detail_id', 'person_id', 'crash_id',
+            'state', 'st_case', 'year',
+            'age', 'sex', 'sex_name',
+            'person_type', 'person_type_name',
+            'crosswalk_present', 'pedestrian_in_crosswalk', 'school_zone',
+            'pedestrian_crash_type', 'pedestrian_crash_type_name',
+            'bicyclist_crash_type', 'bicyclist_crash_type_name',
+            'pedestrian_location', 'pedestrian_location_name',
+            'bicyclist_location', 'bicyclist_location_name',
+            'pedestrian_position', 'pedestrian_position_name',
+            'bicyclist_position', 'bicyclist_position_name',
+            'pedestrian_direction', 'pedestrian_direction_name',
+            'bicyclist_direction', 'bicyclist_direction_name',
+            'motorist_direction', 'motorist_direction_name',
+            'motorist_maneuver', 'motorist_maneuver_name',
+            'pedestrian_scenario', 'pedestrian_scenario_name',
+            'pedestrian_crash_group', 'pedestrian_crash_group_name',
+            'bicyclist_crash_group', 'bicyclist_crash_group_name',
+            'ingestion_timestamp'
+        ]
+        ped_df = ped_df[column_order]
+
         self.con.execute("INSERT INTO pedestrian_details SELECT * FROM ped_df")
 
         print(f"  ✅ Inserted {len(ped_data)} pedestrian detail records")
