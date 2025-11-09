@@ -116,9 +116,22 @@ class FARSIngester:
 
         return temp_dir
 
-    def create_crash_id(self, row: pd.Series) -> str:
-        """Create unique crash ID."""
-        return f"{row['YEAR']}_{row['STATE']:02d}_{row['ST_CASE']}"
+    def create_crash_id(self, row: pd.Series, year: int = None) -> str:
+        """Create unique crash ID with 4-digit year.
+
+        Args:
+            row: DataFrame row with crash data
+            year: 4-digit year (if None, will try to get from row and convert)
+        """
+        if year is None:
+            # Get year from row and ensure it's 4-digit
+            year_val = self.safe_int(row.get('YEAR'))
+            if year_val and year_val < 100:
+                # Convert 2-digit year to 4-digit (75 -> 1975)
+                year = 1900 + year_val if year_val >= 75 else 2000 + year_val
+            else:
+                year = year_val
+        return f"{year}_{row['STATE']:02d}_{row['ST_CASE']}"
 
     def create_person_id(self, row: pd.Series, crash_id: str) -> str:
         """Create unique person ID."""
@@ -155,6 +168,56 @@ class FARSIngester:
             return False
         return value in true_values
 
+    def safe_coordinate(self, value, coord_type='lat'):
+        """
+        Safely convert coordinate value, filtering FARS special codes.
+
+        Args:
+            value: Raw coordinate value
+            coord_type: 'lat' or 'lon' to determine valid range
+
+        Returns:
+            Valid coordinate or None
+        """
+        coord = self.safe_float(value)
+        if coord is None:
+            return None
+
+        # Filter FARS special codes for missing/unknown coordinates
+        # 88888888, 99999999, 777777, etc. are special codes
+        if coord > 1000 or coord < -1000:
+            return None
+
+        # Validate coordinate ranges
+        if coord_type == 'lat':
+            # Valid latitude: -90 to 90
+            if coord < -90 or coord > 90:
+                return None
+        else:  # longitude
+            # Valid longitude: -180 to 180
+            if coord < -180 or coord > 180:
+                return None
+
+        return coord
+
+    def safe_age(self, value):
+        """
+        Safely convert age value, filtering invalid ages.
+
+        Returns:
+            Valid age (0-120) or None
+        """
+        age = self.safe_int(value)
+        if age is None:
+            return None
+
+        # Filter FARS special codes and unrealistic ages
+        # Codes like 998 (Not Reported), 999 (Unknown)
+        if age < 0 or age > 120:
+            return None
+
+        return age
+
     def ingest_crashes(self, csv_dir: Path, year: int) -> int:
         """
         Ingest crash-level data.
@@ -179,8 +242,8 @@ class FARSIngester:
 
         print(f"  🔄 Processing {len(df)} crash records...")
 
-        # Create crash_id
-        df['crash_id'] = df.apply(lambda row: self.create_crash_id(row), axis=1)
+        # Create crash_id with 4-digit year
+        df['crash_id'] = df.apply(lambda row: self.create_crash_id(row, year), axis=1)
 
         # Create crash_date and datetime
         df['crash_date'] = pd.to_datetime(
@@ -209,8 +272,8 @@ class FARSIngester:
                 'day_of_week': self.safe_int(row.get('DAY_WEEK')),
                 'hour': self.safe_int(row.get('HOUR')),
                 'minute': self.safe_int(row.get('MINUTE')),
-                'latitude': self.safe_float(row.get('LATITUDE')),
-                'longitude': self.safe_float(row.get('LONGITUD')),
+                'latitude': self.safe_coordinate(row.get('LATITUDE'), 'lat'),
+                'longitude': self.safe_coordinate(row.get('LONGITUD'), 'lon'),
                 'county': self.safe_int(row.get('COUNTY')),
                 'county_name': row.get('COUNTYNAME', ''),
                 'city': self.safe_int(row.get('CITY')),
@@ -371,7 +434,7 @@ class FARSIngester:
                 'is_pedestrian': is_pedestrian,
                 'is_bicyclist': is_bicyclist,
                 'is_non_motorist': is_non_motorist,
-                'age': self.safe_int(row.get('AGE')),
+                'age': self.safe_age(row.get('AGE')),
                 'age_name': row.get('AGENAME', ''),
                 'sex': self.safe_int(row.get('SEX')),
                 'sex_name': row.get('SEXNAME', ''),
@@ -465,7 +528,7 @@ class FARSIngester:
                 'state': self.safe_int(row.get('STATE')),
                 'st_case': self.safe_int(row.get('ST_CASE')),
                 'year': year,
-                'age': self.safe_int(row.get('PBAGE')),
+                'age': self.safe_age(row.get('PBAGE')),
                 'sex': self.safe_int(row.get('PBSEX')),
                 'sex_name': row.get('PBSEXNAME', ''),
                 'person_type': self.safe_int(row.get('PBPTYPE')),
