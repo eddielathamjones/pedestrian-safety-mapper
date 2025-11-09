@@ -218,6 +218,39 @@ class FARSIngester:
 
         return age
 
+    def find_csv_file(self, csv_dir: Path, base_name: str, alternatives: list = None):
+        """
+        Find CSV file with case-insensitive search.
+
+        Args:
+            csv_dir: Directory to search in
+            base_name: Base filename (e.g., 'accident')
+            alternatives: List of alternative filenames to try
+
+        Returns:
+            Path to file if found, None otherwise
+        """
+        # Try all case variations of the base name
+        variations = [
+            f"{base_name}.csv",
+            f"{base_name}.CSV",
+            f"{base_name.upper()}.csv",
+            f"{base_name.upper()}.CSV",
+            f"{base_name.lower()}.csv",
+            f"{base_name.lower()}.CSV"
+        ]
+
+        # Add any alternatives (e.g., MIPER.CSV for person.csv)
+        if alternatives:
+            variations.extend(alternatives)
+
+        for variation in variations:
+            file_path = csv_dir / variation
+            if file_path.exists():
+                return file_path
+
+        return None
+
     def ingest_crashes(self, csv_dir: Path, year: int) -> int:
         """
         Ingest crash-level data.
@@ -229,12 +262,8 @@ class FARSIngester:
         Returns:
             Number of records inserted
         """
-        accident_file = csv_dir / "accident.csv"
-        if not accident_file.exists():
-            # Try uppercase
-            accident_file = csv_dir / "ACCIDENT.CSV"
-
-        if not accident_file.exists():
+        accident_file = self.find_csv_file(csv_dir, "accident")
+        if not accident_file:
             raise FileNotFoundError(f"accident.csv not found in {csv_dir}")
 
         print(f"  📁 Reading accident.csv...")
@@ -387,17 +416,7 @@ class FARSIngester:
 
     def ingest_persons(self, csv_dir: Path, year: int) -> int:
         """Ingest person-level data."""
-        person_files = [
-            csv_dir / "person.csv",
-            csv_dir / "PERSON.CSV",
-            csv_dir / "MIPER.CSV"  # Michigan format for older years
-        ]
-
-        person_file = None
-        for pf in person_files:
-            if pf.exists():
-                person_file = pf
-                break
+        person_file = self.find_csv_file(csv_dir, "person", alternatives=["MIPER.CSV"])
 
         if not person_file:
             print(f"  ⚠️  Warning: No person file found, skipping persons")
@@ -501,11 +520,9 @@ class FARSIngester:
 
     def ingest_pedestrian_details(self, csv_dir: Path, year: int) -> int:
         """Ingest pedestrian-specific details from pbtype table."""
-        pbtype_file = csv_dir / "pbtype.csv"
-        if not pbtype_file.exists():
-            pbtype_file = csv_dir / "PBTYPE.CSV"
+        pbtype_file = self.find_csv_file(csv_dir, "pbtype")
 
-        if not pbtype_file.exists():
+        if not pbtype_file:
             print(f"  ⚠️  Warning: No pbtype file found, skipping pedestrian details")
             return 0
 
