@@ -1,0 +1,254 @@
+{
+  "type": "FeatureCollection",
+  "name": "Berkeley Street Network Sample (Synthetic Demo)",
+  "description": "Small synthetic street network for demonstrating Pedestrian Genome Project",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2728, 37.8716], [-122.2720, 37.8716]]
+      },
+      "properties": {
+        "id": "university_ave_1",
+        "name": "University Avenue",
+        "functional_class": 2,
+        "speed_limit": 35,
+        "lanes": 4,
+        "is_stroad": true,
+        "risk_score": 8.5,
+        "crashes": 12,
+        "has_sidewalk": true,
+        "lighting": "adequate"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2720, 37.8716], [-122.2712, 37.8716]]
+      },
+      "properties": {
+        "id": "university_ave_2",
+        "name": "University Avenue",
+        "functional_class": 2,
+        "speed_limit": 35,
+        "lanes": 4,
+        "is_stroad": true,
+        "risk_score": 9.2,
+        "crashes": 15,
+        "has_sidewalk": true,
+        "lighting": "adequate"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2720, 37.8716], [-122.2720, 37.8708]]
+      },
+      "properties": {
+        "id": "shattuck_ave_1",
+        "name": "Shattuck Avenue",
+        "functional_class": 2,
+        "speed_limit": 35,
+        "lanes": 4,
+        "is_stroad": true,
+        "risk_score": 8.8,
+        "crashes": 18,
+        "has_sidewalk": true,
+        "lighting": "adequate"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2728, 37.8724], [-122.2720, 37.8724]]
+      },
+      "properties": {
+        "id": "hearst_ave_1",
+        "name": "Hearst Avenue",
+        "functional_class": 3,
+        "speed_limit": 30,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 4.2,
+        "crashes": 3,
+        "has_sidewalk": true,
+        "lighting": "adequate"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2720, 37.8724], [-122.2720, 37.8716]]
+      },
+      "properties": {
+        "id": "shattuck_ave_2",
+        "name": "Shattuck Avenue",
+        "functional_class": 2,
+        "speed_limit": 35,
+        "lanes": 4,
+        "is_stroad": true,
+        "risk_score": 8.3,
+        "crashes": 14,
+        "has_sidewalk": true,
+        "lighting": "adequate"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2736, 37.8716], [-122.2728, 37.8716]]
+      },
+      "properties": {
+        "id": "university_ave_0",
+        "name": "University Avenue",
+        "functional_class": 2,
+        "speed_limit": 40,
+        "lanes": 4,
+        "is_stroad": true,
+        "risk_score": 9.8,
+        "crashes": 22,
+        "has_sidewalk": false,
+        "lighting": "poor"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2728, 37.8720], [-122.2720, 37.8720]]
+      },
+      "properties": {
+        "id": "addison_st_1",
+        "name": "Addison Street",
+        "functional_class": 6,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 1.8,
+        "crashes": 0,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2720, 37.8720], [-122.2712, 37.8720]]
+      },
+      "properties": {
+        "id": "addison_st_2",
+        "name": "Addison Street",
+        "functional_class": 6,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 2.1,
+        "crashes": 1,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2728, 37.8718], [-122.2720, 37.8718]]
+      },
+      "properties": {
+        "id": "bancroft_way_1",
+        "name": "Bancroft Way",
+        "functional_class": 4,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 2.5,
+        "crashes": 2,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2720, 37.8718], [-122.2712, 37.8718]]
+      },
+      "properties": {
+        "id": "bancroft_way_2",
+        "name": "Bancroft Way",
+        "functional_class": 4,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 2.8,
+        "crashes": 1,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2712, 37.8724], [-122.2712, 37.8716]]
+      },
+      "properties": {
+        "id": "milvia_st_1",
+        "name": "Milvia Street",
+        "functional_class": 6,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 1.5,
+        "crashes": 0,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2728, 37.8724], [-122.2728, 37.8716]]
+      },
+      "properties": {
+        "id": "oxford_st_1",
+        "name": "Oxford Street",
+        "functional_class": 6,
+        "speed_limit": 25,
+        "lanes": 2,
+        "is_stroad": false,
+        "risk_score": 1.9,
+        "crashes": 1,
+        "has_sidewalk": true,
+        "lighting": "good"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.2670, 37.8716], [-122.2712, 37.8716]]
+      },
+      "properties": {
+        "id": "university_ave_i80",
+        "name": "University Avenue (I-80 approach)",
+        "functional_class": 1,
+        "speed_limit": 50,
+        "lanes": 5,
+        "is_stroad": false,
+        "risk_score": 7.5,
+        "crashes": 8,
+        "has_sidewalk": false,
+        "lighting": "adequate"
+      }
+    }
+  ]
+}

@@ -44,7 +44,7 @@ class ArchaeologicalSite:
     period: str  # "Late Automobile Age" (1980-2020)
 
     # Context
-    context_type: str  # "High-speed arterial", "ritual vehicular corridor"
+    context_type: str  # "High-speed arterial", "principal arterial complex"
     stratigraphic_layer: str
     associated_structures: List[str]
 
@@ -81,8 +81,8 @@ class ArchaeologicalReport:
 
     ARTIFACT_TYPES = {
         'crosswalk_paint': "Type A Pedestrian Crossing Marker",
-        'street_sign': "Type B Traffic Control Artifact",
-        'traffic_signal': "Type C Ritual Control Device",
+        'street_sign': "Type B Regulatory Signage",
+        'traffic_signal': "Type C Traffic Control Device",
         'curb': "Type D Boundary Marker",
         'street_lamp': "Type E Illumination Structure",
         'storm_drain': "Type F Drainage Feature",
@@ -185,11 +185,11 @@ class ArchaeologicalReport:
     def _interpret_context(self, func_sys: int, props: Dict) -> str:
         """Interpret site context in archaeological language."""
         contexts = {
-            1: "Limited-access ritual vehicular corridor",
-            2: "High-speed principal arterial complex",
-            3: "Secondary arterial transportation feature",
-            4: "Collector distribution network",
-            6: "Local residential circulation space",
+            1: "Limited-access high-speed corridor (interstate classification)",
+            2: "Principal arterial complex with elevated design speeds",
+            3: "Secondary arterial thoroughfare",
+            4: "Collector street network segment",
+            6: "Local residential street pattern",
         }
 
         context = contexts.get(func_sys, "Unclassified transportation feature")
@@ -230,7 +230,7 @@ class ArchaeologicalReport:
             'catalog_number': 'TS-001',
             'material': 'Metal housing, LED illumination elements',
             'condition': 'Functional',
-            'function': 'Ritual traffic control device, vehicular priority',
+            'function': 'Traffic flow control, vehicular phase priority',
             'notes': 'No pedestrian signal phase detected at time of deposition'
         })
 

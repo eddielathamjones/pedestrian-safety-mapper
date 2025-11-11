@@ -76,7 +76,19 @@ class StreetGenome:
         edges = [f for f in features if f['geometry']['type'] == 'LineString']
 
         if not edges:
-            print("No edge data found")
+            print("\n" + "="*70)
+            print("ERROR: No street network edges found")
+            print("="*70)
+            print("\nThis script requires street NETWORK data (edges/nodes),")
+            print("not point data (crash locations).")
+            print("\nExpected GeoJSON format:")
+            print("  - Features with geometry type 'LineString'")
+            print("  - Properties including: functional_class, speed_limit, etc.")
+            print("\nTo generate network data:")
+            print("  1. Run: python scripts/build_network_from_osm.py")
+            print("  2. Or use street network from elsewhere")
+            print("\nInput file appears to contain Point features (crash locations).")
+            print("="*70 + "\n")
             return
 
         # Sort by geographic position (north to south, west to east)
@@ -185,6 +197,21 @@ class StreetGenome:
         """
         print("\nCalculating phenotype (observable characteristics)...")
 
+        # Check if we have data
+        if not self.metadata or len(self.metadata) == 0:
+            print("Warning: No metadata available for phenotype calculation")
+            self.phenotype = {
+                'total_length_bp': len(self.sequence),
+                'mutation_count': len(self.mutations),
+                'mutation_rate': len(self.mutations) / len(self.sequence) if len(self.sequence) > 0 else 0,
+                'total_crashes': 0,
+                'avg_risk_score': 0,
+                'stroad_count': 0,
+                'sidewalk_coverage': 0,
+                'health_index': 0,
+            }
+            return
+
         # Aggregate statistics from metadata
         total_crashes = sum(m.get('crashes', 0) for m in self.metadata)
         avg_risk = sum(m.get('risk_score', 0) for m in self.metadata) / len(self.metadata)
@@ -194,7 +221,7 @@ class StreetGenome:
         self.phenotype = {
             'total_length_bp': len(self.sequence),
             'mutation_count': len(self.mutations),
-            'mutation_rate': len(self.mutations) / len(self.sequence),
+            'mutation_rate': len(self.mutations) / len(self.sequence) if len(self.sequence) > 0 else 0,
             'total_crashes': total_crashes,
             'avg_risk_score': avg_risk,
             'stroad_count': stroad_count,
