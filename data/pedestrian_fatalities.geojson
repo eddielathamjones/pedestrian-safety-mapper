@@ -1,0 +1,245 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-118.2437, 34.0522]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 6,
+        "case": 60001,
+        "county": 37,
+        "age": 45,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-73.9352, 40.7306]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 36,
+        "case": 360001,
+        "county": 61,
+        "age": 32,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-87.6298, 41.8781]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 17,
+        "case": 170001,
+        "county": 31,
+        "age": 58,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-95.3698, 29.7604]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 48,
+        "case": 480001,
+        "county": 201,
+        "age": 67,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.4194, 37.7749]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 6,
+        "case": 60002,
+        "county": 75,
+        "age": 41,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.3321, 47.6062]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 53,
+        "case": 530001,
+        "county": 33,
+        "age": 29,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-80.1918, 25.7617]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 12,
+        "case": 120001,
+        "county": 86,
+        "age": 72,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.3880, 33.7490]
+      },
+      "properties": {
+        "year": 1987,
+        "state": 13,
+        "case": 130001,
+        "county": 121,
+        "age": 54,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-104.9903, 39.7392]
+      },
+      "properties": {
+        "year": 1987,
+        "state": 8,
+        "case": 80001,
+        "county": 31,
+        "age": 38,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-75.1652, 39.9526]
+      },
+      "properties": {
+        "year": 1987,
+        "state": 42,
+        "case": 420001,
+        "county": 101,
+        "age": 61,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.6765, 45.5231]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 41,
+        "case": 410001,
+        "county": 51,
+        "age": 44,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-97.7431, 30.2672]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 48,
+        "case": 480002,
+        "county": 453,
+        "age": 52,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-112.0740, 33.4484]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 4,
+        "case": 40001,
+        "county": 13,
+        "age": 36,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-71.0589, 42.3601]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 25,
+        "case": 250001,
+        "county": 25,
+        "age": 48,
+        "sex": 2,
+        "injury_severity": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-93.2650, 44.9778]
+      },
+      "properties": {
+        "year": 1987,
+        "state": 27,
+        "case": 270001,
+        "county": 53,
+        "age": 55,
+        "sex": 1,
+        "injury_severity": 4
+      }
+    }
+  ]
+}
