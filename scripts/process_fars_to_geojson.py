@@ -27,7 +27,8 @@ def extract_zip_files(year_dir):
 
 def process_fars_year(year, base_dir="data/raw"):
     """
-    Processes FARS data for a specific year and extracts pedestrian fatality locations.
+    Processes FARS data for a specific year and extracts pedestrian fatality locations
+    with comprehensive policy-relevant attributes.
 
     Args:
         year (int): Year to process
@@ -46,22 +47,30 @@ def process_fars_year(year, base_dir="data/raw"):
 
     features = []
 
-    # Look for ACCIDENT and PERSON CSV files
-    accident_files = glob.glob(os.path.join(extract_dir, "*accident*.csv"), recursive=True) + \
-                     glob.glob(os.path.join(extract_dir, "*ACCIDENT*.csv"), recursive=True)
-    person_files = glob.glob(os.path.join(extract_dir, "*person*.csv"), recursive=True) + \
-                   glob.glob(os.path.join(extract_dir, "*PERSON*.csv"), recursive=True)
+    # Look for required CSV files
+    accident_files = glob.glob(os.path.join(extract_dir, "**/*accident*.csv"), recursive=True) + \
+                     glob.glob(os.path.join(extract_dir, "**/*ACCIDENT*.csv"), recursive=True)
+    person_files = glob.glob(os.path.join(extract_dir, "**/*person*.csv"), recursive=True) + \
+                   glob.glob(os.path.join(extract_dir, "**/*PERSON*.csv"), recursive=True)
+    vehicle_files = glob.glob(os.path.join(extract_dir, "**/*vehicle*.csv"), recursive=True) + \
+                    glob.glob(os.path.join(extract_dir, "**/*VEHICLE*.csv"), recursive=True)
 
     if not accident_files or not person_files:
         print(f"Could not find required CSV files for year {year}")
         return features
 
     try:
-        # Read accident data (contains location information)
+        # Read accident data (contains location and environmental information)
         accident_df = pd.read_csv(accident_files[0], encoding='latin-1', low_memory=False)
 
         # Read person data (contains pedestrian information)
         person_df = pd.read_csv(person_files[0], encoding='latin-1', low_memory=False)
+
+        # Read vehicle data if available (contains vehicle type information)
+        vehicle_df = None
+        if vehicle_files:
+            vehicle_df = pd.read_csv(vehicle_files[0], encoding='latin-1', low_memory=False)
+            vehicle_df.columns = vehicle_df.columns.str.upper()
 
         # Standardize column names to uppercase
         accident_df.columns = accident_df.columns.str.upper()
@@ -70,8 +79,15 @@ def process_fars_year(year, base_dir="data/raw"):
         # Filter for pedestrians (PER_TYP = 5 typically indicates pedestrian)
         pedestrians = person_df[person_df['PER_TYP'] == 5]
 
-        # Merge with accident data to get location information
-        merged = pedestrians.merge(accident_df, on='ST_CASE', how='left')
+        # Merge with accident data to get location and context information
+        merged = pedestrians.merge(accident_df, on='ST_CASE', how='left', suffixes=('_PED', '_ACC'))
+
+        # Merge with vehicle data to get striking vehicle information
+        if vehicle_df is not None:
+            # Get the first vehicle in each crash (usually the striking vehicle)
+            first_vehicles = vehicle_df.groupby('ST_CASE').first().reset_index()
+            merged = merged.merge(first_vehicles[['ST_CASE', 'BODY_TYP', 'VPICBODYCLASS']],
+                                on='ST_CASE', how='left')
 
         # Extract coordinates (column names vary by year, try different options)
         lat_cols = ['LATITUDE', 'LAT', 'LATITUD']
@@ -103,7 +119,7 @@ def process_fars_year(year, base_dir="data/raw"):
                 (merged[lon_col] <= 180)
             ]
 
-            # Create GeoJSON features
+            # Create GeoJSON features with comprehensive policy-relevant data
             for _, row in valid_coords.iterrows():
                 # FARS stores coordinates in DDMMSS format, convert to decimal degrees
                 lat = row[lat_col]
@@ -119,6 +135,61 @@ def process_fars_year(year, base_dir="data/raw"):
                 if lon > 0:
                     lon = -lon
 
+                # Extract policy-relevant attributes
+                hour = row.get('HOUR_PED', row.get('HOUR_ACC', row.get('HOUR', -1)))
+                if pd.isna(hour) or hour in [99, 88]:
+                    hour = -1
+                else:
+                    hour = int(hour)
+
+                lighting = row.get('LGT_COND', -1)
+                if pd.isna(lighting):
+                    lighting = -1
+                else:
+                    lighting = int(lighting)
+
+                func_sys = row.get('FUNC_SYS', -1)
+                if pd.isna(func_sys):
+                    func_sys = -1
+                else:
+                    func_sys = int(func_sys)
+
+                rur_urb = row.get('RUR_URB', -1)
+                if pd.isna(rur_urb):
+                    rur_urb = -1
+                else:
+                    rur_urb = int(rur_urb)
+
+                typ_int = row.get('TYP_INT', -1)
+                if pd.isna(typ_int):
+                    typ_int = -1
+                else:
+                    typ_int = int(typ_int)
+
+                age = row.get('AGE', -1)
+                if pd.isna(age) or age in [998, 999]:
+                    age = -1
+                else:
+                    age = int(age)
+
+                drunk_dr = row.get('DRUNK_DR', 0)
+                if pd.isna(drunk_dr):
+                    drunk_dr = 0
+                else:
+                    drunk_dr = int(drunk_dr)
+
+                weather = row.get('WEATHER', -1)
+                if pd.isna(weather):
+                    weather = -1
+                else:
+                    weather = int(weather)
+
+                body_typ = row.get('BODY_TYP', -1)
+                if pd.isna(body_typ):
+                    body_typ = -1
+                else:
+                    body_typ = int(body_typ)
+
                 feature = {
                     "type": "Feature",
                     "geometry": {
@@ -126,13 +197,36 @@ def process_fars_year(year, base_dir="data/raw"):
                         "coordinates": [lon, lat]
                     },
                     "properties": {
+                        # Basic identification
                         "year": year,
                         "state": int(row.get('STATE', 0)),
                         "case": int(row.get('ST_CASE', 0)),
-                        "county": int(row.get('COUNTY', 0)) if 'COUNTY' in row else None,
-                        "age": int(row.get('AGE', 0)) if 'AGE' in row else None,
-                        "sex": int(row.get('SEX', 0)) if 'SEX' in row else None,
-                        "injury_severity": int(row.get('INJ_SEV', 0)) if 'INJ_SEV' in row else None
+                        "county": int(row.get('COUNTY', 0)) if pd.notna(row.get('COUNTY')) else None,
+
+                        # Pedestrian demographics
+                        "age": age,
+                        "sex": int(row.get('SEX', 0)) if pd.notna(row.get('SEX')) else None,
+
+                        # Temporal factors
+                        "hour": hour,
+                        "month": int(row.get('MONTH', 0)) if pd.notna(row.get('MONTH')) else None,
+                        "day_week": int(row.get('DAY_WEEK', 0)) if pd.notna(row.get('DAY_WEEK')) else None,
+
+                        # Environmental/Infrastructure factors (CRITICAL FOR POLICY)
+                        "lighting": lighting,  # 1=Daylight, 2=Dark-lighted, 3=Dark-not lighted
+                        "func_sys": func_sys,  # Functional system (1=Interstate, 2=Principal Arterial, etc.)
+                        "rur_urb": rur_urb,    # 1=Urban, 2=Rural
+                        "typ_int": typ_int,    # Intersection type
+                        "weather": weather,    # Weather conditions
+
+                        # Safety factors
+                        "drunk_dr": drunk_dr,  # Number of drunk drivers involved
+
+                        # Vehicle information
+                        "body_typ": body_typ,  # Striking vehicle body type
+
+                        # Location relationship
+                        "rel_road": int(row.get('REL_ROAD', -1)) if pd.notna(row.get('REL_ROAD')) else -1
                     }
                 }
                 features.append(feature)
@@ -141,6 +235,8 @@ def process_fars_year(year, base_dir="data/raw"):
 
     except Exception as e:
         print(f"Error processing year {year}: {e}")
+        import traceback
+        traceback.print_exc()
 
     return features
 

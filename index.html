@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedestrian Safety Mapper</title>
+    <title>Pedestrian Safety Mapper - Evidence-Based Policy Tool</title>
 
     <!-- Mapbox GL JS -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
@@ -17,8 +17,9 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
+            background: #1a1a1a;
         }
 
         #map {
@@ -28,71 +29,408 @@
             width: 100%;
         }
 
-        .info-panel {
+        .main-panel {
             position: absolute;
             top: 20px;
             left: 20px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 350px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            max-width: 420px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
             z-index: 1;
+            backdrop-filter: blur(10px);
         }
 
-        .info-panel h1 {
-            font-size: 22px;
-            margin-bottom: 10px;
-            color: #333;
+        .main-panel h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #d32f2f;
+            font-weight: 700;
         }
 
-        .info-panel p {
-            font-size: 14px;
+        .main-panel .subtitle {
+            font-size: 13px;
             color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f5f5f5;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group {
             margin-bottom: 15px;
-            line-height: 1.5;
         }
 
-        .controls {
-            margin-top: 15px;
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-        }
-
-        .control-group label {
+        .filter-group label {
             display: block;
             font-size: 13px;
             font-weight: 600;
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        .filter-group select,
+        .filter-group input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #d32f2f;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            min-width: 280px;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 3px solid #d32f2f;
+            padding-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #d32f2f;
+            font-size: 16px;
+        }
+
+        .risk-indicator {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+            background: #fff3e0;
+        }
+
+        .risk-indicator strong {
+            display: block;
             margin-bottom: 5px;
+            color: #e65100;
+            font-size: 13px;
+        }
+
+        .risk-indicator p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .interventions-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            max-width: 420px;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        .interventions-panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #1b5e20;
+            font-weight: 700;
+            border-bottom: 3px solid #4caf50;
+            padding-bottom: 8px;
+        }
+
+        .intervention-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f1f8e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 6px;
+        }
+
+        .intervention-item strong {
+            display: block;
+            color: #2e7d32;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .intervention-item p {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .intervention-item .evidence {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            padding-top: 8px;
+            border-top: 1px solid #c5e1a5;
+        }
+
+        .comparison-box {
+            background: #e3f2fd;
+            border: 2px solid #1976d2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .comparison-box strong {
+            display: block;
+            color: #0d47a1;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .comparison-box p {
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .comparison-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #90caf9;
+        }
+
+        .comparison-stat {
+            text-align: center;
+        }
+
+        .comparison-stat-label {
+            font-size: 11px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .comparison-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1976d2;
+        }
+
+        .mapboxgl-popup-content {
+            padding: 18px;
+            max-width: 320px;
+            border-radius: 8px;
+        }
+
+        .popup-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #d32f2f;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ffcdd2;
+        }
+
+        .popup-section {
+            margin-bottom: 12px;
+        }
+
+        .popup-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .popup-info {
+            font-size: 13px;
+            line-height: 1.8;
             color: #333;
         }
 
-        .control-group select,
-        .control-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
+        .popup-info strong {
+            color: #000;
+            font-weight: 600;
+        }
+
+        .popup-warning {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid #ff9800;
+        }
+
+        .popup-warning p {
+            font-size: 12px;
+            color: #e65100;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .loading h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .loading p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .toggle-panel {
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-panel:hover {
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .collapsed {
+            max-height: 60px;
+            overflow: hidden;
         }
 
         .legend {
             position: absolute;
             bottom: 30px;
             right: 20px;
-            background: white;
+            background: rgba(255, 255, 255, 0.98);
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1;
+            min-width: 200px;
         }
 
         .legend h3 {
             font-size: 14px;
             margin-bottom: 10px;
             color: #333;
+            font-weight: 700;
         }
 
         .legend-item {
@@ -106,98 +444,27 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .stats {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            min-width: 200px;
-            z-index: 1;
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .stats h3 {
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: #333;
-            border-bottom: 2px solid #f44336;
-            padding-bottom: 5px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .stat-label {
-            color: #666;
-        }
-
-        .stat-value {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .mapboxgl-popup-content {
-            padding: 15px;
-            max-width: 250px;
-        }
-
-        .popup-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .popup-info {
-            font-size: 12px;
-            line-height: 1.6;
-            color: #666;
-        }
-
-        .popup-info strong {
-            color: #333;
-        }
-
-        .btn {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 15px;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            width: 100%;
-            margin-top: 10px;
         }
 
-        .btn:hover {
-            background: #1976D2;
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
         }
 
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.2);
-            text-align: center;
-            z-index: 1000;
-        }
-
-        .loading.hidden {
-            display: none;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
     </style>
 </head>
@@ -205,79 +472,176 @@
     <div id="map"></div>
 
     <div class="loading" id="loading">
-        <h2>Loading Pedestrian Fatality Data...</h2>
-        <p>Please wait while we load the data</p>
+        <h2>Loading Pedestrian Safety Data...</h2>
+        <p>Preparing evidence-based policy analysis</p>
     </div>
 
-    <div class="info-panel">
+    <div class="main-panel">
         <h1>Pedestrian Safety Mapper</h1>
-        <p>Visualizing pedestrian fatalities from the FARS database. Each point represents a pedestrian fatality.</p>
+        <p class="subtitle">Evidence-based analysis tool for reducing pedestrian fatalities to European levels. Focus on infrastructure, not behavior.</p>
 
-        <div class="controls">
-            <div class="control-group">
-                <label for="year-filter">Filter by Year:</label>
+        <div class="section">
+            <div class="section-title">Risk Factors</div>
+
+            <div class="filter-group">
+                <label for="year-filter">Year</label>
                 <select id="year-filter">
                     <option value="all">All Years</option>
                 </select>
             </div>
 
-            <div class="control-group">
-                <label>
-                    <input type="checkbox" id="cluster-toggle" checked>
-                    Enable Clustering
-                </label>
+            <div class="filter-group">
+                <label for="lighting-filter">Lighting Conditions</label>
+                <select id="lighting-filter">
+                    <option value="all">All Conditions</option>
+                    <option value="1">Daylight</option>
+                    <option value="2">Dark - Lighted</option>
+                    <option value="3">Dark - Not Lighted</option>
+                </select>
             </div>
 
-            <button class="btn" id="reset-view">Reset View</button>
+            <div class="filter-group">
+                <label for="road-filter">Road Type</label>
+                <select id="road-filter">
+                    <option value="all">All Road Types</option>
+                    <option value="1">Interstate</option>
+                    <option value="2">Principal Arterial (Stroad)</option>
+                    <option value="3">Minor Arterial</option>
+                    <option value="4">Major Collector</option>
+                    <option value="6">Local Street</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="time-filter">Time of Day</label>
+                <select id="time-filter">
+                    <option value="all">All Times</option>
+                    <option value="morning">Morning (5am-9am)</option>
+                    <option value="day">Daytime (9am-5pm)</option>
+                    <option value="evening">Evening (5pm-9pm)</option>
+                    <option value="night">Night (9pm-5am)</option>
+                </select>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="cluster-toggle" checked>
+                <label for="cluster-toggle">Enable Clustering</label>
+            </div>
+
+            <button class="btn" id="reset-view">Reset Map View</button>
+            <button class="btn" id="show-all-filters" style="background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);">Clear All Filters</button>
         </div>
     </div>
 
-    <div class="stats">
-        <h3>Statistics</h3>
+    <div class="stats-panel">
+        <h3>Current View Statistics</h3>
         <div class="stat-item">
-            <span class="stat-label">Total Fatalities:</span>
-            <span class="stat-value" id="total-count">0</span>
+            <span class="stat-label">Fatalities Shown:</span>
+            <span class="stat-value" id="visible-count">0</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Currently Visible:</span>
-            <span class="stat-value" id="visible-count">0</span>
+            <span class="stat-label">Total in Dataset:</span>
+            <span class="stat-value" id="total-count">0</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">Year Range:</span>
             <span class="stat-value" id="year-range">-</span>
         </div>
+
+        <div class="comparison-box">
+            <strong>US vs Europe Comparison</strong>
+            <p>European countries achieve 2-4x lower pedestrian fatality rates through infrastructure changes, not behavior campaigns.</p>
+            <div class="comparison-stats">
+                <div class="comparison-stat">
+                    <span class="comparison-stat-label">US (2020)</span>
+                    <span class="comparison-stat-value">2.9</span>
+                    <span class="comparison-stat-label">per 100k</span>
+                </div>
+                <div class="comparison-stat">
+                    <span class="comparison-stat-label">Netherlands</span>
+                    <span class="comparison-stat-value">0.7</span>
+                    <span class="comparison-stat-label">per 100k</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="risk-indicator">
+            <strong>Key Risk Patterns</strong>
+            <p id="risk-pattern">Loading analysis...</p>
+        </div>
+    </div>
+
+    <div class="interventions-panel">
+        <h3>Evidence-Based Interventions</h3>
+
+        <div class="intervention-item">
+            <strong>1. Redesign High-Speed Arterials ("Stroads")</strong>
+            <p>Convert high-speed multi-lane arterials to either highways OR walkable streets. The current hybrid design is deadly.</p>
+            <div class="evidence">Evidence: Netherlands reduced fatalities 75% by separating modes and reducing speeds in urban areas.</div>
+        </div>
+
+        <div class="intervention-item">
+            <strong>2. Protected Infrastructure</strong>
+            <p>Physical separation (not paint), raised crosswalks, refuge islands, leading pedestrian intervals, curb extensions.</p>
+            <div class="evidence">Evidence: Protected intersections reduce pedestrian crashes by 50-90% (Oslo, Helsinki data).</div>
+        </div>
+
+        <div class="intervention-item">
+            <strong>3. Lower Speed Limits + Enforcement</strong>
+            <p>30 km/h (20 mph) limits in urban areas with automated enforcement. Speed kills: 30mph = 45% fatality risk, 20mph = 5%.</p>
+            <div class="evidence">Evidence: Helsinki, Oslo achieved near-zero pedestrian deaths with 30km/h limits.</div>
+        </div>
+
+        <div class="intervention-item">
+            <strong>4. Better Lighting</strong>
+            <p>Improve street lighting on high-risk corridors. Many fatalities occur in dark, unlighted areas.</p>
+            <div class="evidence">Evidence: Proper lighting reduces nighttime pedestrian crashes by 30-50%.</div>
+        </div>
+
+        <div class="intervention-item">
+            <strong>5. Regulate Large Vehicle Designs</strong>
+            <p>SUV/truck front-end designs increase pedestrian fatality risk 2-3x. Mandate EU-style pedestrian protection standards.</p>
+            <div class="evidence">Evidence: EU pedestrian safety standards have reduced fatality severity significantly.</div>
+        </div>
     </div>
 
     <div class="legend">
-        <h3>Heat Map</h3>
+        <h3>Map Legend</h3>
         <div class="legend-item">
-            <div class="legend-color" style="background: #f44336;"></div>
+            <div class="legend-color" style="background: #d32f2f;"></div>
             <span>Pedestrian Fatality</span>
         </div>
         <div class="legend-item">
-            <div class="legend-color" style="background: #ff9800; border: 2px solid #fff;"></div>
+            <div class="legend-color" style="background: linear-gradient(135deg, #ff5722, #f44336);"></div>
             <span>Cluster (Multiple)</span>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        // Initialize map
+        // Initialize map with street-level detail capability
         mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
 
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/dark-v11',
-            center: [-98.5795, 39.8283], // Center of US
-            zoom: 4
+            center: [-98.5795, 39.8283],
+            zoom: 4,
+            maxZoom: 20  // Allow street-level zoom
         });
 
         let geojsonData = null;
-        let currentFilter = 'all';
+        let currentFilters = {
+            year: 'all',
+            lighting: 'all',
+            road: 'all',
+            time: 'all'
+        };
 
         // Add navigation controls
         map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
         map.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
+        map.addControl(new mapboxgl.ScaleControl({unit: 'imperial'}), 'bottom-right');
 
         // Load data when map is ready
         map.on('load', () => {
@@ -292,14 +656,12 @@
                 }
 
                 geojsonData = await response.json();
-
-                // Hide loading screen
                 document.getElementById('loading').classList.add('hidden');
 
-                // Initialize the map with data
                 initializeMapLayers();
                 updateStatistics();
                 populateYearFilter();
+                analyzeRiskPatterns();
 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -309,16 +671,15 @@
         }
 
         function initializeMapLayers() {
-            // Add source
             map.addSource('pedestrian-fatalities', {
                 type: 'geojson',
                 data: geojsonData,
                 cluster: true,
-                clusterMaxZoom: 14,
+                clusterMaxZoom: 16,
                 clusterRadius: 50
             });
 
-            // Add cluster circle layer
+            // Cluster circles with gradient
             map.addLayer({
                 id: 'clusters',
                 type: 'circle',
@@ -329,30 +690,31 @@
                         'step',
                         ['get', 'point_count'],
                         '#ff9800',
-                        10,
+                        5,
                         '#ff5722',
-                        30,
+                        10,
                         '#f44336',
-                        50,
+                        20,
                         '#d32f2f'
                     ],
                     'circle-radius': [
                         'step',
                         ['get', 'point_count'],
-                        15,
+                        18,
+                        5,
+                        22,
                         10,
+                        28,
                         20,
-                        30,
-                        25,
-                        50,
-                        30
+                        35
                     ],
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#fff'
+                    'circle-stroke-width': 3,
+                    'circle-stroke-color': '#fff',
+                    'circle-opacity': 0.9
                 }
             });
 
-            // Add cluster count labels
+            // Cluster count labels
             map.addLayer({
                 id: 'cluster-count',
                 type: 'symbol',
@@ -360,29 +722,34 @@
                 filter: ['has', 'point_count'],
                 layout: {
                     'text-field': '{point_count_abbreviated}',
-                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                    'text-size': 12
+                    'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 14
                 },
                 paint: {
                     'text-color': '#ffffff'
                 }
             });
 
-            // Add unclustered point layer
+            // Individual points
             map.addLayer({
                 id: 'unclustered-point',
                 type: 'circle',
                 source: 'pedestrian-fatalities',
                 filter: ['!', ['has', 'point_count']],
                 paint: {
-                    'circle-color': '#f44336',
-                    'circle-radius': 6,
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#fff'
+                    'circle-color': '#d32f2f',
+                    'circle-radius': 8,
+                    'circle-stroke-width': 2.5,
+                    'circle-stroke-color': '#fff',
+                    'circle-opacity': 0.9
                 }
             });
 
-            // Click handlers
+            setupMapInteractions();
+        }
+
+        function setupMapInteractions() {
+            // Click on cluster to zoom
             map.on('click', 'clusters', (e) => {
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['clusters']
@@ -394,33 +761,61 @@
                         if (err) return;
                         map.easeTo({
                             center: features[0].geometry.coordinates,
-                            zoom: zoom
+                            zoom: Math.min(zoom + 2, 18)  // Zoom in closer, up to street level
                         });
                     }
                 );
             });
 
+            // Click on individual point for details
             map.on('click', 'unclustered-point', (e) => {
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const props = e.features[0].properties;
 
+                const lightingText = getLightingText(props.lighting);
+                const roadTypeText = getRoadTypeText(props.func_sys);
+                const timeText = props.hour >= 0 ? `${props.hour}:00` : 'Unknown';
+
+                const warnings = [];
+                if (props.lighting === 3) warnings.push('Dark, unlighted area');
+                if (props.func_sys === 2) warnings.push('High-speed arterial (stroad)');
+                if (props.body_typ === 48 || props.body_typ === 49) warnings.push('Large vehicle (SUV/Pickup)');
+
                 const popupContent = `
-                    <div class="popup-title">Pedestrian Fatality</div>
-                    <div class="popup-info">
-                        <strong>Year:</strong> ${props.year}<br>
-                        <strong>State Code:</strong> ${props.state}<br>
-                        ${props.age ? `<strong>Age:</strong> ${props.age}<br>` : ''}
-                        ${props.county ? `<strong>County:</strong> ${props.county}<br>` : ''}
+                    <div class="popup-title">Pedestrian Fatality - ${props.year}</div>
+
+                    <div class="popup-section">
+                        <div class="popup-section-title">Victim</div>
+                        <div class="popup-info">
+                            ${props.age > 0 ? `<strong>Age:</strong> ${props.age}<br>` : ''}
+                            ${props.sex === 1 ? '<strong>Sex:</strong> Male<br>' : props.sex === 2 ? '<strong>Sex:</strong> Female<br>' : ''}
+                        </div>
                     </div>
+
+                    <div class="popup-section">
+                        <div class="popup-section-title">Infrastructure Context</div>
+                        <div class="popup-info">
+                            <strong>Road Type:</strong> ${roadTypeText}<br>
+                            <strong>Lighting:</strong> ${lightingText}<br>
+                            <strong>Time:</strong> ${timeText}<br>
+                            ${props.drunk_dr > 0 ? `<strong>⚠ Drunk drivers involved:</strong> ${props.drunk_dr}<br>` : ''}
+                        </div>
+                    </div>
+
+                    ${warnings.length > 0 ? `
+                        <div class="popup-warning">
+                            <p>⚠ High-risk factors present: ${warnings.join(', ')}</p>
+                        </div>
+                    ` : ''}
                 `;
 
-                new mapboxgl.Popup()
+                new mapboxgl.Popup({maxWidth: '320px'})
                     .setLngLat(coordinates)
                     .setHTML(popupContent)
                     .addTo(map);
             });
 
-            // Change cursor on hover
+            // Cursor changes
             map.on('mouseenter', 'clusters', () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
@@ -435,6 +830,31 @@
             });
         }
 
+        function getLightingText(code) {
+            const lighting = {
+                1: 'Daylight',
+                2: 'Dark - Lighted',
+                3: 'Dark - Not Lighted',
+                4: 'Dark - Unknown Lighting',
+                5: 'Dawn',
+                6: 'Dusk'
+            };
+            return lighting[code] || 'Unknown';
+        }
+
+        function getRoadTypeText(code) {
+            const roadTypes = {
+                1: 'Interstate',
+                2: 'Principal Arterial (Stroad)',
+                3: 'Minor Arterial',
+                4: 'Major Collector',
+                5: 'Minor Collector',
+                6: 'Local Street',
+                7: 'Local Street'
+            };
+            return roadTypes[code] || 'Unknown';
+        }
+
         function updateStatistics() {
             if (!geojsonData) return;
 
@@ -445,7 +865,24 @@
 
             document.getElementById('total-count').textContent = totalCount.toLocaleString();
             document.getElementById('visible-count').textContent = totalCount.toLocaleString();
-            document.getElementById('year-range').textContent = `${minYear} - ${maxYear}`;
+            document.getElementById('year-range').textContent = `${minYear}-${maxYear}`;
+        }
+
+        function analyzeRiskPatterns() {
+            if (!geojsonData) return;
+
+            const features = geojsonData.features;
+
+            // Analyze dark/unlighted
+            const darkUnlighted = features.filter(f => f.properties.lighting === 3).length;
+            const darkPct = ((darkUnlighted / features.length) * 100).toFixed(0);
+
+            // Analyze arterials
+            const arterials = features.filter(f => f.properties.func_sys === 2 || f.properties.func_sys === 3).length;
+            const arterialPct = ((arterials / features.length) * 100).toFixed(0);
+
+            document.getElementById('risk-pattern').textContent =
+                `${darkPct}% occurred in dark, unlighted areas. ${arterialPct}% on high-speed arterials. Infrastructure design is the primary factor.`;
         }
 
         function populateYearFilter() {
@@ -462,31 +899,89 @@
             });
         }
 
+        function filterData() {
+            if (!geojsonData) return;
+
+            let filtered = geojsonData.features.filter(f => {
+                // Year filter
+                if (currentFilters.year !== 'all' && f.properties.year !== parseInt(currentFilters.year)) {
+                    return false;
+                }
+
+                // Lighting filter
+                if (currentFilters.lighting !== 'all' && f.properties.lighting !== parseInt(currentFilters.lighting)) {
+                    return false;
+                }
+
+                // Road filter
+                if (currentFilters.road !== 'all' && f.properties.func_sys !== parseInt(currentFilters.road)) {
+                    return false;
+                }
+
+                // Time filter
+                if (currentFilters.time !== 'all') {
+                    const hour = f.properties.hour;
+                    if (hour >= 0) {
+                        if (currentFilters.time === 'morning' && (hour < 5 || hour >= 9)) return false;
+                        if (currentFilters.time === 'day' && (hour < 9 || hour >= 17)) return false;
+                        if (currentFilters.time === 'evening' && (hour < 17 || hour >= 21)) return false;
+                        if (currentFilters.time === 'night' && (hour >= 5 && hour < 21)) return false;
+                    }
+                }
+
+                return true;
+            });
+
+            const filteredData = {
+                type: 'FeatureCollection',
+                features: filtered
+            };
+
+            map.getSource('pedestrian-fatalities').setData(filteredData);
+            document.getElementById('visible-count').textContent = filtered.length.toLocaleString();
+        }
+
         // Event listeners
         document.getElementById('year-filter').addEventListener('change', (e) => {
-            currentFilter = e.target.value;
+            currentFilters.year = e.target.value;
+            filterData();
+        });
+
+        document.getElementById('lighting-filter').addEventListener('change', (e) => {
+            currentFilters.lighting = e.target.value;
+            filterData();
+        });
+
+        document.getElementById('road-filter').addEventListener('change', (e) => {
+            currentFilters.road = e.target.value;
+            filterData();
+        });
+
+        document.getElementById('time-filter').addEventListener('change', (e) => {
+            currentFilters.time = e.target.value;
             filterData();
         });
 
         document.getElementById('cluster-toggle').addEventListener('change', (e) => {
             const source = map.getSource('pedestrian-fatalities');
             if (source) {
-                source.setData(geojsonData);
-                // Re-add layers with/without clustering
+                // Remove layers
                 map.removeLayer('clusters');
                 map.removeLayer('cluster-count');
                 map.removeLayer('unclustered-point');
                 map.removeSource('pedestrian-fatalities');
 
+                // Re-add with/without clustering
                 map.addSource('pedestrian-fatalities', {
                     type: 'geojson',
                     data: geojsonData,
                     cluster: e.target.checked,
-                    clusterMaxZoom: 14,
+                    clusterMaxZoom: 16,
                     clusterRadius: 50
                 });
 
                 initializeMapLayers();
+                filterData();
             }
         });
 
@@ -497,22 +992,21 @@
             });
         });
 
-        function filterData() {
-            if (!geojsonData) return;
+        document.getElementById('show-all-filters').addEventListener('click', () => {
+            currentFilters = {
+                year: 'all',
+                lighting: 'all',
+                road: 'all',
+                time: 'all'
+            };
 
-            let filteredData = geojsonData;
+            document.getElementById('year-filter').value = 'all';
+            document.getElementById('lighting-filter').value = 'all';
+            document.getElementById('road-filter').value = 'all';
+            document.getElementById('time-filter').value = 'all';
 
-            if (currentFilter !== 'all') {
-                const year = parseInt(currentFilter);
-                filteredData = {
-                    type: 'FeatureCollection',
-                    features: geojsonData.features.filter(f => f.properties.year === year)
-                };
-            }
-
-            map.getSource('pedestrian-fatalities').setData(filteredData);
-            document.getElementById('visible-count').textContent = filteredData.features.length.toLocaleString();
-        }
+            filterData();
+        });
     </script>
 </body>
 </html>

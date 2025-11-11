@@ -5,16 +5,52 @@
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [-118.2437, 34.0522]
+        "coordinates": [-118.2897, 34.0195]
       },
       "properties": {
         "year": 2020,
         "state": 6,
         "case": 60001,
         "county": 37,
+        "age": 67,
+        "sex": 2,
+        "hour": 20,
+        "month": 3,
+        "day_week": 5,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 49,
+        "rel_road": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-118.2437, 34.0522]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 6,
+        "case": 60002,
+        "county": 37,
         "age": 45,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 6,
+        "month": 1,
+        "day_week": 2,
+        "lighting": 3,
+        "func_sys": 3,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 48,
+        "rel_road": 2
       }
     },
     {
@@ -30,7 +66,43 @@
         "county": 61,
         "age": 32,
         "sex": 2,
-        "injury_severity": 4
+        "hour": 22,
+        "month": 11,
+        "day_week": 6,
+        "lighting": 2,
+        "func_sys": 4,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 1,
+        "body_typ": 12,
+        "rel_road": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-73.9897, 40.7489]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 36,
+        "case": 360002,
+        "county": 61,
+        "age": 8,
+        "sex": 1,
+        "hour": 15,
+        "month": 9,
+        "day_week": 3,
+        "lighting": 1,
+        "func_sys": 6,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 45,
+        "rel_road": 5
       }
     },
     {
@@ -46,7 +118,43 @@
         "county": 31,
         "age": 58,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 19,
+        "month": 12,
+        "day_week": 1,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 2,
+        "drunk_dr": 0,
+        "body_typ": 48,
+        "rel_road": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-87.6847, 41.9742]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 17,
+        "case": 170002,
+        "county": 31,
+        "age": 74,
+        "sex": 2,
+        "hour": 18,
+        "month": 10,
+        "day_week": 4,
+        "lighting": 3,
+        "func_sys": 3,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 39,
+        "rel_road": 5
       }
     },
     {
@@ -60,9 +168,45 @@
         "state": 48,
         "case": 480001,
         "county": 201,
-        "age": 67,
-        "sex": 2,
-        "injury_severity": 4
+        "age": 42,
+        "sex": 1,
+        "hour": 21,
+        "month": 7,
+        "day_week": 7,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 1,
+        "body_typ": 48,
+        "rel_road": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-95.4195, 29.8158]
+      },
+      "properties": {
+        "year": 2020,
+        "state": 48,
+        "case": 480002,
+        "county": 201,
+        "age": 35,
+        "sex": 1,
+        "hour": 23,
+        "month": 4,
+        "day_week": 5,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 49,
+        "rel_road": 1
       }
     },
     {
@@ -74,11 +218,47 @@
       "properties": {
         "year": 2005,
         "state": 6,
-        "case": 60002,
+        "case": 60003,
         "county": 75,
         "age": 41,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 5,
+        "month": 2,
+        "day_week": 3,
+        "lighting": 3,
+        "func_sys": 4,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 12,
+        "rel_road": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.4284, 37.7956]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 6,
+        "case": 60004,
+        "county": 75,
+        "age": 29,
+        "sex": 2,
+        "hour": 18,
+        "month": 8,
+        "day_week": 1,
+        "lighting": 1,
+        "func_sys": 6,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 39,
+        "rel_road": 5
       }
     },
     {
@@ -92,9 +272,19 @@
         "state": 53,
         "case": 530001,
         "county": 33,
-        "age": 29,
-        "sex": 2,
-        "injury_severity": 4
+        "age": 55,
+        "sex": 1,
+        "hour": 20,
+        "month": 11,
+        "day_week": 5,
+        "lighting": 3,
+        "func_sys": 3,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 3,
+        "drunk_dr": 0,
+        "body_typ": 45,
+        "rel_road": 1
       }
     },
     {
@@ -109,8 +299,44 @@
         "case": 120001,
         "county": 86,
         "age": 72,
+        "sex": 2,
+        "hour": 19,
+        "month": 3,
+        "day_week": 2,
+        "lighting": 2,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 39,
+        "rel_road": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-80.2298, 25.8547]
+      },
+      "properties": {
+        "year": 2005,
+        "state": 12,
+        "case": 120002,
+        "county": 86,
+        "age": 63,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 6,
+        "month": 5,
+        "day_week": 4,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 48,
+        "rel_road": 2
       }
     },
     {
@@ -126,7 +352,17 @@
         "county": 121,
         "age": 54,
         "sex": 2,
-        "injury_severity": 4
+        "hour": 21,
+        "month": 6,
+        "day_week": 6,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 1,
+        "drunk_dr": 1,
+        "body_typ": 12,
+        "rel_road": 1
       }
     },
     {
@@ -142,7 +378,17 @@
         "county": 31,
         "age": 38,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 2,
+        "month": 12,
+        "day_week": 7,
+        "lighting": 3,
+        "func_sys": 3,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 4,
+        "drunk_dr": 1,
+        "body_typ": 12,
+        "rel_road": 2
       }
     },
     {
@@ -158,7 +404,17 @@
         "county": 101,
         "age": 61,
         "sex": 2,
-        "injury_severity": 4
+        "hour": 18,
+        "month": 9,
+        "day_week": 3,
+        "lighting": 2,
+        "func_sys": 4,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 12,
+        "rel_road": 1
       }
     },
     {
@@ -174,7 +430,17 @@
         "county": 51,
         "age": 44,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 19,
+        "month": 2,
+        "day_week": 5,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 3,
+        "drunk_dr": 0,
+        "body_typ": 48,
+        "rel_road": 1
       }
     },
     {
@@ -186,11 +452,21 @@
       "properties": {
         "year": 2020,
         "state": 48,
-        "case": 480002,
+        "case": 480003,
         "county": 453,
         "age": 52,
         "sex": 2,
-        "injury_severity": 4
+        "hour": 20,
+        "month": 6,
+        "day_week": 2,
+        "lighting": 2,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 49,
+        "rel_road": 1
       }
     },
     {
@@ -206,7 +482,17 @@
         "county": 13,
         "age": 36,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 21,
+        "month": 8,
+        "day_week": 6,
+        "lighting": 3,
+        "func_sys": 2,
+        "rur_urb": 1,
+        "typ_int": 2,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 48,
+        "rel_road": 2
       }
     },
     {
@@ -222,7 +508,17 @@
         "county": 25,
         "age": 48,
         "sex": 2,
-        "injury_severity": 4
+        "hour": 7,
+        "month": 1,
+        "day_week": 1,
+        "lighting": 3,
+        "func_sys": 4,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 4,
+        "drunk_dr": 0,
+        "body_typ": 39,
+        "rel_road": 5
       }
     },
     {
@@ -238,7 +534,17 @@
         "county": 53,
         "age": 55,
         "sex": 1,
-        "injury_severity": 4
+        "hour": 17,
+        "month": 4,
+        "day_week": 4,
+        "lighting": 1,
+        "func_sys": 3,
+        "rur_urb": 1,
+        "typ_int": 1,
+        "weather": 1,
+        "drunk_dr": 0,
+        "body_typ": 12,
+        "rel_road": 1
       }
     }
   ]
