@@ -92,6 +92,45 @@ Navigate to: **http://localhost:5000**
 
 That's it! The data is already processed and ready to visualize.
 
+## 🎨 Three Versions Available
+
+This project includes three different interfaces for different audiences:
+
+### 1. **Professional Version** - `http://localhost:5000`
+**For:** City planners, researchers, policy makers
+- Clean, professional design
+- Blue/white color scheme
+- Academic language ("pedestrian fatalities")
+- Interactive MapBox map with filtering
+- Statistical charts and analysis
+- REST API access
+
+### 2. **Edgy/Confrontational Version** - `http://localhost:5000/edgy`
+**For:** Activists, social media, public awareness
+- Black background with blood red accents
+- Punk/zine aesthetic
+- Confrontational language ("DEAD", "STREET DEATHS")
+- Same functionality as professional version
+- Skull imagery and aggressive typography
+- Designed to make people uncomfortable
+- See [EDGY_README.md](EDGY_README.md) for details
+
+### 3. **Print Zine (12 pages)** - `http://localhost:5000/zine` ⭐
+**For:** Street distribution, photocopying, grassroots activism
+- 12-page print-ready format (US Letter / A4)
+- Black & white photocopier-optimized
+- DIY punk zine aesthetic
+- Pages include: Cover, Crisis data, Street maps, Deadliest streets, Demands, Call to action
+- **Copy freely and distribute**
+- Perfect for City Council meetings, community boards, coffee shops
+- Press Ctrl+P to print or save as PDF
+- See [ZINE_README.md](ZINE_README.md) for printing/distribution guide
+
+**Choose your weapon based on your audience:**
+- Presenting to city officials? → Professional version
+- Posting on social media? → Edgy version
+- Going to a City Council meeting? → **Print 50 copies of the zine**
+
 ## 📁 Project Structure
 
 ```
@@ -107,12 +146,19 @@ pedestrian-safety-mapper/
 │   │   ├── app.py                    # Flask REST API server
 │   │   └── extract_tucson_data.py    # ETL pipeline
 │   └── frontend/
-│       ├── index.html
-│       ├── css/styles.css
+│       ├── index.html                # Professional version
+│       ├── index-edgy.html           # Edgy/confrontational version
+│       ├── zine.html                 # Print-ready 12-page zine
+│       ├── css/
+│       │   ├── styles.css            # Professional styling
+│       │   ├── styles-edgy.css       # Black/red edgy styling
+│       │   └── zine.css              # Print-optimized zine styling
 │       └── js/app.js                 # MapBox + Chart.js application
 ├── scripts/
 │   ├── data_download.py              # Downloads FARS data
 │   └── FARS_doc_download.py          # Downloads documentation
+├── EDGY_README.md                    # Documentation for edgy version
+├── ZINE_README.md                    # Zine printing & distribution guide
 └── requirements.txt
 ```
 
