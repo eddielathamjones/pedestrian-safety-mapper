@@ -44,3 +44,12 @@ data/raw/*/extracted/
 
 # Logs
 *.log
+
+# Test outputs from creative projects
+archaeology_test/
+genome_test/
+genome_test2/
+genome_demo/
+requiem_test*.json
+requiem_test*.mid
+*.mid
