@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Street Network Simulator - Compare Interventions</title>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            max-width: 400px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .control-panel h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #1976d2;
+            font-weight: 700;
+        }
+
+        .control-panel .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f5f5f5;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        .control-group select,
+        .control-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 1;
+        }
+
+        .stats-panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 3px solid #1976d2;
+            padding-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #1976d2;
+        }
+
+        .stat-change {
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .stat-change.positive {
+            color: #4caf50;
+        }
+
+        .stat-change.negative {
+            color: #f44336;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .legend h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 4px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .risk-gradient {
+            height: 20px;
+            background: linear-gradient(to right,
+                #4caf50 0%,
+                #8bc34a 20%,
+                #ffeb3b 40%,
+                #ff9800 60%,
+                #ff5722 80%,
+                #d32f2f 100%
+            );
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .risk-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="loading" id="loading">
+        <h2>Street Network Simulator</h2>
+        <p>Load a network file to begin</p>
+    </div>
+
+    <div class="control-panel">
+        <h1>Network Simulator</h1>
+        <p class="subtitle">Load and visualize street networks with risk analysis</p>
+
+        <div class="section">
+            <div class="section-title">Data Source</div>
+
+            <div class="control-group">
+                <label for="network-file">Load Network GeoJSON</label>
+                <input type="file" id="network-file" accept=".json,.geojson">
+            </div>
+
+            <button class="btn btn-secondary" id="load-sample">Load Sample Network</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Risk Visualization</div>
+
+            <div class="control-group">
+                <label for="risk-mode">Color By:</label>
+                <select id="risk-mode">
+                    <option value="risk_score">Risk Score</option>
+                    <option value="speed_limit">Speed Limit</option>
+                    <option value="crashes">Crash Count</option>
+                    <option value="road_class">Road Type</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="show-nodes" checked>
+                    Show Intersections
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Filters</div>
+
+            <div class="control-group">
+                <label for="filter-stroads">
+                    <input type="checkbox" id="filter-stroads">
+                    Show Only Stroads
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="filter-high-risk">
+                    <input type="checkbox" id="filter-high-risk">
+                    Show Only High Risk (Score > 15)
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="filter-no-sidewalk">
+                    <input type="checkbox" id="filter-no-sidewalk">
+                    Show Only Streets Without Sidewalks
+                </label>
+            </div>
+        </div>
+
+        <button class="btn" id="reset-view">Reset View</button>
+    </div>
+
+    <div class="stats-panel">
+        <h3>Network Statistics</h3>
+
+        <div class="stat-item">
+            <span class="stat-label">Total Street Length:</span>
+            <span class="stat-value" id="stat-length">-</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Average Risk Score:</span>
+            <span class="stat-value" id="stat-risk">-</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Stroads:</span>
+            <span class="stat-value" id="stat-stroads">-</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">High-Speed Streets:</span>
+            <span class="stat-value" id="stat-highspeed">-</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Sidewalk Coverage:</span>
+            <span class="stat-value" id="stat-sidewalks">-</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Lighting Coverage:</span>
+            <span class="stat-value" id="stat-lighting">-</span>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <strong style="font-size: 13px; color: #333;">Risk Heat Map</strong>
+            <div class="risk-gradient"></div>
+            <div class="risk-labels">
+                <span>Safe</span>
+                <span>Low</span>
+                <span>Medium</span>
+                <span>High</span>
+                <span>Extreme</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>Street Classification</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #333;"></div>
+            <span>Interstate/Highway</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff5722;"></div>
+            <span>Principal Arterial (Stroad)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff9800;"></div>
+            <span>Minor Arterial</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #2196f3;"></div>
+            <span>Collector</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4caf50;"></div>
+            <span>Local Street</span>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/dark-v11',
+            center: [-98.5, 39.8],
+            zoom: 4,
+            maxZoom: 20
+        });
+
+        let networkData = null;
+        let currentFilters = {
+            stroads: false,
+            highRisk: false,
+            noSidewalk: false
+        };
+
+        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        map.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
+
+        // File input handler
+        document.getElementById('network-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        networkData = JSON.parse(event.target.result);
+                        loadNetwork(networkData);
+                    } catch (error) {
+                        alert('Error loading file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function loadNetwork(geojson) {
+            document.getElementById('loading').classList.add('hidden');
+
+            // Separate edges (LineStrings) and nodes (Points)
+            const edges = geojson.features.filter(f => f.geometry.type === 'LineString');
+            const nodes = geojson.features.filter(f => f.geometry.type === 'Point');
+
+            // Add edges
+            if (map.getSource('network-edges')) {
+                map.getSource('network-edges').setData({
+                    type: 'FeatureCollection',
+                    features: edges
+                });
+            } else {
+                map.addSource('network-edges', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: edges
+                    }
+                });
+
+                map.addLayer({
+                    id: 'network-edges-layer',
+                    type: 'line',
+                    source: 'network-edges',
+                    paint: {
+                        'line-color': getRiskColorExpression(),
+                        'line-width': [
+                            'interpolate', ['linear'], ['zoom'],
+                            10, 2,
+                            15, 4,
+                            18, 8
+                        ],
+                        'line-opacity': 0.8
+                    }
+                });
+            }
+
+            // Add nodes
+            if (map.getSource('network-nodes')) {
+                map.getSource('network-nodes').setData({
+                    type: 'FeatureCollection',
+                    features: nodes
+                });
+            } else {
+                map.addSource('network-nodes', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: nodes
+                    }
+                });
+
+                map.addLayer({
+                    id: 'network-nodes-layer',
+                    type: 'circle',
+                    source: 'network-nodes',
+                    paint: {
+                        'circle-radius': 4,
+                        'circle-color': '#fff',
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#333'
+                    }
+                });
+            }
+
+            // Fit to bounds
+            const bounds = new mapboxgl.LngLatBounds();
+            edges.forEach(feature => {
+                feature.geometry.coordinates.forEach(coord => {
+                    bounds.extend(coord);
+                });
+            });
+            map.fitBounds(bounds, { padding: 50 });
+
+            // Update statistics
+            updateStatistics(edges);
+
+            // Add click handlers
+            setupMapInteractions();
+        }
+
+        function getRiskColorExpression() {
+            return [
+                'interpolate',
+                ['linear'],
+                ['get', 'risk_score'],
+                0, '#4caf50',
+                5, '#8bc34a',
+                10, '#ffeb3b',
+                15, '#ff9800',
+                20, '#ff5722',
+                30, '#d32f2f'
+            ];
+        }
+
+        function setupMapInteractions() {
+            map.on('click', 'network-edges-layer', (e) => {
+                const props = e.features[0].properties;
+
+                const popupContent = `
+                    <div style="padding: 10px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 14px;">${props.name || 'Unnamed'}</h3>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            <strong>Risk Score:</strong> ${props.risk_score ? props.risk_score.toFixed(1) : 'N/A'}<br>
+                            <strong>Road Class:</strong> ${props.road_class || 'Unknown'}<br>
+                            <strong>Speed Limit:</strong> ${props.speed_limit || 'Unknown'} mph<br>
+                            <strong>Lanes:</strong> ${props.lanes || 'Unknown'}<br>
+                            <strong>Length:</strong> ${props.length_m ? (props.length_m * 0.000621371).toFixed(2) + ' mi' : 'Unknown'}<br>
+                            <strong>Sidewalks:</strong> ${props.has_sidewalk ? 'Yes' : 'No'}<br>
+                            <strong>Lighting:</strong> ${props.lighting || 'Unknown'}<br>
+                            ${props.is_stroad ? '<strong style="color: #f44336;">⚠ STROAD</strong><br>' : ''}
+                            ${props.crashes > 0 ? `<strong>Crashes:</strong> ${props.crashes}<br>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(popupContent)
+                    .addTo(map);
+            });
+
+            map.on('mouseenter', 'network-edges-layer', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'network-edges-layer', () => {
+                map.getCanvas().style.cursor = '';
+            });
+        }
+
+        function updateStatistics(edges) {
+            const totalLength = edges.reduce((sum, f) => sum + (f.properties.length_m || 0), 0);
+            const avgRisk = edges.reduce((sum, f) => sum + (f.properties.risk_score || 0), 0) / edges.length;
+            const stroads = edges.filter(f => f.properties.is_stroad).length;
+            const highSpeed = edges.filter(f => f.properties.speed_limit >= 35).length;
+            const withSidewalks = edges.filter(f => f.properties.has_sidewalk).length;
+            const withLighting = edges.filter(f => f.properties.lighting === 'adequate' || f.properties.lighting === 'good').length;
+
+            document.getElementById('stat-length').textContent = (totalLength * 0.000621371).toFixed(1) + ' mi';
+            document.getElementById('stat-risk').textContent = avgRisk.toFixed(1);
+            document.getElementById('stat-stroads').textContent = stroads;
+            document.getElementById('stat-highspeed').textContent = highSpeed;
+            document.getElementById('stat-sidewalks').textContent = ((withSidewalks / edges.length) * 100).toFixed(0) + '%';
+            document.getElementById('stat-lighting').textContent = ((withLighting / edges.length) * 100).toFixed(0) + '%';
+        }
+
+        // Event listeners
+        document.getElementById('reset-view').addEventListener('click', () => {
+            map.flyTo({ center: [-98.5, 39.8], zoom: 4 });
+        });
+
+        document.getElementById('show-nodes').addEventListener('change', (e) => {
+            map.setLayoutProperty('network-nodes-layer', 'visibility',
+                e.target.checked ? 'visible' : 'none');
+        });
+
+        document.getElementById('filter-stroads').addEventListener('change', applyFilters);
+        document.getElementById('filter-high-risk').addEventListener('change', applyFilters);
+        document.getElementById('filter-no-sidewalk').addEventListener('change', applyFilters);
+
+        function applyFilters() {
+            currentFilters.stroads = document.getElementById('filter-stroads').checked;
+            currentFilters.highRisk = document.getElementById('filter-high-risk').checked;
+            currentFilters.noSidewalk = document.getElementById('filter-no-sidewalk').checked;
+
+            const filters = ['all'];
+
+            if (currentFilters.stroads) {
+                filters.push(['==', ['get', 'is_stroad'], true]);
+            }
+
+            if (currentFilters.highRisk) {
+                filters.push(['>=', ['get', 'risk_score'], 15]);
+            }
+
+            if (currentFilters.noSidewalk) {
+                filters.push(['==', ['get', 'has_sidewalk'], false]);
+            }
+
+            if (filters.length > 1) {
+                map.setFilter('network-edges-layer', filters);
+            } else {
+                map.setFilter('network-edges-layer', null);
+            }
+        }
+    </script>
+</body>
+</html>
