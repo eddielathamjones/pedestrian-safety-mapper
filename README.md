@@ -1,10 +1,16 @@
-# Pedestrian Safety Mapper
+# 🚶 Pedestrian Safety Mapper - Tucson, AZ
 
 ## Overview
 
-Pedestrian Safety Mapper is an open-source web application that visualizes pedestrian fatality data from the Fatality Analysis Reporting System (FARS). Designed for policy makers, transportation advocates, and urban planners, this tool provides interactive, data-driven insights into road safety.
+Pedestrian Safety Mapper is an open-source web application that visualizes pedestrian fatality data from the Fatality Analysis Reporting System (FARS). Designed for policy makers, transportation advocates, and urban planners, this tool provides interactive, street-level insights into road safety.
 
-![Project Status: In Development](https://img.shields.io/badge/status-in%20development-yellow)
+**Current Implementation: Tucson, Arizona (1991-2022)**
+- 719 pedestrian fatalities analyzed
+- 445 incidents with precise GPS coordinates
+- Street-level visualization with MapBox GL JS
+- Advanced filtering and temporal analysis
+
+![Project Status: MVP Complete](https://img.shields.io/badge/status-MVP%20Complete-green)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 ## Project Goals
@@ -14,17 +20,25 @@ Pedestrian Safety Mapper is an open-source web application that visualizes pedes
 - Demonstrate advanced GIS and data analysis techniques
 - Support evidence-based transportation policy decisions
 
-## Features (Planned)
+## Features ✅
 
-- Interactive geographic visualization of FARS data
-- Animated time-series analysis of pedestrian fatalities
-- Customizable filters for:
-  - Geographic regions
-  - Time periods
-  - Road types
-  - Additional contextual factors
-- Statistical summaries and trend analysis
-- Exportable reports and visualizations
+- ✅ **Interactive Street Map**: MapBox GL JS with precise GPS locations for every incident
+- ✅ **Advanced Filtering**: Filter by year range, road type, time of day, lighting, and intersection type
+- ✅ **Heatmap Visualization**: Toggle density heatmap to identify high-risk corridors
+- ✅ **Temporal Analysis**: Interactive charts showing trends by year, hour, day of week
+- ✅ **Road Type Breakdown**: Analysis by functional road classification (arterials, collectors, local)
+- ✅ **Hot Spot Detection**: Automatically identifies streets with 3+ incidents
+- ✅ **Coordinated Views**: Click charts to filter map, click hot spots to zoom to location
+- ✅ **Cluster Mode**: Performance-optimized clustering for dense areas
+- ✅ **REST API**: Full-featured API with multiple endpoints for data access
+
+## Key Findings for Tucson
+
+- **Alarming Trend**: Fatalities more than doubled from 30 (2018) to 64 (2022)
+- **Principal Arterials**: 45% of fatalities occur on principal arterial roads
+- **Evening Danger**: Peak danger hours are 6pm-10pm
+- **Mid-Block Incidents**: 67% occur away from intersections
+- **Dark Conditions**: Majority of fatalities occur during nighttime hours
 
 ## Technology Stack
 
@@ -39,53 +53,140 @@ Pedestrian Safety Mapper is an open-source web application that visualizes pedes
   - GeoPandas
 
 
-## Installation
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- PostgreSQL
-- PostGIS extension
-- Node.js (for frontend dependencies)
+- MapBox Account (free tier works - [Sign up here](https://www.mapbox.com/signup/))
 
 ### Setup Steps
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/pedestrian-safety-mapper.git
-   cd pedestrian-safety-mapper
-   ```
+**1. Get Your MapBox Access Token**
 
-2. Create virtual environment
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
+- Go to [MapBox Account](https://account.mapbox.com/)
+- Copy your default public token (starts with `pk.`)
 
-3. Install dependencies
-   ```bash
-   pip install -r requirements.txt
-   npm install
-   ```
+**2. Configure the Token**
 
-4. Set up database
-   ```bash
-   # Detailed database setup instructions will be added
-   ```
+Edit `src/frontend/js/app.js` (line 2):
+```javascript
+mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN_HERE';  // Replace with your token
+```
+
+**3. Install Python Dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+**4. Run the Application**
+
+```bash
+python3 src/backend/app.py
+```
+
+**5. Open in Browser**
+
+Navigate to: **http://localhost:5000**
+
+That's it! The data is already processed and ready to visualize.
+
+## 📁 Project Structure
+
+```
+pedestrian-safety-mapper/
+├── data/
+│   ├── raw/               # FARS CSV files by year (1975-2022)
+│   └── processed/         # Extracted and filtered Tucson data
+│       ├── tucson_pedestrian_fatalities.csv
+│       ├── tucson_pedestrian_fatalities.geojson
+│       └── tucson_statistics.json
+├── src/
+│   ├── backend/
+│   │   ├── app.py                    # Flask REST API server
+│   │   └── extract_tucson_data.py    # ETL pipeline
+│   └── frontend/
+│       ├── index.html
+│       ├── css/styles.css
+│       └── js/app.js                 # MapBox + Chart.js application
+├── scripts/
+│   ├── data_download.py              # Downloads FARS data
+│   └── FARS_doc_download.py          # Downloads documentation
+└── requirements.txt
+```
+
+## 🛠️ API Endpoints
+
+The Flask backend provides comprehensive REST API access:
+
+- `GET /api/incidents` - Get all incidents with optional filtering
+  - Query params: `year_start`, `year_end`, `road_type`, `hour_start`, `hour_end`, `lighting`, `intersection_type`
+- `GET /api/statistics` - Overall statistics summary
+- `GET /api/statistics/temporal` - Temporal breakdown (year, month, hour, day of week)
+- `GET /api/statistics/road_types` - Statistics by functional road classification
+- `GET /api/statistics/intersections` - Intersection vs mid-block analysis
+- `GET /api/statistics/lighting` - Lighting condition breakdown
+- `GET /api/hot_spots` - High-risk streets with 3+ incidents
+- `GET /api/trends` - Year-over-year trends and 3-year moving averages
+- `GET /api/health` - API health check
+
+Example:
+```bash
+curl "http://localhost:5000/api/incidents?year_start=2020&road_type=Principal%20Arterial%20-%20Other"
+```
+
+## 📊 Data Processing
+
+The data has already been processed, but you can re-extract if needed:
+
+```bash
+python3 src/backend/extract_tucson_data.py
+```
+
+This extracts pedestrian fatality data for Tucson from all FARS years (1991-2022 available).
 
 ## Data Sources
 
-- [Fatality Analysis Reporting System (FARS)](https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system)
-- Additional open data sources to be integrated
+- [Fatality Analysis Reporting System (FARS)](https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system) - NHTSA
+- 719 pedestrian fatalities in Tucson (1991-2022)
+- 445 incidents with precise GPS coordinates
 
-## Roadmap
+## 🗺️ Features & Usage
 
-- [ ] Data ingestion and preprocessing
-- [ ] Basic map visualization
-- [ ] Time-series animations
-- [ ] Advanced filtering mechanisms
-- [ ] Report generation tools
-- [ ] Performance optimization
+### Map Controls
+
+- **Show/Hide Markers**: Toggle incident markers on/off
+- **Heatmap Layer**: Toggle density heatmap visualization
+- **Cluster Mode**: Enable/disable marker clustering
+
+### Filtering
+
+Combine multiple filters to analyze specific scenarios:
+- **Year Range**: Focus on recent trends (e.g., 2018-2022)
+- **Time of Day**: Analyze morning commute vs evening hours
+- **Road Type**: Compare arterials vs collectors vs local streets
+- **Lighting**: Daylight vs dark conditions
+- **Location Type**: Intersections vs mid-block
+
+### Hot Spots
+
+The sidebar automatically identifies high-risk streets:
+- Streets with 3 or more incidents
+- Click any street to zoom to its location
+- Reveals dangerous corridors for targeted interventions
+
+## Future Enhancements
+
+- [ ] PostgreSQL + PostGIS database for better performance
+- [ ] Time-of-day animation with slider control
+- [ ] Before/after intervention analysis
+- [ ] Multi-city comparison
+- [ ] Crash narrative text analysis
+- [ ] Weather data integration
+- [ ] Census demographic correlation
+- [ ] Export reports as PDF
+- [ ] Mobile-responsive improvements
 
 ## Contributing
 

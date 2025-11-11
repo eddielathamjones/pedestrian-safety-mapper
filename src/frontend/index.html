@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tucson Pedestrian Safety Mapper</title>
+
+    <!-- MapBox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Chart.js for easy charting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🚶 Tucson Pedestrian Safety Mapper</h1>
+            <p class="subtitle">Street-level analysis of pedestrian fatalities (1991-2022)</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-incidents">-</div>
+                <div class="stat-label">Total Fatalities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="filtered-incidents">-</div>
+                <div class="stat-label">Filtered Results</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="years-covered">-</div>
+                <div class="stat-label">Years of Data</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="control-section">
+                <h3>🎛️ Filters</h3>
+
+                <!-- Year Range -->
+                <div class="control-group">
+                    <label>Year Range</label>
+                    <div class="range-inputs">
+                        <input type="number" id="year-start" min="1991" max="2022" value="2018" placeholder="Start">
+                        <span>to</span>
+                        <input type="number" id="year-end" min="1991" max="2022" value="2022" placeholder="End">
+                    </div>
+                </div>
+
+                <!-- Road Type -->
+                <div class="control-group">
+                    <label>Road Type</label>
+                    <select id="road-type-filter">
+                        <option value="">All Road Types</option>
+                        <option value="Principal Arterial - Other">Principal Arterial</option>
+                        <option value="Minor Arterial">Minor Arterial</option>
+                        <option value="Major Collector">Major Collector</option>
+                        <option value="Minor Collector">Minor Collector</option>
+                        <option value="Local">Local Street</option>
+                        <option value="Interstate">Interstate</option>
+                    </select>
+                </div>
+
+                <!-- Hour Range -->
+                <div class="control-group">
+                    <label>Time of Day</label>
+                    <div class="range-inputs">
+                        <input type="number" id="hour-start" min="0" max="23" placeholder="0">
+                        <span>to</span>
+                        <input type="number" id="hour-end" min="0" max="23" placeholder="23">
+                    </div>
+                </div>
+
+                <!-- Lighting Condition -->
+                <div class="control-group">
+                    <label>Lighting</label>
+                    <select id="lighting-filter">
+                        <option value="">All Conditions</option>
+                        <option value="Daylight">Daylight</option>
+                        <option value="Dark - Lighted">Dark - Lighted</option>
+                        <option value="Dark - Not Lighted">Dark - Not Lighted</option>
+                        <option value="Dawn">Dawn</option>
+                        <option value="Dusk">Dusk</option>
+                    </select>
+                </div>
+
+                <!-- Intersection Type -->
+                <div class="control-group">
+                    <label>Location Type</label>
+                    <select id="intersection-filter">
+                        <option value="">All Locations</option>
+                        <option value="Not an Intersection">Mid-Block (Not Intersection)</option>
+                        <option value="Four-Way Intersection">Four-Way Intersection</option>
+                        <option value="T-Intersection">T-Intersection</option>
+                        <option value="Y-Intersection">Y-Intersection</option>
+                        <option value="Roundabout">Roundabout</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary" id="apply-filters">Apply Filters</button>
+                <button class="btn-secondary" id="reset-filters">Reset All</button>
+            </div>
+
+            <!-- Map Controls -->
+            <div class="control-section">
+                <h3>🗺️ Map Layers</h3>
+
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="show-markers" checked>
+                        <span>Show Incident Markers</span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="show-heatmap">
+                        <span>Show Heatmap</span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="cluster-markers" checked>
+                        <span>Cluster Markers</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Hot Spots -->
+            <div class="control-section">
+                <h3>🔥 High-Risk Streets</h3>
+                <div id="hot-spots-list" class="hot-spots-list">
+                    Loading...
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="map"></div>
+
+            <!-- Popup Template -->
+            <div id="popup-template" style="display: none;">
+                <div class="popup-content">
+                    <h4 class="popup-title"></h4>
+                    <div class="popup-details"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Charts Panel -->
+        <aside class="charts-panel">
+            <div class="chart-section">
+                <h3>📊 Temporal Trends</h3>
+                <canvas id="year-chart"></canvas>
+            </div>
+
+            <div class="chart-section">
+                <h3>🕐 Time of Day</h3>
+                <canvas id="hour-chart"></canvas>
+            </div>
+
+            <div class="chart-section">
+                <h3>🛣️ Road Type Distribution</h3>
+                <canvas id="road-type-chart"></canvas>
+            </div>
+
+            <div class="chart-section">
+                <h3>💡 Lighting Conditions</h3>
+                <canvas id="lighting-chart"></canvas>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading incident data...</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
