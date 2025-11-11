@@ -1,0 +1,579 @@
+/*
+ * TUCSON STREET DEATHS - EDGY/BRUTAL DESIGN
+ * No sugarcoating. Raw data. Blood on the streets.
+ */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --blood-red: #ff0000;
+    --death-black: #0a0a0a;
+    --bone-white: #ffffff;
+    --blood-dark: #8b0000;
+    --blood-bright: #ff3333;
+    --danger-yellow: #ffff00;
+    --asphalt-gray: #1a1a1a;
+    --concrete-gray: #2a2a2a;
+    --warning-orange: #ff6600;
+}
+
+body {
+    background: var(--death-black);
+    color: var(--bone-white);
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+/* Typography - Aggressive & Zine-inspired */
+h1, h2, h3 {
+    font-family: 'Bebas Neue', 'Anton', impact, sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* Header - Brutal Truth */
+.header-brutal {
+    background: var(--death-black);
+    border-bottom: 4px solid var(--blood-red);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1000;
+}
+
+.death-toll {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.skull {
+    font-size: 4rem;
+    color: var(--blood-red);
+    animation: pulse-death 2s infinite;
+}
+
+@keyframes pulse-death {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+.title-scream {
+    font-size: 2.5rem;
+    line-height: 0.9;
+    color: var(--bone-white);
+    text-shadow: 3px 3px 0 var(--blood-red);
+    font-family: 'Anton', impact, sans-serif;
+}
+
+.body-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 3px solid var(--blood-red);
+    padding: 1rem 2rem;
+    background: var(--asphalt-gray);
+}
+
+.count-number {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--blood-red);
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+}
+
+.count-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--bone-white);
+    letter-spacing: 0.3em;
+}
+
+.count-subtext {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+}
+
+.manifesto {
+    text-align: right;
+}
+
+.brutal-truth {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--blood-red);
+    margin-bottom: 0.5rem;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.15em;
+}
+
+.stats-row {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+}
+
+.stat-brutal {
+    color: var(--bone-white);
+    font-family: 'Space Mono', monospace;
+}
+
+.stat-brutal strong {
+    color: var(--blood-red);
+    font-size: 1.3rem;
+    margin-right: 0.25rem;
+}
+
+/* Main Layout */
+.death-map-container {
+    display: grid;
+    grid-template-columns: 300px 1fr 320px;
+    height: calc(100vh - 150px);
+    gap: 0;
+}
+
+/* Control Panel - Raw & Functional */
+.control-brutal {
+    background: var(--asphalt-gray);
+    border-right: 2px solid var(--blood-red);
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.section-scream {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px dashed #333;
+}
+
+.section-scream:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    color: var(--blood-red);
+    margin-bottom: 1rem;
+    letter-spacing: 0.2em;
+    border-left: 4px solid var(--blood-red);
+    padding-left: 0.5rem;
+}
+
+.control-raw {
+    margin-bottom: 1rem;
+}
+
+.label-harsh {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #999;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.15em;
+}
+
+.input-brutal,
+.select-brutal {
+    width: 100%;
+    background: var(--death-black);
+    border: 2px solid #333;
+    color: var(--bone-white);
+    padding: 0.6rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.input-brutal:focus,
+.select-brutal:focus {
+    outline: none;
+    border-color: var(--blood-red);
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-row .input-brutal {
+    flex: 1;
+}
+
+.separator {
+    color: var(--blood-red);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Buttons - Action Required */
+.btn-blood,
+.btn-ghost {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.btn-blood {
+    background: var(--blood-red);
+    color: var(--bone-white);
+    border: 2px solid var(--blood-red);
+}
+
+.btn-blood:hover {
+    background: var(--blood-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 0, 0, 0.4);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #666;
+    border: 2px solid #333;
+}
+
+.btn-ghost:hover {
+    border-color: #666;
+    color: #999;
+}
+
+/* Checkboxes */
+.checkbox-brutal {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.checkbox-brutal input {
+    margin-right: 0.5rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+    accent-color: var(--blood-red);
+}
+
+.checkbox-brutal:hover {
+    color: var(--bone-white);
+}
+
+/* Death List */
+.death-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.death-street {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--death-black);
+    border-left: 3px solid var(--blood-red);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.death-street:hover {
+    background: var(--concrete-gray);
+    border-left-width: 6px;
+    transform: translateX(3px);
+}
+
+.street-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--bone-white);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.street-deaths {
+    font-size: 0.7rem;
+    color: var(--blood-red);
+    font-family: 'Space Mono', monospace;
+}
+
+/* Map */
+.map-brutal {
+    position: relative;
+    height: 100%;
+    background: #000;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Map Overlay Stats */
+.map-overlay-stats {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 1rem;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.overlay-fact {
+    background: rgba(10, 10, 10, 0.9);
+    border: 2px solid var(--blood-red);
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.fact-number {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--blood-red);
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+}
+
+.fact-text {
+    font-size: 0.65rem;
+    color: var(--bone-white);
+    text-align: center;
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+/* MapBox Popup Override */
+.mapboxgl-popup-content {
+    background: var(--death-black);
+    color: var(--bone-white);
+    border: 2px solid var(--blood-red);
+    padding: 1rem;
+    font-family: 'Courier Prime', monospace;
+}
+
+.mapboxgl-popup-close-button {
+    color: var(--blood-red);
+    font-size: 1.5rem;
+}
+
+.popup-content h4 {
+    color: var(--blood-red);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+.popup-details {
+    font-size: 0.8rem;
+}
+
+.popup-details div {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.popup-details strong {
+    color: #888;
+}
+
+/* Charts Panel */
+.charts-brutal {
+    background: var(--asphalt-gray);
+    border-left: 2px solid var(--blood-red);
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.chart-rage {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--death-black);
+    border: 2px solid #333;
+}
+
+.chart-title {
+    font-size: 1rem;
+    color: var(--blood-red);
+    margin-bottom: 1rem;
+    letter-spacing: 0.15em;
+}
+
+.chart-rage canvas {
+    max-height: 180px;
+}
+
+.chart-callout {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--danger-yellow);
+    text-align: center;
+    letter-spacing: 0.1em;
+}
+
+/* Call to Action Box */
+.action-box {
+    background: var(--blood-red);
+    color: var(--bone-white);
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 4px solid var(--blood-dark);
+}
+
+.action-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.15em;
+}
+
+.action-text {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.action-list {
+    border-top: 2px solid var(--blood-dark);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.action-list p {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    font-family: 'Space Mono', monospace;
+}
+
+/* Loading */
+.loading-brutal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--death-black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.loading-brutal.hidden {
+    display: none;
+}
+
+.loading-skull {
+    font-size: 5rem;
+    color: var(--blood-red);
+    animation: spin-death 2s linear infinite;
+}
+
+@keyframes spin-death {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: var(--bone-white);
+    font-size: 1rem;
+    margin-top: 1rem;
+    letter-spacing: 0.2em;
+    font-family: 'Space Mono', monospace;
+}
+
+/* Scrollbar - Blood Track */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--death-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--blood-red);
+    border: 2px solid var(--death-black);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--blood-bright);
+}
+
+/* Zine-style Text Effects */
+.glitch {
+    animation: glitch 1s infinite;
+}
+
+@keyframes glitch {
+    0% { text-shadow: 2px 2px var(--blood-red); }
+    25% { text-shadow: -2px -2px var(--blood-red); }
+    50% { text-shadow: 2px -2px var(--blood-red); }
+    75% { text-shadow: -2px 2px var(--blood-red); }
+    100% { text-shadow: 2px 2px var(--blood-red); }
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .death-map-container {
+        grid-template-columns: 280px 1fr 300px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .death-map-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .control-brutal,
+    .charts-brutal {
+        display: none;
+    }
+
+    .map-overlay-stats {
+        flex-direction: column;
+    }
+}
+
+/* MapBox Cluster Override */
+.mapboxgl-canvas {
+    cursor: crosshair !important;
+}
+
+/* Selection effects */
+::selection {
+    background: var(--blood-red);
+    color: var(--bone-white);
+}

@@ -27,6 +27,28 @@ const ROAD_COLORS = {
     'Interstate': '#ef4444'
 };
 
+// Helper to detect if using edgy version
+function isEdgyMode() {
+    return document.body.classList.contains('edgy-mode') ||
+           document.querySelector('.header-brutal') !== null;
+}
+
+// Get chart theme based on mode
+function getChartTheme() {
+    if (isEdgyMode()) {
+        return {
+            gridColor: '#333',
+            textColor: '#ffffff',
+            backgroundColor: '#0a0a0a'
+        };
+    }
+    return {
+        gridColor: '#e5e7eb',
+        textColor: '#6b7280',
+        backgroundColor: '#ffffff'
+    };
+}
+
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Tucson Pedestrian Safety Mapper...');
@@ -313,6 +335,8 @@ function createYearChart() {
         charts.yearChart.destroy();
     }
 
+    const theme = getChartTheme();
+
     charts.yearChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -320,10 +344,11 @@ function createYearChart() {
             datasets: [{
                 label: 'Fatalities per Year',
                 data: counts,
-                borderColor: '#dc2626',
-                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                borderColor: '#ff0000',
+                backgroundColor: isEdgyMode() ? 'rgba(255, 0, 0, 0.3)' : 'rgba(220, 38, 38, 0.1)',
                 tension: 0.3,
-                fill: true
+                fill: true,
+                borderWidth: 3
             }]
         },
         options: {
@@ -335,10 +360,22 @@ function createYearChart() {
                 }
             },
             scales: {
+                x: {
+                    ticks: {
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0
+                        precision: 0,
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
                     }
                 }
             }
@@ -369,6 +406,8 @@ function createHourChart() {
         charts.hourChart.destroy();
     }
 
+    const theme = getChartTheme();
+
     charts.hourChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -376,7 +415,7 @@ function createHourChart() {
             datasets: [{
                 label: 'Fatalities by Hour',
                 data: counts,
-                backgroundColor: '#f59e0b'
+                backgroundColor: isEdgyMode() ? '#ff0000' : '#f59e0b'
             }]
         },
         options: {
@@ -388,10 +427,22 @@ function createHourChart() {
                 }
             },
             scales: {
+                x: {
+                    ticks: {
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0
+                        precision: 0,
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
                     }
                 }
             }
@@ -460,6 +511,8 @@ function createLightingChart() {
         charts.lightingChart.destroy();
     }
 
+    const theme = getChartTheme();
+
     charts.lightingChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -467,7 +520,7 @@ function createLightingChart() {
             datasets: [{
                 label: 'Fatalities',
                 data: counts,
-                backgroundColor: '#10b981'
+                backgroundColor: isEdgyMode() ? '#ff0000' : '#10b981'
             }]
         },
         options: {
@@ -483,7 +536,19 @@ function createLightingChart() {
                 x: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0
+                        precision: 0,
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: theme.textColor
+                    },
+                    grid: {
+                        color: theme.gridColor
                     }
                 }
             }
@@ -512,15 +577,30 @@ function updateHotSpotsList() {
         return;
     }
 
-    container.innerHTML = sortedSpots.map(([street, data]) => `
-        <div class="hot-spot-item" data-street="${street}">
-            <div class="hot-spot-street">${street}</div>
-            <div class="hot-spot-count">${data.count} incidents</div>
-        </div>
-    `).join('');
+    // Check if using edgy version based on class names
+    const isEdgy = document.body.querySelector('.death-street, .street-name') !== null;
 
-    // Add click handlers
-    document.querySelectorAll('.hot-spot-item').forEach(item => {
+    if (isEdgy) {
+        // Edgy version with death-street class
+        container.innerHTML = sortedSpots.map(([street, data]) => `
+            <div class="death-street" data-street="${street}">
+                <span class="street-name">${street}</span>
+                <span class="street-deaths">${data.count} DEAD</span>
+            </div>
+        `).join('');
+    } else {
+        // Standard version
+        container.innerHTML = sortedSpots.map(([street, data]) => `
+            <div class="hot-spot-item" data-street="${street}">
+                <div class="hot-spot-street">${street}</div>
+                <div class="hot-spot-count">${data.count} incidents</div>
+            </div>
+        `).join('');
+    }
+
+    // Add click handlers for both versions
+    const itemClass = isEdgy ? '.death-street' : '.hot-spot-item';
+    document.querySelectorAll(itemClass).forEach(item => {
         item.addEventListener('click', () => {
             const street = item.dataset.street;
             highlightStreet(street);

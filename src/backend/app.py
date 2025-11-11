@@ -33,6 +33,12 @@ def index():
     return send_from_directory(app.static_folder, 'index.html')
 
 
+@app.route('/edgy')
+def index_edgy():
+    """Serve the edgy/confrontational version"""
+    return send_from_directory(app.static_folder, 'index-edgy.html')
+
+
 @app.route('/api/incidents')
 def get_incidents():
     """

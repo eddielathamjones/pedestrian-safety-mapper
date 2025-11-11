@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUCSON KILLS PEDESTRIANS</title>
+
+    <!-- MapBox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Google Fonts - Aggressive Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Courier+Prime:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles-edgy.css">
+</head>
+<body>
+    <!-- Stark Header -->
+    <header class="header-brutal">
+        <div class="death-toll">
+            <div class="skull">☠</div>
+            <h1 class="title-scream">TUCSON<br>STREET<br>DEATHS</h1>
+            <div class="body-count">
+                <span class="count-number" id="total-deaths">719</span>
+                <span class="count-label">DEAD</span>
+                <span class="count-subtext">1991-2022</span>
+            </div>
+        </div>
+
+        <div class="manifesto">
+            <p class="brutal-truth">YOUR STREETS ARE KILLING MACHINES</p>
+            <p class="stats-row">
+                <span class="stat-brutal"><strong id="filtered-deaths">445</strong> MAPPED</span>
+                <span class="stat-brutal"><strong>64</strong> IN 2022</span>
+                <span class="stat-brutal"><strong>+113%</strong> SINCE 2018</span>
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="death-map-container">
+        <!-- Control Panel -->
+        <aside class="control-brutal">
+            <div class="section-scream">
+                <h2 class="section-title">FILTER THE CARNAGE</h2>
+
+                <!-- Year -->
+                <div class="control-raw">
+                    <label class="label-harsh">YEARS</label>
+                    <div class="input-row">
+                        <input type="number" id="year-start" value="2018" min="1991" max="2022" class="input-brutal">
+                        <span class="separator">→</span>
+                        <input type="number" id="year-end" value="2022" min="1991" max="2022" class="input-brutal">
+                    </div>
+                </div>
+
+                <!-- Road Type -->
+                <div class="control-raw">
+                    <label class="label-harsh">ROAD TYPE</label>
+                    <select id="road-type-filter" class="select-brutal">
+                        <option value="">ALL DEATH TRAPS</option>
+                        <option value="Principal Arterial - Other">PRINCIPAL ARTERIAL</option>
+                        <option value="Minor Arterial">MINOR ARTERIAL</option>
+                        <option value="Major Collector">MAJOR COLLECTOR</option>
+                        <option value="Minor Collector">MINOR COLLECTOR</option>
+                        <option value="Local">LOCAL STREET</option>
+                        <option value="Interstate">INTERSTATE</option>
+                    </select>
+                </div>
+
+                <!-- Time -->
+                <div class="control-raw">
+                    <label class="label-harsh">TIME OF DAY</label>
+                    <div class="input-row">
+                        <input type="number" id="hour-start" placeholder="00" min="0" max="23" class="input-brutal">
+                        <span class="separator">→</span>
+                        <input type="number" id="hour-end" placeholder="23" min="0" max="23" class="input-brutal">
+                    </div>
+                </div>
+
+                <!-- Lighting -->
+                <div class="control-raw">
+                    <label class="label-harsh">LIGHTING</label>
+                    <select id="lighting-filter" class="select-brutal">
+                        <option value="">ALL CONDITIONS</option>
+                        <option value="Daylight">DAYLIGHT</option>
+                        <option value="Dark - Lighted">DARK (LIT)</option>
+                        <option value="Dark - Not Lighted">DARK (UNLIT)</option>
+                        <option value="Dawn">DAWN</option>
+                        <option value="Dusk">DUSK</option>
+                    </select>
+                </div>
+
+                <!-- Location -->
+                <div class="control-raw">
+                    <label class="label-harsh">WHERE THEY DIED</label>
+                    <select id="intersection-filter" class="select-brutal">
+                        <option value="">EVERYWHERE</option>
+                        <option value="Not an Intersection">MID-BLOCK (NO CROSSWALK)</option>
+                        <option value="Four-Way Intersection">4-WAY INTERSECTION</option>
+                        <option value="T-Intersection">T-INTERSECTION</option>
+                    </select>
+                </div>
+
+                <button class="btn-blood" id="apply-filters">SHOW ME</button>
+                <button class="btn-ghost" id="reset-filters">RESET</button>
+            </div>
+
+            <!-- Map Controls -->
+            <div class="section-scream">
+                <h2 class="section-title">MAP LAYERS</h2>
+
+                <label class="checkbox-brutal">
+                    <input type="checkbox" id="show-markers" checked>
+                    <span>DEATH MARKERS</span>
+                </label>
+
+                <label class="checkbox-brutal">
+                    <input type="checkbox" id="show-heatmap">
+                    <span>DANGER ZONES</span>
+                </label>
+
+                <label class="checkbox-brutal">
+                    <input type="checkbox" id="cluster-markers" checked>
+                    <span>CLUSTER VIEW</span>
+                </label>
+            </div>
+
+            <!-- Hot Spots -->
+            <div class="section-scream">
+                <h2 class="section-title">DEADLIEST STREETS</h2>
+                <div id="hot-spots-list" class="death-list">
+                    Loading streets of death...
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map -->
+        <main class="map-brutal">
+            <div id="map"></div>
+
+            <!-- Overlay Stats -->
+            <div class="map-overlay-stats">
+                <div class="overlay-fact">
+                    <span class="fact-number">67%</span>
+                    <span class="fact-text">DIED MID-BLOCK<br>NOT AT CROSSWALKS</span>
+                </div>
+                <div class="overlay-fact">
+                    <span class="fact-number">63%</span>
+                    <span class="fact-text">KILLED IN<br>DARKNESS</span>
+                </div>
+                <div class="overlay-fact">
+                    <span class="fact-number">45%</span>
+                    <span class="fact-text">ON MAJOR<br>ARTERIALS</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Charts -->
+        <aside class="charts-brutal">
+            <div class="chart-rage">
+                <h3 class="chart-title">THE BODY COUNT RISES</h3>
+                <canvas id="year-chart"></canvas>
+                <p class="chart-callout">DOUBLED IN 4 YEARS</p>
+            </div>
+
+            <div class="chart-rage">
+                <h3 class="chart-title">DEATH BY HOUR</h3>
+                <canvas id="hour-chart"></canvas>
+                <p class="chart-callout">EVENING = SLAUGHTER</p>
+            </div>
+
+            <div class="chart-rage">
+                <h3 class="chart-title">WHICH ROADS KILL</h3>
+                <canvas id="road-type-chart"></canvas>
+            </div>
+
+            <div class="chart-rage">
+                <h3 class="chart-title">DARKNESS KILLS</h3>
+                <canvas id="lighting-chart"></canvas>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="action-box">
+                <h3 class="action-title">THIS IS NOT ACCEPTABLE</h3>
+                <p class="action-text">
+                    64 people died on Tucson streets in 2022.<br>
+                    They were someone's parent. Child. Friend.<br><br>
+                    <strong>DEMAND BETTER.</strong>
+                </p>
+                <div class="action-list">
+                    <p>→ PROTECTED CROSSWALKS</p>
+                    <p>→ STREET LIGHTING</p>
+                    <p>→ TRAFFIC CALMING</p>
+                    <p>→ VISION ZERO NOW</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-overlay" class="loading-brutal">
+        <div class="loading-skull">☠</div>
+        <p class="loading-text">LOADING DEATH DATA...</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
