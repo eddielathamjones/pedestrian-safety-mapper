@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requiem for the Pedestrian - A Memorial in Sound</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .warning-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .warning-screen.hidden {
+            display: none;
+        }
+
+        .warning-content {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .warning-content h1 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #fff;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+
+        .warning-content p {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .warning-content .ethical-statement {
+            border-left: 3px solid #ff5722;
+            padding-left: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            color: #ff9800;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 15px 40px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 10px;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        header h1 {
+            font-size: 48px;
+            font-weight: normal;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        header .subtitle {
+            font-size: 18px;
+            color: #888;
+            font-style: italic;
+        }
+
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 40px 0;
+            background: #111;
+            border: 1px solid #333;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .info-card {
+            background: #1a1a1a;
+            padding: 30px;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        .info-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        .info-card p {
+            line-height: 1.8;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .stat-label {
+            color: #888;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .timeline {
+            margin: 60px 0;
+            padding: 30px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+        }
+
+        .timeline h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 60px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            margin-top: 20px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #ff5722;
+            transition: left 0.1s;
+        }
+
+        .about {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 40px;
+            background: #1a1a1a;
+            border-left: 4px solid #ff5722;
+        }
+
+        .about h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+
+        .about p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+
+        .mapping-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .mapping-table th,
+        .mapping-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .mapping-table th {
+            color: #fff;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        .mapping-table td {
+            color: #aaa;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ethical Warning Screen -->
+    <div class="warning-screen" id="warning-screen">
+        <div class="warning-content">
+            <h1>REQUIEM FOR THE PEDESTRIAN</h1>
+
+            <p>
+                This is an <strong>algorithmic memorial</strong>. Each sound you hear
+                represents a human life lost to traffic violence.
+            </p>
+
+            <div class="ethical-statement">
+                <p>
+                    "Does making tragedy beautiful help us remember,<br>
+                    or does it distance us from suffering?"
+                </p>
+            </div>
+
+            <p>
+                This artwork transforms death data into music. The composition maps
+                victim age to pitch, time of day to rhythm, lighting conditions to
+                timbre, and geographic location to stereo position.
+            </p>
+
+            <p>
+                <strong>It is intentionally uncomfortable.</strong>
+            </p>
+
+            <p>
+                By continuing, you acknowledge the ethical tension of making art
+                from tragedy and agree to sit with that discomfort.
+            </p>
+
+            <button class="btn" onclick="enterRequiem()">Enter the Requiem</button>
+            <button class="btn" onclick="window.history.back()">Decline</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <header>
+        <h1>REQUIEM FOR THE PEDESTRIAN</h1>
+        <p class="subtitle">An Algorithmic Memorial in Sound</p>
+    </header>
+
+    <div class="container">
+        <!-- Visualization -->
+        <div class="visualization-container">
+            <canvas id="visualization"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn" id="play-btn">▶ PLAY</button>
+            <button class="btn" id="pause-btn" style="display:none;">⏸ PAUSE</button>
+            <button class="btn" id="stop-btn">⏹ STOP</button>
+        </div>
+
+        <!-- Statistics -->
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>Composition Statistics</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Total Notes (Fatalities)</span>
+                    <span class="stat-value" id="stat-notes">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Duration</span>
+                    <span class="stat-value" id="stat-duration">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Years Covered</span>
+                    <span class="stat-value" id="stat-years">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Dissonance Index</span>
+                    <span class="stat-value" id="stat-dissonance">Loading...</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Demographic Analysis</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Average Age</span>
+                    <span class="stat-value" id="stat-age">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Children (Under 18)</span>
+                    <span class="stat-value" id="stat-children">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Elderly (65+)</span>
+                    <span class="stat-value" id="stat-elderly">Loading...</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Temporal Patterns</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Average Hour</span>
+                    <span class="stat-value" id="stat-hour">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rush Hour Deaths</span>
+                    <span class="stat-value" id="stat-rush">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Night Deaths</span>
+                    <span class="stat-value" id="stat-night">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline">
+            <h2>TEMPORAL PROGRESSION</h2>
+            <p style="color: #888;">Each year becomes a movement in this ongoing symphony of loss.</p>
+            <div class="timeline-track">
+                <div class="timeline-marker" id="timeline-marker"></div>
+            </div>
+        </div>
+
+        <!-- Musical Mapping -->
+        <div class="about">
+            <h2>Musical Mapping</h2>
+            <p>Each data attribute is transformed into a musical parameter:</p>
+
+            <table class="mapping-table">
+                <tr>
+                    <th>Data Attribute</th>
+                    <th>Musical Parameter</th>
+                    <th>Meaning</th>
+                </tr>
+                <tr>
+                    <td>Victim Age</td>
+                    <td>Pitch</td>
+                    <td>Younger = higher notes (tragic), Older = lower notes</td>
+                </tr>
+                <tr>
+                    <td>Time of Day</td>
+                    <td>Rhythm</td>
+                    <td>Rush hours = dense clusters, Night = sparse</td>
+                </tr>
+                <tr>
+                    <td>Lighting</td>
+                    <td>Timbre (Instrument)</td>
+                    <td>Daylight = violin, Dark/lit = viola, Unlit = cello</td>
+                </tr>
+                <tr>
+                    <td>Speed Limit</td>
+                    <td>Velocity & Duration</td>
+                    <td>High speed = loud, short notes (violent)</td>
+                </tr>
+                <tr>
+                    <td>Location</td>
+                    <td>Stereo Pan</td>
+                    <td>West = left speaker, East = right speaker</td>
+                </tr>
+                <tr>
+                    <td>Year</td>
+                    <td>Movement/Position</td>
+                    <td>Time progresses through the composition</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Ethical Reflection -->
+        <div class="about">
+            <h2>Ethical Reflection</h2>
+            <p>
+                This project exists in tension. It makes beauty from tragedy. It transforms
+                death data into aesthetic experience. It asks you to <em>listen</em> to
+                suffering rather than look away.
+            </p>
+            <p>
+                Is this:
+            </p>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin: 10px 0; color: #aaa;">• A memorial that honors the dead?</li>
+                <li style="margin: 10px 0; color: #aaa;">• Art that makes tragedy visible through sound?</li>
+                <li style="margin: 10px 0; color: #aaa;">• Exploitation of suffering for aesthetic purposes?</li>
+            </ul>
+            <p>
+                The answer is probably "yes" to all three. This discomfort is intentional.
+            </p>
+            <p>
+                Unlike traditional memorials that distance us through abstraction (the Vietnam
+                Wall's thousands of names become texture), this memorial forces individual
+                awareness: each note is a person. Each cluster is a bad day.
+            </p>
+            <p>
+                If it makes you uncomfortable, good. That's the point. Pedestrian deaths are
+                not inevitable. They are policy choices made audible.
+            </p>
+        </div>
+
+        <!-- Technical Notes -->
+        <div class="about">
+            <h2>Technical Implementation</h2>
+            <p>
+                The composition uses the <strong>Locrian mode</strong> (the darkest of the
+                church modes) for its inherently unstable, dissonant quality. This mirrors
+                the unnatural, violent nature of traffic deaths.
+            </p>
+            <p>
+                MIDI generation allows the piece to be performed by actual orchestras,
+                or rendered through high-quality software synthesizers. The score can be
+                updated as new data becomes available, making this an ever-evolving memorial.
+            </p>
+            <p>
+                Precedent: This work follows in the tradition of data sonification art
+                (Ryoji Ikeda), memorial sound installations (Janet Cardiff), and algorithmic
+                composition (Brian Eno's generative music).
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p>
+            Requiem for the Pedestrian | A Memorial in Sound<br>
+            Data source: FARS (Fatality Analysis Reporting System)<br>
+            Each note represents a human life lost to traffic violence.
+        </p>
+    </footer>
+
+    <script>
+        let isPlaying = false;
+        let animationFrame = null;
+
+        function enterRequiem() {
+            document.getElementById('warning-screen').classList.add('hidden');
+            loadAnalysis();
+            initVisualization();
+        }
+
+        async function loadAnalysis() {
+            // In production, this would load the actual analysis JSON
+            // For now, use placeholder data
+            const analysis = {
+                composition_stats: {
+                    total_notes: 21,
+                    duration_minutes: 1.5,
+                },
+                temporal: {
+                    year_range: [1987, 2020],
+                    avg_hour: 19.2,
+                    rush_hour_count: 8,
+                    night_count: 10,
+                },
+                demographic: {
+                    avg_age: 52.3,
+                    child_count: 1,
+                    elderly_count: 6,
+                },
+                musical: {
+                    dissonance_index: 0.523
+                }
+            };
+
+            // Update statistics
+            document.getElementById('stat-notes').textContent = analysis.composition_stats.total_notes;
+            document.getElementById('stat-duration').textContent =
+                analysis.composition_stats.duration_minutes.toFixed(1) + ' minutes';
+            document.getElementById('stat-years').textContent =
+                `${analysis.temporal.year_range[0]} - ${analysis.temporal.year_range[1]}`;
+            document.getElementById('stat-dissonance').textContent =
+                analysis.musical.dissonance_index.toFixed(3);
+            document.getElementById('stat-age').textContent =
+                analysis.demographic.avg_age.toFixed(1) + ' years';
+            document.getElementById('stat-children').textContent = analysis.demographic.child_count;
+            document.getElementById('stat-elderly').textContent = analysis.demographic.elderly_count;
+            document.getElementById('stat-hour').textContent =
+                analysis.temporal.avg_hour.toFixed(0) + ':00';
+            document.getElementById('stat-rush').textContent = analysis.temporal.rush_hour_count;
+            document.getElementById('stat-night').textContent = analysis.temporal.night_count;
+        }
+
+        function initVisualization() {
+            const canvas = document.getElementById('visualization');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Draw waveform visualization
+            function draw() {
+                ctx.fillStyle = '#111';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#ff5722';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                const centerY = canvas.height / 2;
+                const time = Date.now() / 1000;
+
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = centerY + Math.sin(x * 0.02 + time) * 30 * Math.sin(x * 0.001);
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.stroke();
+
+                if (isPlaying) {
+                    animationFrame = requestAnimationFrame(draw);
+                }
+            }
+
+            draw();
+        }
+
+        document.getElementById('play-btn').addEventListener('click', () => {
+            isPlaying = true;
+            document.getElementById('play-btn').style.display = 'none';
+            document.getElementById('pause-btn').style.display = 'inline-block';
+            initVisualization();
+            alert('MIDI playback requires a MIDI file. Generate one using the Python script:\n\n' +
+                  'python scripts/requiem_sonification.py data/pedestrian_fatalities.geojson --output requiem.mid');
+        });
+
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            isPlaying = false;
+            document.getElementById('play-btn').style.display = 'inline-block';
+            document.getElementById('pause-btn').style.display = 'none';
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+        });
+
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            isPlaying = false;
+            document.getElementById('play-btn').style.display = 'inline-block';
+            document.getElementById('pause-btn').style.display = 'none';
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            document.getElementById('timeline-marker').style.left = '0';
+        });
+    </script>
+</body>
+</html>
