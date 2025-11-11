@@ -1,0 +1,788 @@
+/*
+ * TUCSON STREET DEATHS - ZINE PRINT LAYOUT
+ * Designed for photocopying. Black and white. Punk DIY aesthetic.
+ * US Letter: 8.5" x 11" (or A4)
+ */
+
+/* Print Setup */
+@page {
+    size: letter portrait;
+    margin: 0.5in;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .page {
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+
+    body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    background: #ffffff;
+    color: #000000;
+    line-height: 1.4;
+}
+
+/* Page Layout */
+.page {
+    width: 8.5in;
+    height: 11in;
+    padding: 0.75in;
+    margin: 0 auto 1in;
+    background: white;
+    border: 2px solid #000;
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+}
+
+/* Typography - Aggressive */
+h1, h2, h3 {
+    font-family: 'Bebas Neue', 'Anton', impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.page-title {
+    font-size: 3rem;
+    border-bottom: 8px solid #000;
+    padding-bottom: 0.25in;
+    margin-bottom: 0.5in;
+    letter-spacing: 0.1em;
+}
+
+/* COVER PAGE */
+.page-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #000;
+    color: #fff;
+    border: 8px solid #000;
+}
+
+.skull-massive {
+    font-size: 8rem;
+    margin-bottom: 0.5in;
+    animation: none; /* No animation for print */
+}
+
+.zine-title {
+    font-size: 5rem;
+    line-height: 0.9;
+    margin-bottom: 0.5in;
+    font-family: 'Anton', impact, sans-serif;
+    letter-spacing: 0.15em;
+    text-shadow: 4px 4px 0 #333;
+}
+
+.cover-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 6px solid #fff;
+    padding: 0.5in;
+    margin-bottom: 0.5in;
+    background: #000;
+}
+
+.death-count {
+    font-size: 6rem;
+    font-weight: 900;
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+}
+
+.death-label {
+    font-size: 2.5rem;
+    font-weight: bold;
+    letter-spacing: 0.3em;
+    margin-top: 0.25in;
+}
+
+.death-years {
+    font-size: 1.2rem;
+    margin-top: 0.15in;
+    opacity: 0.8;
+}
+
+.cover-tagline {
+    font-size: 2rem;
+    line-height: 1.1;
+    margin-bottom: 0.5in;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+}
+
+.cover-footer {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    opacity: 0.7;
+    margin-top: auto;
+}
+
+/* THE CRISIS PAGE */
+.stat-block {
+    margin: 0.5in 0;
+}
+
+.year-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25in;
+    border: 3px solid #000;
+    margin-bottom: 0.15in;
+    font-family: 'Space Mono', monospace;
+}
+
+.year-stat.highlight {
+    background: #000;
+    color: #fff;
+    border-width: 6px;
+}
+
+.year {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.deaths {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.change {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.arrow-down {
+    text-align: center;
+    font-size: 2rem;
+    margin: 0.1in 0;
+}
+
+/* Callout Boxes */
+.callout-box {
+    border: 6px solid #000;
+    background: #000;
+    color: #fff;
+    padding: 0.4in;
+    margin: 0.4in 0;
+    text-align: center;
+}
+
+.callout-text {
+    font-size: 2rem;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+}
+
+.callout-subtext {
+    font-size: 1rem;
+    margin-top: 0.2in;
+    letter-spacing: 0.1em;
+}
+
+/* Body Text */
+.body-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0.3in 0;
+}
+
+.body-text strong {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.intro-text {
+    font-size: 1.1rem;
+    margin-bottom: 0.3in;
+    line-height: 1.5;
+}
+
+.intro-text strong {
+    font-size: 1.3rem;
+}
+
+/* MAP PAGE */
+.map-diagram {
+    margin: 0.4in 0;
+}
+
+.ascii-map {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    border: 4px double #000;
+    padding: 0.2in;
+    background: #fff;
+}
+
+.stat-grid {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.4in 0;
+}
+
+.stat-item {
+    flex: 1;
+    border: 3px solid #000;
+    padding: 0.25in;
+    margin: 0 0.1in;
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: bold;
+    font-family: 'Space Mono', monospace;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.1in;
+    letter-spacing: 0.1em;
+}
+
+/* CHART PAGE */
+.chart-text {
+    margin: 0.4in 0;
+}
+
+.chart-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.2in;
+    letter-spacing: 0.1em;
+}
+
+.bar-chart {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.bar-row {
+    margin-bottom: 0.15in;
+    display: flex;
+    align-items: center;
+    padding: 0.1in;
+    border: 2px solid #000;
+}
+
+.bar-row.highlight {
+    background: #000;
+    color: #fff;
+    border-width: 4px;
+}
+
+.hour {
+    width: 1in;
+    font-weight: bold;
+}
+
+.bar {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+}
+
+/* DIAGRAM PAGE */
+.street-diagram {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    border: 4px double #000;
+    padding: 0.2in;
+    margin: 0.3in 0;
+}
+
+.stat-breakdown {
+    margin: 0.4in 0;
+}
+
+.breakdown-item {
+    font-size: 1.1rem;
+    padding: 0.15in;
+    border-left: 6px solid #000;
+    margin-bottom: 0.15in;
+    font-family: 'Space Mono', monospace;
+}
+
+.pct {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-right: 0.2in;
+}
+
+/* DARK PAGE */
+.page-dark {
+    background: #000;
+    color: #fff;
+}
+
+.page-dark .page-title {
+    border-bottom-color: #fff;
+}
+
+.page-dark .callout-box {
+    background: #fff;
+    color: #000;
+}
+
+.lighting-viz {
+    margin: 0.5in 0;
+}
+
+.light-bar {
+    display: flex;
+    height: 2in;
+    border: 4px solid #fff;
+}
+
+.light-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 2px solid #fff;
+}
+
+.light-section:last-child {
+    border-right: none;
+}
+
+.light-section.dark {
+    background: #000;
+    color: #fff;
+}
+
+.light-section.dark-lit {
+    background: #333;
+    color: #fff;
+}
+
+.light-section.day {
+    background: #fff;
+    color: #000;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+}
+
+.light-section.twilight {
+    background: #666;
+    color: #fff;
+}
+
+.light-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.big-stat {
+    text-align: center;
+    margin: 0.5in 0;
+}
+
+.big-number {
+    display: block;
+    font-size: 5rem;
+    font-weight: bold;
+    font-family: 'Space Mono', monospace;
+}
+
+.big-label {
+    display: block;
+    font-size: 1.5rem;
+    margin-top: 0.2in;
+    letter-spacing: 0.1em;
+}
+
+/* STREET LIST PAGE */
+.street-list {
+    margin: 0.4in 0;
+}
+
+.street-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.15in;
+    border: 3px solid #000;
+    margin-bottom: 0.1in;
+    font-family: 'Space Mono', monospace;
+}
+
+.street-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.street-deaths {
+    font-size: 0.85rem;
+}
+
+/* YEAR FOCUS PAGE */
+.year-focus {
+    text-align: center;
+    margin: 0.5in 0;
+    border: 8px solid #000;
+    padding: 0.5in;
+    background: #000;
+    color: #fff;
+}
+
+.year-number {
+    font-size: 8rem;
+    font-weight: bold;
+    line-height: 1;
+    font-family: 'Space Mono', monospace;
+}
+
+.year-label {
+    font-size: 1.5rem;
+    margin-top: 0.2in;
+    letter-spacing: 0.1em;
+}
+
+.comparison {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.5in 0;
+    gap: 0.3in;
+}
+
+.comp-item {
+    border: 3px solid #000;
+    padding: 0.3in;
+    text-align: center;
+}
+
+.comp-item.highlight {
+    background: #000;
+    color: #fff;
+    border-width: 6px;
+}
+
+.comp-label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.1in;
+}
+
+.comp-value {
+    display: block;
+    font-size: 3rem;
+    font-weight: bold;
+    font-family: 'Space Mono', monospace;
+}
+
+.comp-arrow {
+    font-size: 3rem;
+}
+
+.comp-change {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.timeline {
+    margin: 0.4in 0;
+    text-align: center;
+}
+
+.timeline-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.2in;
+}
+
+.timeline-viz {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    margin: 0.2in 0;
+}
+
+.timeline-caption {
+    font-size: 0.9rem;
+    margin-top: 0.2in;
+}
+
+/* PEOPLE PAGE */
+.people-list {
+    margin: 0.4in 0;
+    font-size: 1.2rem;
+    line-height: 2;
+}
+
+.people-list p {
+    border-left: 4px solid #000;
+    padding-left: 0.2in;
+    margin-bottom: 0.15in;
+}
+
+.memorial-box {
+    border: 6px double #000;
+    padding: 0.4in;
+    margin: 0.4in 0;
+}
+
+.memorial-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    text-align: center;
+    font-style: italic;
+}
+
+/* REASONS PAGE */
+.reasons {
+    margin: 0.4in 0;
+}
+
+.reason-item {
+    margin-bottom: 0.3in;
+    border: 3px solid #000;
+    padding: 0.2in;
+}
+
+.reason-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.1in;
+    letter-spacing: 0.05em;
+}
+
+.reason-item p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* DEMANDS PAGE */
+.demands {
+    margin: 0.4in 0;
+}
+
+.demand {
+    display: flex;
+    gap: 0.2in;
+    margin-bottom: 0.3in;
+    border: 3px solid #000;
+    padding: 0.2in;
+}
+
+.demand-number {
+    font-size: 3rem;
+    font-weight: bold;
+    font-family: 'Space Mono', monospace;
+    min-width: 0.6in;
+}
+
+.demand-content h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.1in;
+}
+
+.demand-content p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* BACK PAGE */
+.page-back {
+    background: #000;
+    color: #fff;
+}
+
+.page-back .page-title {
+    border-bottom-color: #fff;
+}
+
+.action-section {
+    margin-bottom: 0.3in;
+    border-left: 6px solid #fff;
+    padding-left: 0.2in;
+}
+
+.action-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.1in;
+}
+
+.action-section p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.05in;
+}
+
+.action-detail {
+    font-style: italic;
+}
+
+.divider {
+    height: 4px;
+    background: #fff;
+    margin: 0.4in 0;
+}
+
+.footer-message {
+    text-align: center;
+    margin: 0.4in 0;
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.footer-message strong {
+    font-size: 1.3rem;
+}
+
+.final-callout {
+    text-align: center;
+    border: 6px solid #fff;
+    padding: 0.4in;
+    margin: 0.4in 0;
+}
+
+.final-text {
+    font-size: 2rem;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+}
+
+.final-subtext {
+    font-size: 1.5rem;
+    margin-top: 0.2in;
+    letter-spacing: 0.15em;
+}
+
+.back-footer {
+    text-align: center;
+    margin-top: auto;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+
+.back-footer p {
+    margin-bottom: 0.05in;
+}
+
+.skull-small {
+    font-size: 1rem;
+}
+
+/* PRINT INSTRUCTIONS (NO PRINT) */
+.print-guide h3 {
+    font-size: 1.2rem;
+    margin: 0.3in 0 0.15in 0;
+}
+
+.print-guide ol,
+.print-guide ul {
+    margin-left: 0.4in;
+    margin-bottom: 0.2in;
+}
+
+.print-guide li {
+    margin-bottom: 0.1in;
+    line-height: 1.5;
+}
+
+.print-guide p {
+    margin: 0.15in 0;
+}
+
+.print-guide strong {
+    font-size: 1.2rem;
+}
+
+/* Screen-only styling */
+@media screen {
+    body {
+        background: #333;
+        padding: 1in 0;
+    }
+
+    .page {
+        box-shadow: 0 0.1in 0.3in rgba(0,0,0,0.5);
+    }
+}
+
+/* Print optimization */
+@media print {
+    body {
+        background: white;
+    }
+
+    .page {
+        margin: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Force high contrast for photocopying */
+    * {
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    .page-cover,
+    .page-dark,
+    .page-back {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+    .page-cover *,
+    .page-dark *,
+    .page-back * {
+        color: #fff !important;
+    }
+
+    .callout-box {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+    .callout-box * {
+        color: #fff !important;
+    }
+
+    .year-stat.highlight,
+    .bar-row.highlight,
+    .comp-item.highlight,
+    .year-focus {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+    .year-stat.highlight *,
+    .bar-row.highlight *,
+    .comp-item.highlight *,
+    .year-focus * {
+        color: #fff !important;
+    }
+}

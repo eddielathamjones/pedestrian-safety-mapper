@@ -39,6 +39,12 @@ def index_edgy():
     return send_from_directory(app.static_folder, 'index-edgy.html')
 
 
+@app.route('/zine')
+def zine():
+    """Serve the print-ready 12-page zine"""
+    return send_from_directory(app.static_folder, 'zine.html')
+
+
 @app.route('/api/incidents')
 def get_incidents():
     """
