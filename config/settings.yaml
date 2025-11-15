@@ -1,0 +1,221 @@
+# FARS Multi-Sensory Database - Application Settings
+
+# General Settings
+general:
+  project_name: "FARS Multi-Sensory Pedestrian Crash Database"
+  version: "0.1.0"
+  debug: true
+  log_level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# Data Collection Settings
+data_collection:
+  # Geographic filtering
+  geographic_filter:
+    enabled: true
+    states: ["AZ"]  # Start with Arizona, add more states as needed
+    # counties: ["Pima"]  # Optional: filter to specific counties
+    # cities: ["Tucson"]  # Optional: filter to specific cities
+
+  # Batch processing
+  batch_size: 10  # Process this many crashes at a time
+  parallel_downloads: 5  # Number of concurrent downloads
+
+  # Rate limiting (be nice to APIs)
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    requests_per_hour: 1000
+
+# Street View Settings
+streetview:
+  # Preferred source: mapillary (free), google (requires API key)
+  source: mapillary
+
+  # Image collection parameters
+  search_radius_meters: 30
+  max_images_per_crash: 10
+  desired_directions: [0, 90, 180, 270]  # N, E, S, W
+
+  # Image quality
+  min_image_width: 1024
+  min_image_height: 768
+
+  # Storage
+  storage_path: "./data/streetview"
+  image_format: "jpg"
+  compress_images: true
+  compression_quality: 85
+
+# Sound Data Settings
+sound:
+  # Sources: aporee, field_recording, modeled
+  sources: ["aporee", "modeled"]
+
+  # Aporee settings
+  aporee:
+    search_radius_km: 1.0
+    max_recordings_per_crash: 3
+
+  # Traffic noise modeling
+  traffic_noise_model:
+    enabled: true
+    base_noise_db: 55  # Base ambient noise level
+    traffic_multiplier: 1.2
+
+  # Audio processing
+  sample_rate: 44100
+  duration_seconds: 120
+  storage_path: "./data/sound"
+
+# Air Quality Settings
+air_quality:
+  # Preferred source: purpleair, epa, openaq
+  source: purpleair
+
+  # Search parameters
+  search_radius_meters: 1000
+  max_sensors_per_crash: 3
+
+  # Data quality
+  require_recent_data: true
+  max_age_hours: 24
+
+  # AQI calculation
+  pollutants: ["pm2_5", "pm10"]
+  calculate_aqi: true
+
+# Weather Settings
+weather:
+  # Preferred source: visualcrossing, noaa, openweather
+  source: visualcrossing
+
+  # Time matching
+  match_crash_time: true
+  time_window_hours: 1  # Match weather within this many hours of crash
+
+  # Extreme weather thresholds
+  extreme_heat_f: 100
+  extreme_cold_f: 32
+  poor_visibility_miles: 2.0
+
+# Lighting Settings
+lighting:
+  # Data sources
+  sources:
+    streetlights: true  # Use city open data if available
+    viirs_nighttime: true  # Use NASA VIIRS satellite data
+
+  # Analysis parameters
+  search_radius_50m: 50
+  search_radius_100m: 100
+
+  # Time of day classification
+  dawn_dusk_angle: -6  # Civil twilight angle in degrees
+
+# Computer Vision Settings
+computer_vision:
+  # Models to use
+  models:
+    object_detection: "detr"  # Options: detr, yolo, faster-rcnn
+    semantic_segmentation: "deeplab"  # Options: deeplab, unet, segformer
+
+  # Detection targets
+  detect:
+    - crosswalks
+    - traffic_signals
+    - sidewalks
+    - street_signs
+    - vehicles
+    - pedestrians
+
+  # Green View Index
+  calculate_gvi: true
+  gvi_method: "segmentation"  # segmentation or color_threshold
+
+  # Performance
+  use_gpu: false  # Set to true if GPU available
+  batch_size: 4
+  confidence_threshold: 0.5
+
+# Analysis Settings
+analysis:
+  # Scoring algorithms
+  scoring:
+    # Environmental stress score (0-100)
+    environmental_stress:
+      noise_weight: 0.25
+      air_quality_weight: 0.30
+      temperature_weight: 0.20
+      lighting_weight: 0.25
+
+    # Pedestrian safety score (0-100)
+    pedestrian_safety:
+      infrastructure_weight: 0.40
+      visibility_weight: 0.20
+      environmental_weight: 0.20
+      traffic_weight: 0.20
+
+  # Infrastructure grading (A-F)
+  infrastructure_grading:
+    A: [90, 100]   # All infrastructure present and good
+    B: [80, 89]    # Minor deficiencies
+    C: [70, 79]    # Moderate deficiencies
+    D: [60, 69]    # Significant deficiencies
+    F: [0, 59]     # Major deficiencies
+
+  # Risk flags
+  risk_thresholds:
+    high_noise_db: 75
+    poor_aq_aqi: 150
+    insufficient_lighting_count: 2
+
+# Output Settings
+output:
+  # Report generation
+  reports:
+    enabled: true
+    output_path: "./outputs/reports"
+    formats: ["pdf", "html", "json"]
+
+  # Visualization
+  visualizations:
+    enabled: true
+    output_path: "./outputs/visualizations"
+    formats: ["png", "html", "geojson"]
+
+  # Data export
+  exports:
+    enabled: true
+    output_path: "./outputs/exports"
+    formats: ["csv", "geojson", "shapefile"]
+
+# Logging Settings
+logging:
+  # Log file configuration
+  log_file: "./logs/fars_multisensory.log"
+  max_file_size_mb: 10
+  backup_count: 5
+
+  # Console logging
+  console_output: true
+
+  # Log rotation
+  rotation: daily  # daily, weekly, or size-based
+
+# Performance Settings
+performance:
+  # Caching
+  cache:
+    enabled: true
+    cache_dir: "./.cache"
+    max_size_mb: 1000
+
+  # Multi-processing
+  multiprocessing:
+    enabled: true
+    max_workers: 4  # Number of parallel processes
+
+  # Memory management
+  memory:
+    max_memory_mb: 4000
+    clear_cache_when_full: true

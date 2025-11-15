@@ -1,0 +1,290 @@
+# FARS Multi-Sensory Database - .gitignore
+
+# ============================================================================
+# Sensitive Configuration
+# ============================================================================
+config/api_keys.yaml
+config/database.yaml
+*.env
+.env
+.env.local
+.env.*.local
+
+# Backup config files with credentials
+*.yaml.backup
+*.json.backup
+
+# ============================================================================
+# Python
+# ============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# Data Files (Large/Sensitive)
+# ============================================================================
+# Downloaded street view images
+data/streetview/**/*.jpg
+data/streetview/**/*.jpeg
+data/streetview/**/*.png
+
+# Audio recordings
+data/sound/**/*.wav
+data/sound/**/*.mp3
+data/sound/**/*.flac
+
+# Processed data (can be regenerated)
+data/processed/**/*.csv
+data/processed/**/*.parquet
+data/processed/**/*.pkl
+data/processed/**/*.pickle
+
+# But keep example data
+!data/*/example/
+!data/*/examples/
+!data/*/sample/
+
+# ============================================================================
+# Database
+# ============================================================================
+# SQLite databases (if used for local dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL dumps
+*.sql.gz
+*.dump
+backup/*.sql
+backups/*.sql
+
+# Database migration files (if using alembic/etc)
+# alembic/versions/*.py
+
+# ============================================================================
+# Logs
+# ============================================================================
+logs/
+*.log
+*.log.*
+
+# ============================================================================
+# Jupyter Notebook
+# ============================================================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Notebook outputs (large)
+notebooks/**/*_files/
+
+# ============================================================================
+# IDE & Editors
+# ============================================================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Spyder
+.spyderproject
+.spyproject
+
+# ============================================================================
+# OS Files
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================================
+# Output Files
+# ============================================================================
+# Generated reports
+outputs/reports/**/*.pdf
+outputs/reports/**/*.html
+outputs/reports/**/*.docx
+
+# Visualizations (large image files)
+outputs/visualizations/**/*.png
+outputs/visualizations/**/*.jpg
+outputs/visualizations/**/*.svg
+
+# Exports (except examples)
+outputs/exports/**/*.csv
+outputs/exports/**/*.geojson
+outputs/exports/**/*.shp
+outputs/exports/**/*.zip
+
+# But keep examples
+!outputs/**/example*
+!outputs/**/sample*
+
+# ============================================================================
+# Cache & Temporary Files
+# ============================================================================
+.cache/
+*.cache
+.temp/
+temp/
+tmp/
+*.tmp
+
+# Download cache
+.download_cache/
+
+# ============================================================================
+# Model Files (Large)
+# ============================================================================
+# Pre-trained model weights
+models/**/*.pt
+models/**/*.pth
+models/**/*.h5
+models/**/*.pb
+models/**/*.onnx
+
+# But keep model configs
+!models/**/*.json
+!models/**/*.yaml
+
+# ============================================================================
+# Documentation Build
+# ============================================================================
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# ============================================================================
+# Package Manager
+# ============================================================================
+# Node (if used for frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+# Large FARS data files
+data/raw/**/*.zip
+data/raw/**/*.CSV
+data/raw/**/*.SAS
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/streetview/.gitkeep
+!data/sound/.gitkeep
+!data/processed/.gitkeep
+
+# Credentials for external services
+credentials.json
+token.json
+service_account.json
+
+# Test outputs
+test_output/
+test_results/
+
+# ============================================================================
+# Keep These Files
+# ============================================================================
+# Force include certain files even if matched above
+!.gitkeep
+!.gitignore
+!README.md
+!LICENSE
+!requirements.txt
+!config/*.yaml.template
+!config/*.yaml.example

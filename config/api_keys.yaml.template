@@ -1,0 +1,49 @@
+# API Keys Configuration
+# Copy this file to api_keys.yaml and add your actual API keys
+# IMPORTANT: api_keys.yaml should be in .gitignore - never commit it!
+
+# Mapillary API
+# Get your key from: https://www.mapillary.com/dashboard/developers
+mapillary:
+  api_key: "YOUR_MAPILLARY_KEY_HERE"
+
+# PurpleAir API
+# Get your key from: https://www2.purpleair.com/pages/contact-us
+purpleair:
+  api_key: "YOUR_PURPLEAIR_KEY_HERE"
+
+# Visual Crossing Weather API
+# Get your key from: https://www.visualcrossing.com/
+visual_crossing:
+  api_key: "YOUR_VISUAL_CROSSING_KEY_HERE"
+
+# Google Street View API (Optional)
+# Only needed if using Google instead of Mapillary
+# Get from: https://console.cloud.google.com/
+google_streetview:
+  api_key: "YOUR_GOOGLE_KEY_HERE"
+
+# OpenWeatherMap API (Optional)
+# Alternative to Visual Crossing
+# Get from: https://openweathermap.org/api
+openweathermap:
+  api_key: "YOUR_OPENWEATHER_KEY_HERE"
+
+# NASA Earthdata (Optional)
+# For VIIRS nighttime lights data
+# Register at: https://urs.earthdata.nasa.gov/
+nasa_earthdata:
+  username: "YOUR_NASA_USERNAME"
+  password: "YOUR_NASA_PASSWORD"
+
+# OpenAQ API (Optional)
+# Alternative air quality source - no key required
+# https://openaq.org/
+openaq:
+  api_key: null  # No key required
+
+# NOAA API (Optional)
+# Alternative weather source
+# Get from: https://www.ncdc.noaa.gov/cdo-web/token
+noaa:
+  api_key: "YOUR_NOAA_KEY_HERE"
