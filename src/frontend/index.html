@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedestrian Safety Mapper</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <div id="controls">
+    <h1>Pedestrian Fatalities</h1>
+    <label for="year-select">Year</label>
+    <select id="year-select"></select>
+    <div id="count"></div>
+  </div>
+
+  <div id="popup" class="hidden">
+    <button id="popup-close">✕</button>
+    <div id="popup-content"></div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
