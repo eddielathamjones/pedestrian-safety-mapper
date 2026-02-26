@@ -5,67 +5,37 @@ const YEAR_MIN = 2001;
 const YEAR_MAX = 2022;
 const DEFAULT_YEAR = YEAR_MAX;
 
-// Lighting condition → point colour
-const LIGHT_COLORS = [
-  'match', ['get', 'lgt_cond'],
-  1, '#F59E0B',   // Daylight — amber
-  3, '#8B5CF6',   // Dark, lit — violet
-  2, '#1E3A5F',   // Dark, unlit — deep navy
-  4, '#FB923C',   // Dawn — warm orange
-  5, '#F97316',   // Dusk — deep orange
-  '#64748B',      // fallback
-];
-
-// Static circle radius (zoom-interpolated)
-const STATIC_RADIUS = ['interpolate', ['linear'], ['zoom'], 4, 3, 10, 7];
-
-const LIGHT_LABELS = {
-  1: 'Daylight', 2: 'Dark – unlit', 3: 'Dark – lit',
-  4: 'Dawn', 5: 'Dusk', 6: 'Dark – unknown lit',
-  7: 'Other', 8: 'Not reported', 9: 'Unknown',
-};
-
-const WEATHER_LABELS = {
-  1: 'Clear', 2: 'Rain', 3: 'Sleet/hail', 4: 'Snow',
-  5: 'Fog/smog', 6: 'Severe crosswinds', 7: 'Blowing sand',
-  8: 'Other', 10: 'Cloudy', 11: 'Blowing snow', 12: 'Freezing rain',
-  98: 'Not reported', 99: 'Unknown',
-};
-
-const ROUTE_LABELS = {
-  1: 'Interstate', 2: 'US Highway', 3: 'State Highway',
-  4: 'County Road', 5: 'Local Street', 6: 'Trafficway',
-  7: 'Parkway/Recreation', 8: 'Other', 9: 'Unknown',
-};
-
-const SEX_LABELS = { 1: 'Male', 2: 'Female', 8: 'Not reported', 9: 'Unknown' };
-
 // ── Animation constants ────────────────────────────────────────
-const ANIM_STEP          = 0.25;   // advance in 15-min increments
-const ANIM_SPEED_FAST    = 1.2;    // sim-hours/sec when sparse  (~20s full cycle)
-const ANIM_SPEED_SLOW    = 0.15;   // sim-hours/sec when dense  (~160s full cycle)
-const ANIM_BASE_RADIUS   = 4;      // base point radius in animation mode
-const ANIM_START_HOUR    = 4;      // clock and dead-dot accumulation begin here
+const ANIM_STEP        = 0.25;   // advance in 15-min increments
+const ANIM_SPEED_FAST  = 1.2;    // sim-hours/sec when sparse
+const ANIM_SPEED_SLOW  = 0.15;   // sim-hours/sec when dense
+const ANIM_BASE_RADIUS = 4;
+const ANIM_START_HOUR  = 4;      // clock and dead-dot accumulation begin here
+
+// ── Solar thresholds — set by updateSolarThresholds() after data loads ──
+// Defaults are equinox approximations; replaced with SunCalc values at runtime.
+let DAWN_START = 5.5;
+let DAWN_END   = 7.0;
+let DUSK_START = 19.0;
+let DUSK_END   = 20.5;
 
 // ── State ─────────────────────────────────────────────────────
 let currentYear = DEFAULT_YEAR;
-let currentView = 'points'; // 'points' | 'heatmap' | 'anim'
-const todFilters  = new Set(['day', 'dawn', 'dusk', 'night']);
-const roadFilters = new Set(['interstate', 'highway', 'local']);
-let summaryCache  = null;
-
-// ── Animation state ────────────────────────────────────────────
-let animMode     = 'day';  // 'day' | 'week'
-let animData     = null;   // Map<slot, Feature[]> — slot = hour (day) or weekSlot (week)
-let animFrame    = null;   // requestAnimationFrame id
-let animPlaying  = false;
-let animHour     = 0;      // 0–totalHours float, current sim time
-let animLastTs   = null;   // last rAF timestamp
+let animMode    = 'day';  // 'day' | 'week'
+let animData    = null;   // Map<slot, Feature[]>
+let animFrame   = null;
+let animPlaying = false;
+let animHour    = ANIM_START_HOUR;
+let animLastTs  = null;
 let animLastUpdateHour = -1;
 let animTrailHours  = 3;
-let animMaxDensity  = 1;   // max incidents in any single slot
+let animMaxDensity  = 1;
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// ── DOM refs ──────────────────────────────────────────────────
+const countEl      = document.getElementById('count');
+const loadingBar   = document.getElementById('loading-bar');
 
 // ── Map init ──────────────────────────────────────────────────
 const map = new maplibregl.Map({
@@ -88,44 +58,15 @@ for (let y = YEAR_MAX; y >= YEAR_MIN; y--) {
 }
 yearSelect.value = DEFAULT_YEAR;
 
-// ── Summary cache ─────────────────────────────────────────────
-async function fetchSummary() {
-  if (summaryCache) return summaryCache;
-  try {
-    const res = await fetch('/api/summary');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    summaryCache = await res.json();
-  } catch (_) {
-    summaryCache = {};
-  }
-  return summaryCache;
-}
-
-// ── Trend indicator ───────────────────────────────────────────
-const trendEl = document.getElementById('trend');
-
-async function updateTrend(year, count) {
-  if (!count || year <= YEAR_MIN) { trendEl.textContent = ''; return; }
-  const summary = await fetchSummary();
-  const prev = summary[String(year - 1)];
-  if (!prev) { trendEl.textContent = ''; return; }
-  const delta = ((count - prev) / prev * 100);
-  const sign = delta > 0 ? '+' : '';
-  const cls  = delta > 0 ? 'trend-up' : 'trend-down';
-  const arrow = delta > 0 ? '▲' : '▼';
-  trendEl.innerHTML =
-    `<span class="${cls}">${arrow} ${sign}${delta.toFixed(1)}% vs ${year - 1}</span>`;
-}
-
-// ── Map layers ────────────────────────────────────────────────
+// ── Map layers + boot ─────────────────────────────────────────
 map.on('load', () => {
+  // Incident source (active animated dots)
   map.addSource('incidents', {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: [] },
   });
 
-  // Night overlay — sits between base tiles and incident layers (experiment)
-  // Opacity is driven by updateMapFilter(); 0 = invisible, ~0.72 = full night.
+  // Night overlay — between base tiles and incident layers
   map.addSource('night-overlay-src', {
     type: 'geojson',
     data: {
@@ -140,44 +81,20 @@ map.on('load', () => {
   map.addLayer({ id: 'night-overlay', type: 'fill', source: 'night-overlay-src',
     paint: { 'fill-color': '#0a1628', 'fill-opacity': 0 } });
 
-  // Heatmap layer
-  map.addLayer({
-    id: 'incidents-heat',
-    type: 'heatmap',
-    source: 'incidents',
-    layout: { visibility: 'none' },
-    paint: {
-      'heatmap-weight': 1,
-      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 8, 1.8],
-      'heatmap-radius':   ['interpolate', ['linear'], ['zoom'], 4, 10, 8, 24],
-      'heatmap-opacity':  ['interpolate', ['linear'], ['zoom'], 8, 1, 10, 0],
-      'heatmap-color': [
-        'interpolate', ['linear'], ['heatmap-density'],
-        0,   'rgba(0,0,0,0)',
-        0.1, '#1e3a5f',
-        0.3, '#7c3aed',
-        0.5, '#ef4444',
-        0.7, '#f97316',
-        1.0, '#fef08a',
-      ],
-    },
-  });
-
-  // Points layer — colour encodes lighting condition
+  // Active animated dots
   map.addLayer({
     id: 'incidents-circle',
     type: 'circle',
     source: 'incidents',
     paint: {
-      'circle-radius':       STATIC_RADIUS,
-      'circle-color':        LIGHT_COLORS,
-      'circle-opacity':      0.85,
-      'circle-stroke-width': 0.5,
-      'circle-stroke-color': 'rgba(255,255,255,0.25)',
+      'circle-radius':       ['get', 'anim_radius'],
+      'circle-color':        '#ff1744',
+      'circle-opacity':      ['get', 'anim_opacity'],
+      'circle-stroke-width': 0,
     },
   });
 
-  // Dead dots — persistent residue after trail expires (animation mode only)
+  // Dead dots — persistent residue after trail expires
   map.addSource('incidents-dead', {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: [] },
@@ -186,45 +103,24 @@ map.on('load', () => {
     id: 'incidents-dead',
     type: 'circle',
     source: 'incidents-dead',
-    layout: { visibility: 'none' },
     paint: {
-      'circle-radius':   ['interpolate', ['linear'], ['zoom'], 4, 1.5, 10, 3],
-      'circle-color':    '#000000',
-      'circle-opacity':  1,
+      'circle-radius':       ['interpolate', ['linear'], ['zoom'], 4, 1.5, 10, 3],
+      'circle-color':        '#000000',
+      'circle-opacity':      1,
       'circle-stroke-width': 0,
     },
   });
 
-  updateLayerVisibility();
-  fetchSummary();
-  loadIncidents();
+  loadAnimData();
 });
 
-// ── Layer visibility (static modes only) ─────────────────────
-function updateLayerVisibility() {
-  if (currentView === 'anim') return; // animation manages its own layers
-  if (!map.getLayer('incidents-circle')) return;
-
-  if (currentView === 'heatmap') {
-    map.setLayoutProperty('incidents-heat', 'visibility', 'visible');
-    map.setPaintProperty('incidents-circle', 'circle-opacity', [
-      'interpolate', ['linear'], ['zoom'], 8, 0, 10, 0.85,
-    ]);
-  } else {
-    map.setLayoutProperty('incidents-heat', 'visibility', 'none');
-    map.setPaintProperty('incidents-circle', 'circle-opacity', 0.85);
-  }
-}
-
 // ── N6: Pop/fade function ─────────────────────────────────────
-// age: sim-hours since the incident's hour fired (0 = just fired)
-// returns {opacity, radius} or null if outside trail window
 function popFade(age, trailHours) {
   if (age < 0 || age >= trailHours) return null;
   const t         = age / trailHours;
-  const opacity   = Math.pow(1 - t, 1.5);                       // non-linear fade
-  const popFactor = Math.max(0, 1 - age * 3);                   // burst decays over 0.33 sim-hrs
-  const radius    = ANIM_BASE_RADIUS * (1 + 0.5 * popFactor);   // peak 1.5× base, settles to base
+  const opacity   = Math.pow(1 - t, 1.5);
+  const popFactor = Math.max(0, 1 - age * 3);
+  const radius    = ANIM_BASE_RADIUS * (1 + 0.5 * popFactor);
   return { opacity, radius };
 }
 
@@ -244,7 +140,6 @@ function buildActiveSet(hour = animHour) {
     const pf  = popFade(age, animTrailHours);
 
     if (pf) {
-      // In trail window — animated pop/fade
       for (const feat of bucket) {
         active.push({
           ...feat,
@@ -252,7 +147,6 @@ function buildActiveSet(hour = animHour) {
         });
       }
     } else if (s >= ANIM_START_HOUR && s <= hour - animTrailHours) {
-      // Past trail, fired this cycle (at or after start hour) — collect as dead black dot
       for (const feat of bucket) dead.push(feat);
     }
   }
@@ -260,36 +154,57 @@ function buildActiveSet(hour = animHour) {
   map.getSource('incidents').setData({ type: 'FeatureCollection', features: active });
   map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: dead });
 
-  // Map tile shading — reflects time of day
   updateMapFilter(hour % 24);
 
   // Clock display
-  const totalH = animTotalHours();
-  const absH   = Math.floor(hour) % totalH;
-  const h      = absH % 24;
-  const m      = Math.round((hour % 1) * 60);
-  const ampm   = h < 12 ? 'AM' : 'PM';
-  const dh     = h % 12 || 12;
-  const dm     = String(m).padStart(2, '0');
+  const totalH  = animTotalHours();
+  const absH    = Math.floor(hour) % totalH;
+  const h       = absH % 24;
+  const m       = Math.round((hour % 1) * 60);
+  const ampm    = h < 12 ? 'AM' : 'PM';
+  const dh      = h % 12 || 12;
+  const dm      = String(m).padStart(2, '0');
   const timeStr = `${dh}:${dm} ${ampm}`;
   countEl.textContent = animMode === 'week'
     ? `${DAYS[Math.floor(absH / 24)]} ${timeStr}`
     : timeStr;
   countEl.classList.add('anim-clock');
-  trendEl.textContent = '';
 }
 
-// ── Map time-of-day filter (experiment) ──────────────────────
-// Shifts the map canvas between night and daylight appearance as the
-// animation clock advances. Uses threshold-based smoothstep so the curve
-// stays near-zero (dark) for most of the night, rises sharply at
-// sunrise (~5:30–7am), plateaus through the day, and drops sharply
-// at sunset (~7–8:30pm). Cleared on animation exit.
-const DAWN_START = 5.5;   // first light
-const DAWN_END   = 7.0;   // full daylight
-const DUSK_START = 19.0;  // sunset begins
-const DUSK_END   = 20.5;  // full dark
+// ── A2: Centroid computer ─────────────────────────────────────
+function computeCentroid(features) {
+  let latSum = 0, lonSum = 0, n = 0;
+  for (const f of features) {
+    const [lon, lat] = f.geometry.coordinates;
+    if (lat != null && lon != null) { latSum += lat; lonSum += lon; n++; }
+  }
+  return n ? { lat: latSum / n, lon: lonSum / n } : { lat: 39.5, lon: -98.35 };
+}
 
+// ── A3: Solar threshold computer ──────────────────────────────
+// Replaces hardcoded DAWN/DUSK constants with SunCalc values at the
+// spring equinox for the data centroid. UTC offset approximated from
+// centroid longitude: utcOffset = Math.round(centLon / 15).
+function updateSolarThresholds(centLat, centLon) {
+  const utcOffset = Math.round(centLon / 15);
+  const equinox   = new Date(Date.UTC(2024, 2, 20, 12, 0, 0)); // March 20, 2024
+
+  function toLocalHour(date) {
+    return ((date.getUTCHours() + date.getUTCMinutes() / 60 + utcOffset) % 24 + 24) % 24;
+  }
+
+  const times = SunCalc.getTimes(equinox, centLat, centLon);
+  DAWN_START = toLocalHour(times.dawn);
+  DAWN_END   = toLocalHour(times.sunrise);
+  DUSK_START = toLocalHour(times.sunset);
+  DUSK_END   = toLocalHour(times.dusk);
+
+  const latStr = Math.abs(centLat).toFixed(1) + '°' + (centLat >= 0 ? 'N' : 'S');
+  const lonStr = Math.abs(centLon).toFixed(1) + '°' + (centLon >= 0 ? 'E' : 'W');
+  document.getElementById('solar-ref').textContent = `Equinox · ${latStr}, ${lonStr}`;
+}
+
+// ── Map time-of-day filter ────────────────────────────────────
 function smoothstep(edge0, edge1, x) {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
@@ -300,21 +215,14 @@ function updateMapFilter(hour24) {
   if      (hour24 < DAWN_START) daylight = 0;
   else if (hour24 < DAWN_END)   daylight = smoothstep(DAWN_START, DAWN_END,   hour24);
   else if (hour24 < DUSK_START) daylight = 1;
-  else if (hour24 < DUSK_END)   daylight = smoothstep(DUSK_END,   DUSK_START, hour24); // reversed for fade-out
+  else if (hour24 < DUSK_END)   daylight = smoothstep(DUSK_END,   DUSK_START, hour24);
   else                          daylight = 0;
 
-  // Drive the fill layer opacity — 0 at noon (transparent), ~0.72 at midnight (darkest)
   map.setPaintProperty('night-overlay', 'fill-opacity',
     parseFloat((0.72 * (1 - daylight)).toFixed(2)));
 }
 
-function clearMapFilter() {
-  map.setPaintProperty('night-overlay', 'fill-opacity', 0);
-}
-
 // ── Dynamic speed ────────────────────────────────────────────
-// Slows when the current hour has many incidents, speeds up when sparse.
-// Square-root easing softens the mapping so transitions feel gradual.
 function animTotalHours() { return animMode === 'week' ? 168 : 24; }
 
 function getDynamicSpeed() {
@@ -354,10 +262,14 @@ async function loadAnimData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const geojson = await res.json();
 
+    // A2 + A3: compute centroid, update solar thresholds
+    const { lat: centLat, lon: centLon } = computeCentroid(geojson.features);
+    updateSolarThresholds(centLat, centLon);
+
     animData = new Map();
     for (const feat of geojson.features) {
       const h = feat.properties.hour;
-      if (h == null || h > 23) continue; // skip unknown (99) and sentinel
+      if (h == null || h > 23) continue;
 
       let slot;
       if (animMode === 'week') {
@@ -373,12 +285,12 @@ async function loadAnimData() {
       animData.get(slot).push(feat);
     }
 
-    // Pre-compute peak density for dynamic speed
     animMaxDensity = 1;
     for (const bucket of animData.values()) {
       if (bucket.length > animMaxDensity) animMaxDensity = bucket.length;
     }
 
+    map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
     endLoad();
     animPlaying = true;
     updatePlayPauseBtn();
@@ -390,83 +302,7 @@ async function loadAnimData() {
   }
 }
 
-// ── N8: Mode controller ───────────────────────────────────────
-function enterAnimMode() {
-  currentView = 'anim';
-
-  // View toggle UI
-  document.getElementById('view-points').classList.remove('active');
-  document.getElementById('view-heat').classList.remove('active');
-  document.getElementById('view-anim').classList.add('active');
-
-  // Show animation controls
-  document.getElementById('anim-controls').classList.remove('hidden');
-
-  // Switch to data-driven paint — single high-contrast colour, no encoding
-  map.setLayoutProperty('incidents-heat', 'visibility', 'none');
-  map.setPaintProperty('incidents-circle', 'circle-color', '#ff1744');
-  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.4)');
-  map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
-  map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
-
-  map.setLayoutProperty('incidents-dead', 'visibility', 'visible');
-  closePopup();
-  loadAnimData();
-}
-
-function exitAnimMode() {
-  // Cancel clock
-  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  animPlaying = false;
-  animData    = null;
-
-  // Hide animation controls, reset mode, clear clock display
-  document.getElementById('anim-controls').classList.add('hidden');
-  animMode = 'day';
-  document.getElementById('anim-mode-day').classList.add('active');
-  document.getElementById('anim-mode-week').classList.remove('active');
-  countEl.classList.remove('anim-clock');
-
-  clearMapFilter();
-
-  // Hide and clear dead dots layer
-  map.setLayoutProperty('incidents-dead', 'visibility', 'none');
-  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
-
-  // Restore static paint properties
-  map.setPaintProperty('incidents-circle', 'circle-color',        LIGHT_COLORS);
-  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(255,255,255,0.25)');
-  map.setPaintProperty('incidents-circle', 'circle-opacity', 0.85);
-  map.setPaintProperty('incidents-circle', 'circle-radius',  STATIC_RADIUS);
-}
-
-// ── View toggle ───────────────────────────────────────────────
-document.getElementById('view-points').addEventListener('click', () => {
-  if (currentView === 'anim') exitAnimMode();
-  currentView = 'points';
-  document.getElementById('view-points').classList.add('active');
-  document.getElementById('view-heat').classList.remove('active');
-  document.getElementById('view-anim').classList.remove('active');
-  updateLayerVisibility();
-  loadIncidents();
-});
-
-document.getElementById('view-heat').addEventListener('click', () => {
-  if (currentView === 'anim') exitAnimMode();
-  currentView = 'heatmap';
-  document.getElementById('view-heat').classList.add('active');
-  document.getElementById('view-points').classList.remove('active');
-  document.getElementById('view-anim').classList.remove('active');
-  updateLayerVisibility();
-  loadIncidents();
-});
-
-document.getElementById('view-anim').addEventListener('click', () => {
-  if (currentView === 'anim') return;
-  enterAnimMode();
-});
-
-// ── Animation playback controls ───────────────────────────────
+// ── Playback controls ─────────────────────────────────────────
 const animPlayPauseBtn = document.getElementById('anim-playpause');
 const trailSlider      = document.getElementById('trail-slider');
 const trailValueEl     = document.getElementById('trail-value');
@@ -478,7 +314,7 @@ function updatePlayPauseBtn() {
 animPlayPauseBtn.addEventListener('click', () => {
   if (!animData) return;
   animPlaying = !animPlaying;
-  if (animPlaying) animLastTs = null; // prevent time-jump on resume
+  if (animPlaying) animLastTs = null;
   updatePlayPauseBtn();
 });
 
@@ -513,37 +349,18 @@ trailSlider.addEventListener('input', () => {
   if (animData) buildActiveSet();
 });
 
-// ── Fetch + update (static modes) ────────────────────────────
-const countEl      = document.getElementById('count');
-const loadingBar   = document.getElementById('loading-bar');
+yearSelect.addEventListener('change', () => {
+  currentYear = Number(yearSelect.value);
+  loadAnimData();
+});
 
-const BBOX_ZOOM_THRESHOLD = 6;
-const TOD_ALL  = ['day', 'dawn', 'dusk', 'night'];
-const ROAD_ALL = ['interstate', 'highway', 'local'];
-
-function getBbox() {
-  const b = map.getBounds();
-  return `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
-}
-
-function buildUrl() {
-  const zoom = map.getZoom();
-  const bbox = zoom >= BBOX_ZOOM_THRESHOLD ? getBbox() : null;
-
-  let url = `/api/incidents?year=${currentYear}`;
-  if (bbox) url += `&bbox=${encodeURIComponent(bbox)}`;
-  if (todFilters.size  < TOD_ALL.length)  for (const t of todFilters)  url += `&tod=${t}`;
-  if (roadFilters.size < ROAD_ALL.length) for (const r of roadFilters) url += `&road=${r}`;
-  return url;
-}
-
+// ── Loading bar ───────────────────────────────────────────────
 function startLoad() {
   loadingBar.classList.remove('hidden', 'done');
   loadingBar.classList.add('active');
   countEl.textContent = 'Loading…';
   countEl.classList.add('loading');
   countEl.classList.remove('anim-clock');
-  trendEl.textContent = '';
 }
 
 function endLoad() {
@@ -552,114 +369,3 @@ function endLoad() {
   countEl.classList.remove('loading');
   setTimeout(() => loadingBar.classList.add('hidden'), 500);
 }
-
-async function loadIncidents() {
-  if (currentView === 'anim') return;
-  startLoad();
-  try {
-    const res = await fetch(buildUrl());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const geojson = await res.json();
-    map.getSource('incidents').setData(geojson);
-
-    const n       = geojson.features.length;
-    const isBbox  = map.getZoom() >= BBOX_ZOOM_THRESHOLD;
-    const suffix  = isBbox ? ' in view' : '';
-    countEl.textContent = `${n.toLocaleString()}${suffix}`;
-    endLoad();
-
-    if (!isBbox) updateTrend(currentYear, n);
-  } catch (err) {
-    countEl.textContent = 'Error loading data';
-    endLoad();
-    console.error(err);
-  }
-}
-
-// Debounced moveend (static modes only)
-let moveTimer;
-map.on('moveend', () => {
-  if (currentView === 'anim') return;
-  clearTimeout(moveTimer);
-  moveTimer = setTimeout(loadIncidents, 300);
-});
-
-yearSelect.addEventListener('change', () => {
-  currentYear = Number(yearSelect.value);
-  closePopup();
-  if (currentView === 'anim') {
-    loadAnimData(); // reload animation data for new year
-  } else {
-    loadIncidents();
-  }
-});
-
-// ── Filter chips ──────────────────────────────────────────────
-document.getElementById('tod-filters').addEventListener('click', (e) => {
-  const btn = e.target.closest('.chip[data-tod]');
-  if (!btn) return;
-  const key = btn.dataset.tod;
-  if (todFilters.has(key)) { todFilters.delete(key); btn.classList.remove('active'); }
-  else                     { todFilters.add(key);    btn.classList.add('active'); }
-  closePopup();
-  loadIncidents();
-});
-
-document.getElementById('road-filters').addEventListener('click', (e) => {
-  const btn = e.target.closest('.chip[data-road]');
-  if (!btn) return;
-  const key = btn.dataset.road;
-  if (roadFilters.has(key)) { roadFilters.delete(key); btn.classList.remove('active'); }
-  else                      { roadFilters.add(key);    btn.classList.add('active'); }
-  closePopup();
-  loadIncidents();
-});
-
-// ── Popup ─────────────────────────────────────────────────────
-const popup        = document.getElementById('popup');
-const popupContent = document.getElementById('popup-content');
-const popupHeader  = document.getElementById('popup-header');
-document.getElementById('popup-close').addEventListener('click', closePopup);
-
-function closePopup() { popup.classList.add('hidden'); }
-
-function formatHour(hour, minute) {
-  if (hour == null || hour === 99) return 'Unknown';
-  const h    = hour % 12 || 12;
-  const ampm = hour < 12 ? 'AM' : 'PM';
-  const m    = minute != null && minute !== 99 ? String(minute).padStart(2, '0') : '00';
-  return `${h}:${m} ${ampm}`;
-}
-
-function row(label, value) {
-  return `<div class="row"><span class="label">${label}</span><span class="value">${value ?? '—'}</span></div>`;
-}
-
-map.on('click', 'incidents-circle', (e) => {
-  if (currentView === 'anim') return; // no popup during animation
-  const p = e.features[0].properties;
-
-  const date = (p.month && p.day && p.year)
-    ? `${p.month}/${p.day}/${p.year}`
-    : p.year ?? '—';
-
-  popupHeader.textContent = `Incident · ${date}`;
-  popupContent.innerHTML = [
-    row('Time',       formatHour(p.hour, p.minute)),
-    row('Lighting',   LIGHT_LABELS[p.lgt_cond] ?? '—'),
-    row('Weather',    WEATHER_LABELS[p.weather] ?? '—'),
-    row('Road type',  ROUTE_LABELS[p.route] ?? '—'),
-    row('Location',   p.rur_urb === 1 ? 'Rural' : p.rur_urb === 2 ? 'Urban' : '—'),
-    row('Victim age', p.age && p.age < 997 ? p.age : '—'),
-    row('Victim sex', SEX_LABELS[p.sex] ?? '—'),
-  ].join('');
-
-  popup.classList.remove('hidden');
-});
-
-map.on('mouseenter', 'incidents-circle', () => {
-  if (currentView !== 'anim') map.getCanvas().style.cursor = 'pointer';
-});
-map.on('mouseleave', 'incidents-circle', () => {
-  map.getCanvas().style.cursor = '';
-});

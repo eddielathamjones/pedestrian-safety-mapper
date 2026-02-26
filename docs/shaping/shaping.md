@@ -88,6 +88,7 @@ Build the full vision from the start: Python backend, PostgreSQL/PostGIS databas
 - R3 resolved: A6-B selected — Render (Flask) + Neon (PostGIS), $0.
 - R5 resolved: spike confirmed decimal lat/lon 2001–2022. Pre-2001 in Issue #1.
 - R6/R8 satisfied: A1 now joins PERSON → ACCIDENT and preserves time-of-day, lighting, weather, road type, age, sex. A4 notes Deck.gl as the future animation layer.
+- R6 active: solar-corrected lighting visualization shaped and in progress on `feature/lighting-focus` — see [`shaping-lighting.md`](shaping-lighting.md).
 - R7 resolved: MapLibre GL JS + OpenFreeMap + Render free + Neon free = $0.
 
 ---
