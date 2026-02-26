@@ -20,7 +20,8 @@ let DUSK_START = 19.0;
 let DUSK_END   = 20.5;
 
 // ── State ─────────────────────────────────────────────────────
-let currentYear = DEFAULT_YEAR;
+let yearFrom = DEFAULT_YEAR;
+let yearTo   = DEFAULT_YEAR;
 let animMode    = 'day';  // 'day' | 'week'
 let animData    = null;   // Map<slot, Feature[]>
 let animFrame   = null;
@@ -51,15 +52,17 @@ const map = new maplibregl.Map({
 
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-// ── Year selector ─────────────────────────────────────────────
-const yearSelect = document.getElementById('year-select');
+// ── Year range selectors ──────────────────────────────────────
+const yearFromEl = document.getElementById('year-from');
+const yearToEl   = document.getElementById('year-to');
+
 for (let y = YEAR_MAX; y >= YEAR_MIN; y--) {
-  const opt = document.createElement('option');
-  opt.value = y;
-  opt.textContent = y;
-  yearSelect.appendChild(opt);
+  const makeOpt = () => { const o = document.createElement('option'); o.value = y; o.textContent = y; return o; };
+  yearFromEl.appendChild(makeOpt());
+  yearToEl.appendChild(makeOpt());
 }
-yearSelect.value = DEFAULT_YEAR;
+yearFromEl.value = DEFAULT_YEAR;
+yearToEl.value   = DEFAULT_YEAR;
 
 // ── Map layers + boot ─────────────────────────────────────────
 map.on('load', () => {
@@ -269,12 +272,17 @@ async function loadAnimData() {
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
 
   try {
-    const res = await fetch(`/api/incidents?year=${currentYear}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const geojson = await res.json();
+    const years = [];
+    for (let y = Math.min(yearFrom, yearTo); y <= Math.max(yearFrom, yearTo); y++) years.push(y);
+
+    const responses = await Promise.all(
+      years.map(y => fetch(`/api/incidents?year=${y}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }))
+    );
+    const allFeatures = responses.flatMap(r => r.features);
+    const geojson = { features: allFeatures };
 
     // A2 + A3: compute centroid, update solar thresholds
-    const { lat: centLat, lon: centLon } = computeCentroid(geojson.features);
+    const { lat: centLat, lon: centLon } = computeCentroid(allFeatures);
     updateSolarThresholds(centLat, centLon);
 
     animData = new Map();
@@ -360,8 +368,17 @@ trailSlider.addEventListener('input', () => {
   if (animData) buildActiveSet();
 });
 
-yearSelect.addEventListener('change', () => {
-  currentYear = Number(yearSelect.value);
+yearFromEl.addEventListener('change', () => {
+  yearFrom = Number(yearFromEl.value);
+  // keep yearTo >= yearFrom
+  if (yearTo < yearFrom) { yearTo = yearFrom; yearToEl.value = yearTo; }
+  loadAnimData();
+});
+
+yearToEl.addEventListener('change', () => {
+  yearTo = Number(yearToEl.value);
+  // keep yearFrom <= yearTo
+  if (yearFrom > yearTo) { yearFrom = yearTo; yearFromEl.value = yearFrom; }
   loadAnimData();
 });
 

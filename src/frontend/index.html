@@ -19,8 +19,12 @@
     </div>
 
     <div class="control-group">
-      <label for="year-select">Year</label>
-      <select id="year-select"></select>
+      <label>Years</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="year-from"></select>
+        <span style="color:var(--text-muted);font-size:11px;flex-shrink:0;">–</span>
+        <select id="year-to"></select>
+      </div>
     </div>
 
     <div id="stats">
