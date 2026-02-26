@@ -290,7 +290,17 @@ function enterAnimMode() {
 
   // Switch to data-driven paint — single high-contrast colour, no encoding
   map.setLayoutProperty('incidents-heat', 'visibility', 'none');
-  map.setPaintProperty('incidents-circle', 'circle-color',   '#e63946');
+  map.setPaintProperty('incidents-circle', 'circle-color', [
+    'interpolate', ['linear'], ['get', 'hour'],
+    0,  '#6d28d9',  // midnight    — violet
+    5,  '#2563eb',  // pre-dawn    — deep blue
+    8,  '#38bdf8',  // morning     — sky blue
+    12, '#34d399',  // noon        — teal
+    15, '#fbbf24',  // afternoon   — amber
+    18, '#f97316',  // dusk        — orange
+    20, '#ef4444',  // evening     — red
+    23, '#991b1b',  // late night  — crimson
+  ]);
   map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.4)');
   map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
   map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
