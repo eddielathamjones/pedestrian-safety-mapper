@@ -13,16 +13,69 @@
   <div id="map"></div>
 
   <div id="controls">
-    <h1>Pedestrian Fatalities</h1>
-    <label for="year-select">Year</label>
-    <select id="year-select"></select>
-    <div id="count"></div>
+    <div id="controls-header">
+      <h1>Pedestrian Fatalities</h1>
+      <p class="subtitle">FARS · <span id="data-range">2001–2022</span></p>
+    </div>
+
+    <div class="control-group">
+      <label for="year-select">Year</label>
+      <select id="year-select"></select>
+    </div>
+
+    <div id="stats">
+      <div id="count"></div>
+      <div id="trend"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+      <label>Lighting</label>
+      <div class="filter-chips" id="tod-filters">
+        <button class="chip active" data-tod="day">Day</button>
+        <button class="chip active" data-tod="dawn">Dawn</button>
+        <button class="chip active" data-tod="dusk">Dusk</button>
+        <button class="chip active" data-tod="night">Night</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Road type</label>
+      <div class="filter-chips" id="road-filters">
+        <button class="chip active" data-road="interstate">Interstate</button>
+        <button class="chip active" data-road="highway">Highway</button>
+        <button class="chip active" data-road="local">Local</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+      <label>View</label>
+      <div class="view-toggle">
+        <button class="view-btn active" id="view-points">Points</button>
+        <button class="view-btn" id="view-heat">Heatmap</button>
+      </div>
+    </div>
+
+    <div id="legend">
+      <div class="legend-row"><span class="dot" style="background:#F59E0B"></span>Daylight</div>
+      <div class="legend-row"><span class="dot" style="background:#FB923C"></span>Dawn</div>
+      <div class="legend-row"><span class="dot" style="background:#F97316"></span>Dusk</div>
+      <div class="legend-row"><span class="dot" style="background:#3B82F6"></span>Night, lit</div>
+      <div class="legend-row"><span class="dot" style="background:#1E3A5F"></span>Night, unlit</div>
+      <div class="legend-row"><span class="dot" style="background:#64748B"></span>Unknown</div>
+    </div>
   </div>
 
   <div id="popup" class="hidden">
-    <button id="popup-close">✕</button>
+    <button id="popup-close" aria-label="Close">✕</button>
+    <div id="popup-header"></div>
     <div id="popup-content"></div>
   </div>
+
+  <div id="loading-bar" class="hidden"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="js/app.js"></script>
