@@ -5,7 +5,7 @@ const YEAR_MIN = 2001;
 const YEAR_MAX = 2022;
 const DEFAULT_YEAR = YEAR_MAX;
 
-// Lighting condition → point colour (matches legend)
+// Lighting condition → point colour
 const LIGHT_COLORS = [
   'match', ['get', 'lgt_cond'],
   1, '#F59E0B',   // Daylight — amber
@@ -13,8 +13,11 @@ const LIGHT_COLORS = [
   2, '#1E3A5F',   // Dark, unlit — deep navy
   4, '#FB923C',   // Dawn — warm orange
   5, '#F97316',   // Dusk — deep orange
-  '#64748B',      // fallback (unknown / not reported)
+  '#64748B',      // fallback
 ];
+
+// Static circle radius (zoom-interpolated)
+const STATIC_RADIUS = ['interpolate', ['linear'], ['zoom'], 4, 3, 10, 7];
 
 const LIGHT_LABELS = {
   1: 'Daylight', 2: 'Dark – unlit', 3: 'Dark – lit',
@@ -37,12 +40,27 @@ const ROUTE_LABELS = {
 
 const SEX_LABELS = { 1: 'Male', 2: 'Female', 8: 'Not reported', 9: 'Unknown' };
 
+// ── Animation constants ────────────────────────────────────────
+const ANIM_CYCLE_SECS    = 20;                         // full 24-hr cycle in real seconds
+const ANIM_HOURS_PER_SEC = 24 / ANIM_CYCLE_SECS;      // 1.2 sim-hours per real second
+const ANIM_UPDATE_INTERVAL = 0.08;                     // rebuild active set every 0.08 sim-hours
+const ANIM_BASE_RADIUS   = 4;                          // base point radius in animation mode
+
 // ── State ─────────────────────────────────────────────────────
 let currentYear = DEFAULT_YEAR;
-let currentView = 'points'; // 'points' | 'heatmap'
-const todFilters = new Set(['day', 'dawn', 'dusk', 'night']);
+let currentView = 'points'; // 'points' | 'heatmap' | 'anim'
+const todFilters  = new Set(['day', 'dawn', 'dusk', 'night']);
 const roadFilters = new Set(['interstate', 'highway', 'local']);
-let summaryCache = null;
+let summaryCache  = null;
+
+// ── Animation state ────────────────────────────────────────────
+let animData     = null;   // Map<hour 0–23, Feature[]>
+let animFrame    = null;   // requestAnimationFrame id
+let animPlaying  = false;
+let animHour     = 0;      // 0–24 float, current sim time
+let animLastTs   = null;   // last rAF timestamp
+let animLastUpdateHour = -1;
+let animTrailHours = 3;
 
 // ── Map init ──────────────────────────────────────────────────
 const map = new maplibregl.Map({
@@ -88,7 +106,7 @@ async function updateTrend(year, count) {
   if (!prev) { trendEl.textContent = ''; return; }
   const delta = ((count - prev) / prev * 100);
   const sign = delta > 0 ? '+' : '';
-  const cls = delta > 0 ? 'trend-up' : 'trend-down';
+  const cls  = delta > 0 ? 'trend-up' : 'trend-down';
   const arrow = delta > 0 ? '▲' : '▼';
   trendEl.innerHTML =
     `<span class="${cls}">${arrow} ${sign}${delta.toFixed(1)}% vs ${year - 1}</span>`;
@@ -101,7 +119,7 @@ map.on('load', () => {
     data: { type: 'FeatureCollection', features: [] },
   });
 
-  // Heatmap layer (visible in 'heatmap' view)
+  // Heatmap layer
   map.addLayer({
     id: 'incidents-heat',
     type: 'heatmap',
@@ -109,21 +127,9 @@ map.on('load', () => {
     layout: { visibility: 'none' },
     paint: {
       'heatmap-weight': 1,
-      'heatmap-intensity': [
-        'interpolate', ['linear'], ['zoom'],
-        4, 0.4,
-        8, 1.8,
-      ],
-      'heatmap-radius': [
-        'interpolate', ['linear'], ['zoom'],
-        4, 10,
-        8, 24,
-      ],
-      'heatmap-opacity': [
-        'interpolate', ['linear'], ['zoom'],
-        8, 1,
-        10, 0,
-      ],
+      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 8, 1.8],
+      'heatmap-radius':   ['interpolate', ['linear'], ['zoom'], 4, 10, 8, 24],
+      'heatmap-opacity':  ['interpolate', ['linear'], ['zoom'], 8, 1, 10, 0],
       'heatmap-color': [
         'interpolate', ['linear'], ['heatmap-density'],
         0,   'rgba(0,0,0,0)',
@@ -142,29 +148,28 @@ map.on('load', () => {
     type: 'circle',
     source: 'incidents',
     paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 3, 10, 7],
-      'circle-color': LIGHT_COLORS,
-      'circle-opacity': 0.85,
+      'circle-radius':       STATIC_RADIUS,
+      'circle-color':        LIGHT_COLORS,
+      'circle-opacity':      0.85,
       'circle-stroke-width': 0.5,
       'circle-stroke-color': 'rgba(255,255,255,0.25)',
     },
   });
 
   updateLayerVisibility();
-  fetchSummary(); // warm the cache in background
+  fetchSummary();
   loadIncidents();
 });
 
-// ── Layer visibility ──────────────────────────────────────────
+// ── Layer visibility (static modes only) ─────────────────────
 function updateLayerVisibility() {
+  if (currentView === 'anim') return; // animation manages its own layers
   if (!map.getLayer('incidents-circle')) return;
+
   if (currentView === 'heatmap') {
     map.setLayoutProperty('incidents-heat', 'visibility', 'visible');
-    // Points fade in at high zoom in heatmap mode (auto-transition to points)
     map.setPaintProperty('incidents-circle', 'circle-opacity', [
-      'interpolate', ['linear'], ['zoom'],
-      8, 0,
-      10, 0.85,
+      'interpolate', ['linear'], ['zoom'], 8, 0, 10, 0.85,
     ]);
   } else {
     map.setLayoutProperty('incidents-heat', 'visibility', 'none');
@@ -172,58 +177,196 @@ function updateLayerVisibility() {
   }
 }
 
+// ── N6: Pop/fade function ─────────────────────────────────────
+// age: sim-hours since the incident's hour fired (0 = just fired)
+// returns {opacity, radius} or null if outside trail window
+function popFade(age, trailHours) {
+  if (age < 0 || age >= trailHours) return null;
+  const t         = age / trailHours;
+  const opacity   = Math.pow(1 - t, 1.5);                       // non-linear fade
+  const popFactor = Math.max(0, 1 - age * 2);                   // burst decays over 0.5 sim-hrs
+  const radius    = ANIM_BASE_RADIUS * (1 + 2 * popFactor);     // peak 3× base, settles to base
+  return { opacity, radius };
+}
+
+// ── N7: Active set builder ────────────────────────────────────
+function buildActiveSet() {
+  if (!animData) return;
+
+  const features = [];
+  for (let h = 0; h < 24; h++) {
+    const bucket = animData.get(h);
+    if (!bucket) continue;
+
+    const age = (animHour - h + 24) % 24;
+    const pf  = popFade(age, animTrailHours);
+    if (!pf) continue;
+
+    for (const feat of bucket) {
+      features.push({
+        ...feat,
+        properties: {
+          ...feat.properties,
+          anim_opacity: pf.opacity,
+          anim_radius:  pf.radius,
+        },
+      });
+    }
+  }
+
+  map.getSource('incidents').setData({ type: 'FeatureCollection', features });
+
+  // Clock display
+  const h    = Math.floor(animHour) % 24;
+  const m    = Math.floor((animHour % 1) * 60);
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const dh   = h % 12 || 12;
+  const dm   = String(m).padStart(2, '0');
+  countEl.textContent = `${dh}:${dm} ${ampm}`;
+  countEl.classList.add('anim-clock');
+  trendEl.textContent = '';
+}
+
+// ── N5: Animation clock ───────────────────────────────────────
+function animTick(ts) {
+  if (animPlaying && animLastTs !== null) {
+    const dtHours = ((ts - animLastTs) / 1000) * ANIM_HOURS_PER_SEC;
+    animHour = (animHour + dtHours) % 24;
+
+    const delta   = animHour - animLastUpdateHour;
+    const wrapped = animLastUpdateHour > 0 && animHour < 1 && delta < -10;
+    if (Math.abs(delta) >= ANIM_UPDATE_INTERVAL || wrapped) {
+      buildActiveSet();
+      animLastUpdateHour = animHour;
+    }
+  }
+  animLastTs = ts;
+  animFrame  = requestAnimationFrame(animTick);
+}
+
+// ── N4: Animation data loader ─────────────────────────────────
+async function loadAnimData() {
+  startLoad();
+  animPlaying = false;
+  animHour    = 0;
+  animLastTs  = null;
+  animLastUpdateHour = -1;
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+
+  try {
+    const res = await fetch(`/api/incidents?year=${currentYear}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const geojson = await res.json();
+
+    animData = new Map();
+    for (const feat of geojson.features) {
+      const h = feat.properties.hour;
+      if (h == null || h > 23) continue; // skip unknown (99) and sentinel
+      if (!animData.has(h)) animData.set(h, []);
+      animData.get(h).push(feat);
+    }
+
+    endLoad();
+    animPlaying = true;
+    updatePlayPauseBtn();
+    animFrame = requestAnimationFrame(animTick);
+  } catch (err) {
+    countEl.textContent = 'Error loading data';
+    endLoad();
+    console.error(err);
+  }
+}
+
+// ── N8: Mode controller ───────────────────────────────────────
+function enterAnimMode() {
+  currentView = 'anim';
+
+  // View toggle UI
+  document.getElementById('view-points').classList.remove('active');
+  document.getElementById('view-heat').classList.remove('active');
+  document.getElementById('view-anim').classList.add('active');
+
+  // Show animation controls
+  document.getElementById('anim-controls').classList.remove('hidden');
+
+  // Switch to data-driven paint — animation injects anim_opacity / anim_radius
+  map.setLayoutProperty('incidents-heat', 'visibility', 'none');
+  map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
+  map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
+
+  closePopup();
+  loadAnimData();
+}
+
+function exitAnimMode() {
+  // Cancel clock
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  animPlaying = false;
+  animData    = null;
+
+  // Hide animation controls, clear clock display
+  document.getElementById('anim-controls').classList.add('hidden');
+  countEl.classList.remove('anim-clock');
+
+  // Restore static paint properties
+  map.setPaintProperty('incidents-circle', 'circle-opacity', 0.85);
+  map.setPaintProperty('incidents-circle', 'circle-radius',  STATIC_RADIUS);
+}
+
 // ── View toggle ───────────────────────────────────────────────
 document.getElementById('view-points').addEventListener('click', () => {
+  if (currentView === 'anim') exitAnimMode();
   currentView = 'points';
   document.getElementById('view-points').classList.add('active');
   document.getElementById('view-heat').classList.remove('active');
+  document.getElementById('view-anim').classList.remove('active');
   updateLayerVisibility();
+  loadIncidents();
 });
 
 document.getElementById('view-heat').addEventListener('click', () => {
+  if (currentView === 'anim') exitAnimMode();
   currentView = 'heatmap';
   document.getElementById('view-heat').classList.add('active');
   document.getElementById('view-points').classList.remove('active');
+  document.getElementById('view-anim').classList.remove('active');
   updateLayerVisibility();
-});
-
-// ── Filter chips ──────────────────────────────────────────────
-document.getElementById('tod-filters').addEventListener('click', (e) => {
-  const btn = e.target.closest('.chip[data-tod]');
-  if (!btn) return;
-  const key = btn.dataset.tod;
-  if (todFilters.has(key)) {
-    todFilters.delete(key);
-    btn.classList.remove('active');
-  } else {
-    todFilters.add(key);
-    btn.classList.add('active');
-  }
-  closePopup();
   loadIncidents();
 });
 
-document.getElementById('road-filters').addEventListener('click', (e) => {
-  const btn = e.target.closest('.chip[data-road]');
-  if (!btn) return;
-  const key = btn.dataset.road;
-  if (roadFilters.has(key)) {
-    roadFilters.delete(key);
-    btn.classList.remove('active');
-  } else {
-    roadFilters.add(key);
-    btn.classList.add('active');
-  }
-  closePopup();
-  loadIncidents();
+document.getElementById('view-anim').addEventListener('click', () => {
+  if (currentView === 'anim') return;
+  enterAnimMode();
 });
 
-// ── Fetch + update ────────────────────────────────────────────
-const countEl = document.getElementById('count');
-const loadingBar = document.getElementById('loading-bar');
+// ── Animation playback controls ───────────────────────────────
+const animPlayPauseBtn = document.getElementById('anim-playpause');
+const trailSlider      = document.getElementById('trail-slider');
+const trailValueEl     = document.getElementById('trail-value');
+
+function updatePlayPauseBtn() {
+  animPlayPauseBtn.textContent = animPlaying ? '⏸ Pause' : '▶ Play';
+}
+
+animPlayPauseBtn.addEventListener('click', () => {
+  if (!animData) return;
+  animPlaying = !animPlaying;
+  if (animPlaying) animLastTs = null; // prevent time-jump on resume
+  updatePlayPauseBtn();
+});
+
+trailSlider.addEventListener('input', () => {
+  animTrailHours = Number(trailSlider.value);
+  trailValueEl.textContent = `${animTrailHours}h`;
+  if (animData) buildActiveSet();
+});
+
+// ── Fetch + update (static modes) ────────────────────────────
+const countEl      = document.getElementById('count');
+const loadingBar   = document.getElementById('loading-bar');
 
 const BBOX_ZOOM_THRESHOLD = 6;
-const TOD_ALL = ['day', 'dawn', 'dusk', 'night'];
+const TOD_ALL  = ['day', 'dawn', 'dusk', 'night'];
 const ROAD_ALL = ['interstate', 'highway', 'local'];
 
 function getBbox() {
@@ -237,17 +380,8 @@ function buildUrl() {
 
   let url = `/api/incidents?year=${currentYear}`;
   if (bbox) url += `&bbox=${encodeURIComponent(bbox)}`;
-
-  // Only send TOD params if not all selected (avoids redundant DB clause)
-  if (todFilters.size < TOD_ALL.length) {
-    for (const t of todFilters) url += `&tod=${t}`;
-  }
-
-  // Only send road params if not all selected
-  if (roadFilters.size < ROAD_ALL.length) {
-    for (const r of roadFilters) url += `&road=${r}`;
-  }
-
+  if (todFilters.size  < TOD_ALL.length)  for (const t of todFilters)  url += `&tod=${t}`;
+  if (roadFilters.size < ROAD_ALL.length) for (const r of roadFilters) url += `&road=${r}`;
   return url;
 }
 
@@ -256,6 +390,7 @@ function startLoad() {
   loadingBar.classList.add('active');
   countEl.textContent = 'Loading…';
   countEl.classList.add('loading');
+  countEl.classList.remove('anim-clock');
   trendEl.textContent = '';
 }
 
@@ -267,6 +402,7 @@ function endLoad() {
 }
 
 async function loadIncidents() {
+  if (currentView === 'anim') return;
   startLoad();
   try {
     const res = await fetch(buildUrl());
@@ -274,9 +410,9 @@ async function loadIncidents() {
     const geojson = await res.json();
     map.getSource('incidents').setData(geojson);
 
-    const n = geojson.features.length;
-    const isBbox = map.getZoom() >= BBOX_ZOOM_THRESHOLD;
-    const suffix = isBbox ? ' in view' : '';
+    const n       = geojson.features.length;
+    const isBbox  = map.getZoom() >= BBOX_ZOOM_THRESHOLD;
+    const suffix  = isBbox ? ' in view' : '';
     countEl.textContent = `${n.toLocaleString()}${suffix}`;
     endLoad();
 
@@ -288,9 +424,10 @@ async function loadIncidents() {
   }
 }
 
-// Debounced moveend
+// Debounced moveend (static modes only)
 let moveTimer;
 map.on('moveend', () => {
+  if (currentView === 'anim') return;
   clearTimeout(moveTimer);
   moveTimer = setTimeout(loadIncidents, 300);
 });
@@ -298,22 +435,47 @@ map.on('moveend', () => {
 yearSelect.addEventListener('change', () => {
   currentYear = Number(yearSelect.value);
   closePopup();
+  if (currentView === 'anim') {
+    loadAnimData(); // reload animation data for new year
+  } else {
+    loadIncidents();
+  }
+});
+
+// ── Filter chips ──────────────────────────────────────────────
+document.getElementById('tod-filters').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip[data-tod]');
+  if (!btn) return;
+  const key = btn.dataset.tod;
+  if (todFilters.has(key)) { todFilters.delete(key); btn.classList.remove('active'); }
+  else                     { todFilters.add(key);    btn.classList.add('active'); }
+  closePopup();
+  loadIncidents();
+});
+
+document.getElementById('road-filters').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip[data-road]');
+  if (!btn) return;
+  const key = btn.dataset.road;
+  if (roadFilters.has(key)) { roadFilters.delete(key); btn.classList.remove('active'); }
+  else                      { roadFilters.add(key);    btn.classList.add('active'); }
+  closePopup();
   loadIncidents();
 });
 
 // ── Popup ─────────────────────────────────────────────────────
-const popup = document.getElementById('popup');
+const popup        = document.getElementById('popup');
 const popupContent = document.getElementById('popup-content');
-const popupHeader = document.getElementById('popup-header');
+const popupHeader  = document.getElementById('popup-header');
 document.getElementById('popup-close').addEventListener('click', closePopup);
 
 function closePopup() { popup.classList.add('hidden'); }
 
 function formatHour(hour, minute) {
   if (hour == null || hour === 99) return 'Unknown';
-  const h = hour % 12 || 12;
+  const h    = hour % 12 || 12;
   const ampm = hour < 12 ? 'AM' : 'PM';
-  const m = minute != null && minute !== 99 ? String(minute).padStart(2, '0') : '00';
+  const m    = minute != null && minute !== 99 ? String(minute).padStart(2, '0') : '00';
   return `${h}:${m} ${ampm}`;
 }
 
@@ -322,6 +484,7 @@ function row(label, value) {
 }
 
 map.on('click', 'incidents-circle', (e) => {
+  if (currentView === 'anim') return; // no popup during animation
   const p = e.features[0].properties;
 
   const date = (p.month && p.day && p.year)
@@ -329,13 +492,12 @@ map.on('click', 'incidents-circle', (e) => {
     : p.year ?? '—';
 
   popupHeader.textContent = `Incident · ${date}`;
-
   popupContent.innerHTML = [
-    row('Time', formatHour(p.hour, p.minute)),
-    row('Lighting', LIGHT_LABELS[p.lgt_cond] ?? '—'),
-    row('Weather', WEATHER_LABELS[p.weather] ?? '—'),
-    row('Road type', ROUTE_LABELS[p.route] ?? '—'),
-    row('Location', p.rur_urb === 1 ? 'Rural' : p.rur_urb === 2 ? 'Urban' : '—'),
+    row('Time',       formatHour(p.hour, p.minute)),
+    row('Lighting',   LIGHT_LABELS[p.lgt_cond] ?? '—'),
+    row('Weather',    WEATHER_LABELS[p.weather] ?? '—'),
+    row('Road type',  ROUTE_LABELS[p.route] ?? '—'),
+    row('Location',   p.rur_urb === 1 ? 'Rural' : p.rur_urb === 2 ? 'Urban' : '—'),
     row('Victim age', p.age && p.age < 997 ? p.age : '—'),
     row('Victim sex', SEX_LABELS[p.sex] ?? '—'),
   ].join('');
@@ -344,7 +506,7 @@ map.on('click', 'incidents-circle', (e) => {
 });
 
 map.on('mouseenter', 'incidents-circle', () => {
-  map.getCanvas().style.cursor = 'pointer';
+  if (currentView !== 'anim') map.getCanvas().style.cursor = 'pointer';
 });
 map.on('mouseleave', 'incidents-circle', () => {
   map.getCanvas().style.cursor = '';

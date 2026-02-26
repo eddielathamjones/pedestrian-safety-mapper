@@ -203,6 +203,69 @@ body {
   color: #fff;
 }
 
+/* ── Animate button ────────────────────────────────────────── */
+#view-anim {
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+#view-anim:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  border-style: solid;
+}
+#view-anim.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  border-style: solid;
+  color: #fff;
+}
+
+/* ── Animation controls ────────────────────────────────────── */
+#anim-controls { display: flex; flex-direction: column; gap: 12px; }
+#anim-controls.hidden { display: none; }
+
+#anim-playpause {
+  width: 100%;
+  padding: 8px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  letter-spacing: 0.01em;
+}
+#anim-playpause:hover { border-color: var(--accent); }
+
+#trail-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+/* Clock display in count el during animation */
+#count.anim-clock {
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Legend ────────────────────────────────────────────────── */
 #legend {
   display: flex;
