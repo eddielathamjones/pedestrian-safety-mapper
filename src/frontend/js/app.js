@@ -41,9 +41,9 @@ const ROUTE_LABELS = {
 const SEX_LABELS = { 1: 'Male', 2: 'Female', 8: 'Not reported', 9: 'Unknown' };
 
 // ── Animation constants ────────────────────────────────────────
-const ANIM_CYCLE_SECS    = 20;                         // full 24-hr cycle in real seconds
-const ANIM_HOURS_PER_SEC = 24 / ANIM_CYCLE_SECS;      // 1.2 sim-hours per real second
-const ANIM_UPDATE_INTERVAL = 0.08;                     // rebuild active set every 0.08 sim-hours
+const ANIM_CYCLE_SECS    = 60;                         // full 24-hr cycle in real seconds
+const ANIM_HOURS_PER_SEC = 24 / ANIM_CYCLE_SECS;      // 0.4 sim-hours per real second
+const ANIM_STEP          = 0.25;                       // advance in 15-min increments
 const ANIM_BASE_RADIUS   = 4;                          // base point radius in animation mode
 
 // ── State ─────────────────────────────────────────────────────
@@ -184,13 +184,13 @@ function popFade(age, trailHours) {
   if (age < 0 || age >= trailHours) return null;
   const t         = age / trailHours;
   const opacity   = Math.pow(1 - t, 1.5);                       // non-linear fade
-  const popFactor = Math.max(0, 1 - age * 2);                   // burst decays over 0.5 sim-hrs
-  const radius    = ANIM_BASE_RADIUS * (1 + 2 * popFactor);     // peak 3× base, settles to base
+  const popFactor = Math.max(0, 1 - age * 3);                   // burst decays over 0.33 sim-hrs
+  const radius    = ANIM_BASE_RADIUS * (1 + 0.5 * popFactor);   // peak 1.5× base, settles to base
   return { opacity, radius };
 }
 
 // ── N7: Active set builder ────────────────────────────────────
-function buildActiveSet() {
+function buildActiveSet(hour = animHour) {
   if (!animData) return;
 
   const features = [];
@@ -198,7 +198,7 @@ function buildActiveSet() {
     const bucket = animData.get(h);
     if (!bucket) continue;
 
-    const age = (animHour - h + 24) % 24;
+    const age = (hour - h + 24) % 24;
     const pf  = popFade(age, animTrailHours);
     if (!pf) continue;
 
@@ -217,8 +217,8 @@ function buildActiveSet() {
   map.getSource('incidents').setData({ type: 'FeatureCollection', features });
 
   // Clock display
-  const h    = Math.floor(animHour) % 24;
-  const m    = Math.floor((animHour % 1) * 60);
+  const h    = Math.floor(hour) % 24;
+  const m    = Math.round((hour % 1) * 60);
   const ampm = h < 12 ? 'AM' : 'PM';
   const dh   = h % 12 || 12;
   const dm   = String(m).padStart(2, '0');
@@ -233,11 +233,10 @@ function animTick(ts) {
     const dtHours = ((ts - animLastTs) / 1000) * ANIM_HOURS_PER_SEC;
     animHour = (animHour + dtHours) % 24;
 
-    const delta   = animHour - animLastUpdateHour;
-    const wrapped = animLastUpdateHour > 0 && animHour < 1 && delta < -10;
-    if (Math.abs(delta) >= ANIM_UPDATE_INTERVAL || wrapped) {
-      buildActiveSet();
-      animLastUpdateHour = animHour;
+    const snapped = Math.floor(animHour / ANIM_STEP) * ANIM_STEP;
+    if (snapped !== animLastUpdateHour) {
+      buildActiveSet(snapped);
+      animLastUpdateHour = snapped;
     }
   }
   animLastTs = ts;
