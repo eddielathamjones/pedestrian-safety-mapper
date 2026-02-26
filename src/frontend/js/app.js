@@ -41,9 +41,9 @@ const ROUTE_LABELS = {
 const SEX_LABELS = { 1: 'Male', 2: 'Female', 8: 'Not reported', 9: 'Unknown' };
 
 // ── Animation constants ────────────────────────────────────────
-const ANIM_CYCLE_SECS    = 60;                         // full 24-hr cycle in real seconds
-const ANIM_HOURS_PER_SEC = 24 / ANIM_CYCLE_SECS;      // 0.4 sim-hours per real second
-const ANIM_STEP          = 0.25;                       // advance in 15-min increments
+const ANIM_STEP          = 0.25;   // advance in 15-min increments
+const ANIM_SPEED_FAST    = 1.2;    // sim-hours/sec when sparse  (~20s full cycle)
+const ANIM_SPEED_SLOW    = 0.15;   // sim-hours/sec when dense  (~160s full cycle)
 const ANIM_BASE_RADIUS   = 4;                          // base point radius in animation mode
 
 // ── State ─────────────────────────────────────────────────────
@@ -60,7 +60,8 @@ let animPlaying  = false;
 let animHour     = 0;      // 0–24 float, current sim time
 let animLastTs   = null;   // last rAF timestamp
 let animLastUpdateHour = -1;
-let animTrailHours = 3;
+let animTrailHours  = 3;
+let animMaxDensity  = 1;   // max incidents in any single hour bucket
 
 // ── Map init ──────────────────────────────────────────────────
 const map = new maplibregl.Map({
@@ -227,10 +228,20 @@ function buildActiveSet(hour = animHour) {
   trendEl.textContent = '';
 }
 
+// ── Dynamic speed ────────────────────────────────────────────
+// Slows when the current hour has many incidents, speeds up when sparse.
+// Square-root easing softens the mapping so transitions feel gradual.
+function getDynamicSpeed() {
+  const hour    = Math.floor(animHour) % 24;
+  const count   = animData?.get(hour)?.length ?? 0;
+  const density = Math.sqrt(count / animMaxDensity); // 0–1, eased
+  return ANIM_SPEED_FAST + (ANIM_SPEED_SLOW - ANIM_SPEED_FAST) * density;
+}
+
 // ── N5: Animation clock ───────────────────────────────────────
 function animTick(ts) {
   if (animPlaying && animLastTs !== null) {
-    const dtHours = ((ts - animLastTs) / 1000) * ANIM_HOURS_PER_SEC;
+    const dtHours = ((ts - animLastTs) / 1000) * getDynamicSpeed();
     animHour = (animHour + dtHours) % 24;
 
     const snapped = Math.floor(animHour / ANIM_STEP) * ANIM_STEP;
@@ -263,6 +274,12 @@ async function loadAnimData() {
       if (h == null || h > 23) continue; // skip unknown (99) and sentinel
       if (!animData.has(h)) animData.set(h, []);
       animData.get(h).push(feat);
+    }
+
+    // Pre-compute peak density for dynamic speed
+    animMaxDensity = 1;
+    for (const bucket of animData.values()) {
+      if (bucket.length > animMaxDensity) animMaxDensity = bucket.length;
     }
 
     endLoad();
