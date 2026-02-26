@@ -10,7 +10,7 @@ shaping: true
 |----|-------------|--------|
 | R0 | Show pedestrian fatality incidents on an interactive map using real FARS data | Core goal |
 | R1 | 🟡 V1 covers a focused recent slice (2010–2022); schema supports full 2001–2022 expansion without migration | Must-have |
-| R2 | 🟡 V1 has a basic year filter; animated time-series is future scope | Must-have |
+| R2 | V1 has a basic year filter; time-of-day animation shaped and sliced — see [`shaping-animation.md`](shaping-animation.md), V7/V8 | Must-have |
 | R3 | App is deployable and publicly accessible (portfolio demo-able) | Must-have |
 | R4 | Data processing pipeline extracts pedestrian records from raw FARS zips | Must-have |
 | R5 | Incidents are plotted with geographic coordinates (lat/lon) | Must-have |
@@ -74,7 +74,7 @@ Build the full vision from the start: Python backend, PostgreSQL/PostGIS databas
 |-----|-------------|--------|---|
 | R0 | Show pedestrian fatality incidents on an interactive map using real FARS data | Core goal | ✅ |
 | R1 | V1 covers 2010–2022; schema supports full 2001–2022 expansion without migration | Must-have | ✅ |
-| R2 | V1 has a basic year filter; animated time-series is future scope | Must-have | ✅ |
+| R2 | V1 has a basic year filter; time-of-day animation shaped and sliced (V7/V8) | Must-have | ✅ |
 | R3 | App is deployable and publicly accessible (portfolio demo-able) | Must-have | ✅ |
 | R4 | Data processing pipeline extracts pedestrian records from raw FARS zips | Must-have | ✅ |
 | R5 | Incidents are plotted with geographic coordinates (lat/lon) | Must-have | ✅ |
@@ -83,7 +83,8 @@ Build the full vision from the start: Python backend, PostgreSQL/PostGIS databas
 | R8 | ETL preserves full ACCIDENT + PERSON record for future features | Must-have | ✅ |
 
 **Notes:**
-- R1/R2 scoped: V1 ingests 2010–2022 (~500k records, within Neon 500 MB target). Full 2001–2022 is a later expansion. Animation is future scope.
+- R1 resolved: data now covers 2001–2022 (123k+ incidents), shipped in V5.
+- R2 resolved: time-of-day animation fully shaped (Shape B selected) and sliced into V7/V8 — see `shaping-animation.md`.
 - R3 resolved: A6-B selected — Render (Flask) + Neon (PostGIS), $0.
 - R5 resolved: spike confirmed decimal lat/lon 2001–2022. Pre-2001 in Issue #1.
 - R6/R8 satisfied: A1 now joins PERSON → ACCIDENT and preserves time-of-day, lighting, weather, road type, age, sex. A4 notes Deck.gl as the future animation layer.
