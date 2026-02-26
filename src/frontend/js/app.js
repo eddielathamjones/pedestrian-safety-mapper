@@ -295,7 +295,6 @@ function enterAnimMode() {
     0,  '#6d28d9',  // midnight    — violet
     5,  '#2563eb',  // pre-dawn    — deep blue
     8,  '#38bdf8',  // morning     — sky blue
-    12, '#34d399',  // noon        — teal
     15, '#fbbf24',  // afternoon   — amber
     18, '#f97316',  // dusk        — orange
     20, '#ef4444',  // evening     — red
