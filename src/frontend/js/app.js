@@ -44,7 +44,8 @@ const SEX_LABELS = { 1: 'Male', 2: 'Female', 8: 'Not reported', 9: 'Unknown' };
 const ANIM_STEP          = 0.25;   // advance in 15-min increments
 const ANIM_SPEED_FAST    = 1.2;    // sim-hours/sec when sparse  (~20s full cycle)
 const ANIM_SPEED_SLOW    = 0.15;   // sim-hours/sec when dense  (~160s full cycle)
-const ANIM_BASE_RADIUS   = 4;                          // base point radius in animation mode
+const ANIM_BASE_RADIUS   = 4;      // base point radius in animation mode
+const ANIM_START_HOUR    = 4;      // clock and dead-dot accumulation begin here
 
 // ── State ─────────────────────────────────────────────────────
 let currentYear = DEFAULT_YEAR;
@@ -123,6 +124,22 @@ map.on('load', () => {
     data: { type: 'FeatureCollection', features: [] },
   });
 
+  // Night overlay — sits between base tiles and incident layers (experiment)
+  // Opacity is driven by updateMapFilter(); 0 = invisible, ~0.72 = full night.
+  map.addSource('night-overlay-src', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[-180,-85.051129],[180,-85.051129],[180,85.051129],[-180,85.051129],[-180,-85.051129]]],
+      },
+      properties: {},
+    },
+  });
+  map.addLayer({ id: 'night-overlay', type: 'fill', source: 'night-overlay-src',
+    paint: { 'fill-color': '#0a1628', 'fill-opacity': 0 } });
+
   // Heatmap layer
   map.addLayer({
     id: 'incidents-heat',
@@ -157,6 +174,24 @@ map.on('load', () => {
       'circle-opacity':      0.85,
       'circle-stroke-width': 0.5,
       'circle-stroke-color': 'rgba(255,255,255,0.25)',
+    },
+  });
+
+  // Dead dots — persistent residue after trail expires (animation mode only)
+  map.addSource('incidents-dead', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  });
+  map.addLayer({
+    id: 'incidents-dead',
+    type: 'circle',
+    source: 'incidents-dead',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius':   ['interpolate', ['linear'], ['zoom'], 4, 1.5, 10, 3],
+      'circle-color':    '#000000',
+      'circle-opacity':  1,
+      'circle-stroke-width': 0,
     },
   });
 
@@ -197,29 +232,36 @@ function popFade(age, trailHours) {
 function buildActiveSet(hour = animHour) {
   if (!animData) return;
 
-  const total    = animTotalHours();
-  const features = [];
+  const total  = animTotalHours();
+  const active = [];
+  const dead   = [];
+
   for (let s = 0; s < total; s++) {
     const bucket = animData.get(s);
     if (!bucket) continue;
 
     const age = (hour - s + total) % total;
     const pf  = popFade(age, animTrailHours);
-    if (!pf) continue;
 
-    for (const feat of bucket) {
-      features.push({
-        ...feat,
-        properties: {
-          ...feat.properties,
-          anim_opacity: pf.opacity,
-          anim_radius:  pf.radius,
-        },
-      });
+    if (pf) {
+      // In trail window — animated pop/fade
+      for (const feat of bucket) {
+        active.push({
+          ...feat,
+          properties: { ...feat.properties, anim_opacity: pf.opacity, anim_radius: pf.radius },
+        });
+      }
+    } else if (s >= ANIM_START_HOUR && s <= hour - animTrailHours) {
+      // Past trail, fired this cycle (at or after start hour) — collect as dead black dot
+      for (const feat of bucket) dead.push(feat);
     }
   }
 
-  map.getSource('incidents').setData({ type: 'FeatureCollection', features });
+  map.getSource('incidents').setData({ type: 'FeatureCollection', features: active });
+  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: dead });
+
+  // Map tile shading — reflects time of day
+  updateMapFilter(hour % 24);
 
   // Clock display
   const totalH = animTotalHours();
@@ -235,6 +277,39 @@ function buildActiveSet(hour = animHour) {
     : timeStr;
   countEl.classList.add('anim-clock');
   trendEl.textContent = '';
+}
+
+// ── Map time-of-day filter (experiment) ──────────────────────
+// Shifts the map canvas between night and daylight appearance as the
+// animation clock advances. Uses threshold-based smoothstep so the curve
+// stays near-zero (dark) for most of the night, rises sharply at
+// sunrise (~5:30–7am), plateaus through the day, and drops sharply
+// at sunset (~7–8:30pm). Cleared on animation exit.
+const DAWN_START = 5.5;   // first light
+const DAWN_END   = 7.0;   // full daylight
+const DUSK_START = 19.0;  // sunset begins
+const DUSK_END   = 20.5;  // full dark
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function updateMapFilter(hour24) {
+  let daylight;
+  if      (hour24 < DAWN_START) daylight = 0;
+  else if (hour24 < DAWN_END)   daylight = smoothstep(DAWN_START, DAWN_END,   hour24);
+  else if (hour24 < DUSK_START) daylight = 1;
+  else if (hour24 < DUSK_END)   daylight = smoothstep(DUSK_END,   DUSK_START, hour24); // reversed for fade-out
+  else                          daylight = 0;
+
+  // Drive the fill layer opacity — 0 at noon (transparent), ~0.72 at midnight (darkest)
+  map.setPaintProperty('night-overlay', 'fill-opacity',
+    parseFloat((0.72 * (1 - daylight)).toFixed(2)));
+}
+
+function clearMapFilter() {
+  map.setPaintProperty('night-overlay', 'fill-opacity', 0);
 }
 
 // ── Dynamic speed ────────────────────────────────────────────
@@ -269,7 +344,7 @@ function animTick(ts) {
 async function loadAnimData() {
   startLoad();
   animPlaying = false;
-  animHour    = 0;
+  animHour    = ANIM_START_HOUR;
   animLastTs  = null;
   animLastUpdateHour = -1;
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
@@ -329,20 +404,12 @@ function enterAnimMode() {
 
   // Switch to data-driven paint — single high-contrast colour, no encoding
   map.setLayoutProperty('incidents-heat', 'visibility', 'none');
-  map.setPaintProperty('incidents-circle', 'circle-color', [
-    'interpolate', ['linear'], ['get', 'hour'],
-    0,  '#6d28d9',  // midnight    — violet
-    5,  '#2563eb',  // pre-dawn    — deep blue
-    8,  '#38bdf8',  // morning     — sky blue
-    15, '#fbbf24',  // afternoon   — amber
-    18, '#f97316',  // dusk        — orange
-    20, '#ef4444',  // evening     — red
-    23, '#991b1b',  // late night  — crimson
-  ]);
+  map.setPaintProperty('incidents-circle', 'circle-color', '#ff1744');
   map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.4)');
   map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
   map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
 
+  map.setLayoutProperty('incidents-dead', 'visibility', 'visible');
   closePopup();
   loadAnimData();
 }
@@ -359,6 +426,12 @@ function exitAnimMode() {
   document.getElementById('anim-mode-day').classList.add('active');
   document.getElementById('anim-mode-week').classList.remove('active');
   countEl.classList.remove('anim-clock');
+
+  clearMapFilter();
+
+  // Hide and clear dead dots layer
+  map.setLayoutProperty('incidents-dead', 'visibility', 'none');
+  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
 
   // Restore static paint properties
   map.setPaintProperty('incidents-circle', 'circle-color',        LIGHT_COLORS);
