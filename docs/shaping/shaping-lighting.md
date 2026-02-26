@@ -32,12 +32,7 @@ Everything else — the night overlay layer, the smoothstep curve, the animation
 | A3 | **Solar threshold computer** — `SunCalc.getTimes(equinox, centLat, centLon)` → extract `dawn`, `sunrise`, `sunset`, `dusk` as fractional local hours → replace `DAWN_START / DAWN_END / DUSK_START / DUSK_END`; UTC→local via `Math.round(centLon / 15)` | |
 | A4 | **Simplified UI** — remove Points / Heatmap view toggle; app opens directly in animation mode on load | |
 | A5 | **Reference label** — small text in controls showing "Equinox · [lat, lon]" so the reference is visible | |
-
-**A3 flag:** SunCalc returns UTC `Date` objects. FARS hours are local clock time at the incident location.
-Converting to fractional local hours requires knowing the UTC offset for the centroid.
-The US data centroid lands roughly in the central plains (lon ≈ −95 to −98), UTC−6 (CST).
-Options: hardcode −6, compute from centroid longitude (`Math.round(centLon / 15)`), or use a timezone library.
-Needs resolution before this part can be marked known.
+| A6 | **Per-slot solar curve** — for each hour slot (0–23), compute mean lat/lon of incidents at that slot; one `SunCalc.getPosition(equinox, slotLat, slotLon)` call per slot → `animSolarCurve[24]` of altitudes in degrees; `updateMapFilter()` interpolates this curve instead of the fixed smoothstep; sun elevation display uses the slot's own altitude | |
 
 ---
 
@@ -48,12 +43,12 @@ Needs resolution before this part can be marked known.
 | R0 | Show fatalities relative to actual astronomical darkness | Core goal | ✅ |
 | R1 | Background transitions driven by SunCalc, not hardcoded approximations | Must-have | ✅ |
 | R2 | Spring equinox as reference date baseline | Must-have | ✅ |
-| R3 | Reference location = centroid of year's incident data | Must-have | ✅ |
+| R3 | 🟡 Reference location = per-slot incident centroid (A6 upgrades A3 from one global centroid to one per hour slot) | Must-have | ✅ |
 | R4 | Interface stripped to animation only | Must-have | ✅ |
 | R5 | No new backend infrastructure | Must-have | ✅ |
 | R6 | Dots unchanged | Must-have | ✅ |
 
-**All parts resolved. Ready to build.**
+**All parts resolved.**
 
 ---
 

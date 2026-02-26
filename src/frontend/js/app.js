@@ -34,6 +34,7 @@ let animMaxDensity  = 1;
 let animCentLat     = 39.5;   // updated by updateSolarThresholds()
 let animCentLon     = -98.35;
 let animUtcOffset   = -6;
+let animSolarCurve  = null;   // Float32Array[24] of solar altitudes in degrees, one per hour slot
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -162,13 +163,14 @@ function buildActiveSet(hour = animHour) {
 
   updateMapFilter(hour % 24);
 
-  // Solar elevation display — shows sun angle at equinox reference point
-  const h24     = hour % 24;
-  const utcHour = ((h24 - animUtcOffset) % 24 + 24) % 24;
-  const posDate = new Date(Date.UTC(2024, 2, 20, Math.floor(utcHour),
-                    Math.round((utcHour % 1) * 60), 0));
-  const pos     = SunCalc.getPosition(posDate, animCentLat, animCentLon);
-  const altDeg  = pos.altitude * (180 / Math.PI);
+  // Solar elevation display — interpolated from per-slot curve
+  const h24    = hour % 24;
+  const h0     = Math.floor(h24) % 24;
+  const h1     = (h0 + 1) % 24;
+  const frac   = h24 % 1;
+  const altDeg = animSolarCurve
+    ? animSolarCurve[h0] + (animSolarCurve[h1] - animSolarCurve[h0]) * frac
+    : 0;
   const icon    = altDeg > 0 ? '☀' : altDeg > -6 ? '◐' : '☾';
   const sign    = altDeg >= 0 ? '+' : '−';
   const absAlt  = Math.abs(altDeg).toFixed(1);
@@ -218,22 +220,64 @@ function updateSolarThresholds(centLat, centLon) {
   document.getElementById('solar-ref').textContent = `Equinox · ${latStr}, ${lonStr}`;
 }
 
-// ── Map time-of-day filter ────────────────────────────────────
-function smoothstep(edge0, edge1, x) {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
+// ── A6: Per-slot solar curve ──────────────────────────────────
+// For each hour slot 0–23, compute mean lat/lon of incidents at that slot,
+// then call SunCalc.getPosition(equinox, slotLat, slotLon) → altitude in degrees.
+// 24 SunCalc calls total. Result drives updateMapFilter() directly.
+function buildSolarCurve(hourBuckets) {
+  const curve = new Float32Array(24);
+  const equinox = new Date(Date.UTC(2024, 2, 20, 12, 0, 0));
+
+  for (let h = 0; h < 24; h++) {
+    const bucket = hourBuckets.get(h);
+    if (!bucket || bucket.length === 0) {
+      // fallback: use global centroid
+      const utcH = ((h - animUtcOffset) % 24 + 24) % 24;
+      const d = new Date(Date.UTC(2024, 2, 20, utcH, 0, 0));
+      curve[h] = SunCalc.getPosition(d, animCentLat, animCentLon).altitude * (180 / Math.PI);
+      continue;
+    }
+
+    let latSum = 0, lonSum = 0;
+    for (const feat of bucket) {
+      const [lon, lat] = feat.geometry.coordinates;
+      latSum += lat; lonSum += lon;
+    }
+    const slotLat = latSum / bucket.length;
+    const slotLon = lonSum / bucket.length;
+    const utcOffset = Math.round(slotLon / 15);
+    const utcH = ((h - utcOffset) % 24 + 24) % 24;
+    const d = new Date(Date.UTC(2024, 2, 20, utcH, 0, 0));
+    curve[h] = SunCalc.getPosition(d, slotLat, slotLon).altitude * (180 / Math.PI);
+  }
+  return curve;
 }
 
+// ── Map time-of-day filter ────────────────────────────────────
 function updateMapFilter(hour24) {
-  let daylight;
-  if      (hour24 < DAWN_START) daylight = 0;
-  else if (hour24 < DAWN_END)   daylight = smoothstep(DAWN_START, DAWN_END,   hour24);
-  else if (hour24 < DUSK_START) daylight = 1;
-  else if (hour24 < DUSK_END)   daylight = smoothstep(DUSK_END,   DUSK_START, hour24);
-  else                          daylight = 0;
+  let altDeg;
 
+  if (animSolarCurve) {
+    // Interpolate between adjacent hour slots in the data-driven curve
+    const h0   = Math.floor(hour24) % 24;
+    const h1   = (h0 + 1) % 24;
+    const frac = hour24 % 1;
+    altDeg = animSolarCurve[h0] + (animSolarCurve[h1] - animSolarCurve[h0]) * frac;
+  } else {
+    // Fallback before curve is ready: use DAWN/DUSK thresholds
+    const t = Math.max(0, Math.min(1,
+      hour24 < DAWN_END   ? (hour24 - DAWN_START) / (DAWN_END - DAWN_START) :
+      hour24 < DUSK_START ? 1 :
+      hour24 < DUSK_END   ? 1 - (hour24 - DUSK_START) / (DUSK_END - DUSK_START) : 0
+    ));
+    altDeg = t * 90 - 18; // rough mapping: t=0 → -18°, t=1 → +72°
+  }
+
+  // Map altitude to overlay opacity: -18° = full dark, 0° = full light
+  const daylight = Math.max(0, Math.min(1, (altDeg + 18) / 18));
+  const s = daylight * daylight * (3 - 2 * daylight); // smoothstep
   map.setPaintProperty('night-overlay', 'fill-opacity',
-    parseFloat((0.72 * (1 - daylight)).toFixed(2)));
+    parseFloat((0.72 * (1 - s)).toFixed(2)));
 }
 
 // ── Dynamic speed ────────────────────────────────────────────
@@ -308,6 +352,16 @@ async function loadAnimData() {
     for (const bucket of animData.values()) {
       if (bucket.length > animMaxDensity) animMaxDensity = bucket.length;
     }
+
+    // A6: build per-slot solar curve from hour-of-day buckets
+    // In week mode, group by hour-of-day (slot % 24) for the solar lookup
+    const hourBuckets = new Map();
+    for (const [slot, bucket] of animData.entries()) {
+      const h = slot % 24;
+      if (!hourBuckets.has(h)) hourBuckets.set(h, []);
+      hourBuckets.get(h).push(...bucket);
+    }
+    animSolarCurve = buildSolarCurve(hourBuckets);
 
     map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
     endLoad();
