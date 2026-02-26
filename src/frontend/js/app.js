@@ -482,6 +482,15 @@ animPlayPauseBtn.addEventListener('click', () => {
   updatePlayPauseBtn();
 });
 
+document.getElementById('anim-rewind').addEventListener('click', () => {
+  if (!animData) return;
+  animHour           = ANIM_START_HOUR;
+  animLastTs         = null;
+  animLastUpdateHour = -1;
+  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
+  buildActiveSet(ANIM_START_HOUR);
+});
+
 document.getElementById('anim-mode-day').addEventListener('click', () => {
   if (animMode === 'day') return;
   animMode = 'day';

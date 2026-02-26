@@ -254,6 +254,19 @@ body {
 }
 #anim-playpause:hover { border-color: var(--accent); }
 
+#anim-rewind {
+  padding: 8px 10px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+#anim-rewind:hover { border-color: var(--accent); color: var(--text); }
+
 #trail-slider {
   width: 100%;
   accent-color: var(--accent);
