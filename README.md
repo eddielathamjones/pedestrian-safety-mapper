@@ -4,16 +4,18 @@ An open-source web application for visualizing pedestrian fatality data from the
 
 ![Project Status: Active](https://img.shields.io/badge/status-active-brightgreen)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
-![Data: NHTSA FARS 2010–2022](https://img.shields.io/badge/data-FARS%202010–2022-blue)
+![Data: NHTSA FARS 2001–2022](https://img.shields.io/badge/data-FARS%202001–2022-blue)
 
 ---
 
 ## What It Does
 
-- Plots every recorded pedestrian fatality (2010–2022) as an interactive point on a US map
-- Click any incident to see date, time of day, lighting conditions, weather, road type, and victim demographics
-- Filter by year to explore how patterns shift over time
-- Built on a full-stack architecture designed to grow into animated time-series, density analysis, and external data integrations
+- Plots every recorded pedestrian fatality (2001–2022) — over 123,000 incidents — as an interactive point on a US map
+- Points are colour-coded by lighting condition so patterns of darkness-related fatalities are immediately visible
+- Click any incident to see date, time of day, lighting, weather, road type, and victim demographics
+- Filter by year, time of day (Day / Dawn / Dusk / Night), and road type (Interstate / Highway / Local)
+- Toggle between point view and a heatmap for density analysis at national scale
+- Trend indicator shows year-over-year % change at a glance
 
 ## Stack
 
@@ -61,7 +63,7 @@ To load all years at once (requires full `data/raw/` checkout):
 
 ```bash
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
-  python -m src.data_processing.etl --years 2010-2022 --data-dir data/raw
+  python -m src.data_processing.etl --years 2001-2022 --data-dir data/raw
 ```
 
 ## Data
@@ -104,6 +106,14 @@ pedestrian-safety-mapper/
 
 ## API
 
+### `GET /api/summary`
+
+Returns total incident counts by year.
+
+```json
+{ "2001": 4389, "2002": 4991, ... }
+```
+
 ### `GET /api/incidents`
 
 Returns a GeoJSON FeatureCollection of pedestrian fatalities.
@@ -112,6 +122,8 @@ Returns a GeoJSON FeatureCollection of pedestrian fatalities.
 |-----------|------|----------|-------------|
 | `year` | integer | yes | Year to query (2001–2022) |
 | `bbox` | string | no | `minLon,minLat,maxLon,maxLat` — filter to viewport |
+| `tod` | string (repeatable) | no | Time of day: `day`, `dawn`, `dusk`, `night` |
+| `road` | string (repeatable) | no | Road type: `interstate`, `highway`, `local` |
 
 **Example response:**
 
@@ -139,11 +151,12 @@ The project is built in vertical slices. Each slice ships a working, demo-able f
 | Slice | Status | Description |
 |-------|--------|-------------|
 | V1 — Data on the map | ✅ Done | 2022 fatalities as interactive points |
-| V2 — Year selector | 🔜 Next | Filter map by year (2010–2022) |
-| V3 — Incident detail popup | 🔜 Next | Click a point for full incident context |
-| V4 — Viewport loading | 🔜 Next | Fetch only visible incidents on pan/zoom |
+| V2 — Year selector | ✅ Done | Filter map by year (2001–2022) |
+| V3 — Incident detail popup | ✅ Done | Click a point for full incident context |
+| V4 — Viewport loading | ✅ Done | Fetch only visible incidents on pan/zoom |
+| V5 — Extended history | ✅ Done | Data extended back to 2001 (123k+ incidents) |
+| V6 — UI polish + filters | ✅ Done | Colour encoding, filters, trend indicator, heatmap |
 | Future — Time-of-day animation | 💡 Planned | 24-hr animated cycle with daylight visualization |
-| Future — Density / heatmap | 💡 Planned | Switch between point and density views |
 | Future — Street View integration | 💡 Planned | Pull imagery for incident locations |
 
 Full design decisions are documented in [`docs/shaping/`](docs/shaping/).
