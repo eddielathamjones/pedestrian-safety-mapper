@@ -66,8 +66,8 @@ let animTrailHours = 3;
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.openfreemap.org/styles/liberty',
-  center: [-98.5, 39.5],
-  zoom: 4,
+  center: [-110.9747, 32.2226],  // Tucson, Pima County
+  zoom: 11,
   attributionControl: true,
 });
 
