@@ -69,30 +69,52 @@ map.on('load', () => {
     },
   });
 
-  loadYear(currentYear);
+  loadIncidents();
 });
 
 // ── Fetch + update ────────────────────────────────────────────
 const countEl = document.getElementById('count');
 
-async function loadYear(year) {
+// Use bbox when zoomed in enough that a viewport fetch makes sense.
+// At zoom < 6 the bbox covers most of the US anyway, so skip it.
+const BBOX_ZOOM_THRESHOLD = 6;
+
+function getBbox() {
+  const b = map.getBounds();
+  return `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+}
+
+async function loadIncidents() {
+  const zoom = map.getZoom();
+  const bbox = zoom >= BBOX_ZOOM_THRESHOLD ? getBbox() : null;
+
   countEl.textContent = 'Loading…';
   try {
-    const res = await fetch(`/api/incidents?year=${year}`);
+    let url = `/api/incidents?year=${currentYear}`;
+    if (bbox) url += `&bbox=${bbox}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const geojson = await res.json();
     map.getSource('incidents').setData(geojson);
-    countEl.textContent = `${geojson.features.length.toLocaleString()} incidents`;
+    const suffix = bbox ? ' in view' : '';
+    countEl.textContent = `${geojson.features.length.toLocaleString()} incidents${suffix}`;
   } catch (err) {
     countEl.textContent = 'Error loading data';
     console.error(err);
   }
 }
 
+// Debounced moveend — waits for the map to settle before fetching
+let moveTimer;
+map.on('moveend', () => {
+  clearTimeout(moveTimer);
+  moveTimer = setTimeout(loadIncidents, 300);
+});
+
 yearSelect.addEventListener('change', () => {
   currentYear = Number(yearSelect.value);
   closePopup();
-  loadYear(currentYear);
+  loadIncidents();
 });
 
 // ── Popup ─────────────────────────────────────────────────────

@@ -8,11 +8,14 @@ Derived from Shape A breadboard. Each slice ends in demo-able UI and is a full v
 
 ## Slice Definitions
 
-| Slice | Name | Demo |
-|-------|------|------|
-| V1 | Data on the map | Open the app — see 2022 pedestrian fatalities as dots on a US map |
-| V2 | Year selector | Pick any year 2010–2022 — map updates to show that year's incidents |
-| V3 | Incident detail popup | Click any dot — see date, time of day, road type, lighting, weather, victim age/sex |
+| Slice | Name | Status | Demo |
+|-------|------|:------:|------|
+| V1 | Data on the map | ✅ Shipped | Open the app — see 2022 pedestrian fatalities as dots on a US map |
+| V2 | Year selector | ✅ Shipped | Pick any year 2010–2022 — map updates to show that year's incidents |
+| V3 | Incident detail popup | ✅ Shipped | Click any dot — see date, time of day, road type, lighting, weather, victim age/sex |
+| V4 | Viewport-based loading | ✅ Shipped | Pan or zoom — incidents load dynamically; map stays fast at any zoom level |
+
+> **Note:** V2, V3, and V4 frontend affordances (U3, U4, U5, U1ˣ) were built alongside V1 in the initial scaffold. V4 backend (N3ˣ bbox param) was also included from the start. V4 frontend wire-up (moveend → bbox fetch) completed in the follow-on session.
 | V4 | Viewport-based loading | Pan or zoom — visible incidents load dynamically; map stays fast at any zoom level |
 
 ---
