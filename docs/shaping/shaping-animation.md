@@ -150,6 +150,42 @@ flowchart LR
 
 ---
 
+## Week Mode Extension (shipped alongside V7)
+
+### Requirements
+
+| ID | Requirement | Status |
+|----|-------------|--------|
+| W0 | Week mode: incidents animated linearly Mon 00:00 → Sun 23:59 (168-hour timeline), loops | Core goal |
+| W1 | Day-of-week derived client-side from `year`/`month`/`day` — no schema change | Must-have |
+| W2 | Day / Week sub-toggle within animation controls | Must-have |
+| W3 | Clock display shows day + time in week mode ("Wednesday 2:15 PM") | Must-have |
+| W4 | Circadian colour gradient on hour (time of day), not day of week | Must-have |
+| W5 | Dynamic speed applies per hour-of-week slot (168 slots) | Must-have |
+| W6 | Trail slider works in both modes | Must-have |
+
+### Shape — W: Parameterised engine
+
+`animTotalHours()` returns 24 (day) or 168 (week). Grouping key is `hour` (day) or `dow*24+hour` (week). All other animation logic — clock, active set builder, dynamic speed, pop/fade — is unchanged.
+
+### Fit Check — W × W
+
+| Req | Requirement | Status | W |
+|-----|-------------|--------|---|
+| W0 | Week mode: Mon 00:00 → Sun 23:59, loops | Core goal | ✅ |
+| W1 | Day-of-week derived client-side — no schema change | Must-have | ✅ |
+| W2 | Day / Week sub-toggle in animation controls | Must-have | ✅ |
+| W3 | Clock shows day + time in week mode | Must-have | ✅ |
+| W4 | Colour gradient on hour, not day | Must-have | ✅ |
+| W5 | Dynamic speed across 168 slots | Must-have | ✅ |
+| W6 | Trail slider works in both modes | Must-have | ✅ |
+
+**Notes:**
+- W1: `(new Date(year, month-1, day).getDay() + 6) % 7` gives Mon=0…Sun=6; no API or schema change
+- W5: `animTotalHours()` parameterises the density lookup and wrap-around in both clock and active set builder
+
+**Selected and shipped.**
+
 ## Slices
 
 See [`slices.md`](slices.md) — V7 (animation engine) and V8 (full controls + integration).
