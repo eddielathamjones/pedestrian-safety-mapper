@@ -288,8 +288,10 @@ function enterAnimMode() {
   // Show animation controls
   document.getElementById('anim-controls').classList.remove('hidden');
 
-  // Switch to data-driven paint — animation injects anim_opacity / anim_radius
+  // Switch to data-driven paint — single high-contrast colour, no encoding
   map.setLayoutProperty('incidents-heat', 'visibility', 'none');
+  map.setPaintProperty('incidents-circle', 'circle-color',   '#ffffff');
+  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.35)');
   map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
   map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
 
@@ -308,6 +310,8 @@ function exitAnimMode() {
   countEl.classList.remove('anim-clock');
 
   // Restore static paint properties
+  map.setPaintProperty('incidents-circle', 'circle-color',        LIGHT_COLORS);
+  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(255,255,255,0.25)');
   map.setPaintProperty('incidents-circle', 'circle-opacity', 0.85);
   map.setPaintProperty('incidents-circle', 'circle-radius',  STATIC_RADIUS);
 }

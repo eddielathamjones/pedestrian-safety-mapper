@@ -203,6 +203,9 @@ body {
   color: #fff;
 }
 
+/* ── Filter panel (tabled) ─────────────────────────────────── */
+#filter-panel { display: none; }
+
 /* ── Animate button ────────────────────────────────────────── */
 #view-anim {
   width: 100%;
