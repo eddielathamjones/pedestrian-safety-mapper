@@ -54,14 +54,17 @@ const roadFilters = new Set(['interstate', 'highway', 'local']);
 let summaryCache  = null;
 
 // ── Animation state ────────────────────────────────────────────
-let animData     = null;   // Map<hour 0–23, Feature[]>
+let animMode     = 'day';  // 'day' | 'week'
+let animData     = null;   // Map<slot, Feature[]> — slot = hour (day) or weekSlot (week)
 let animFrame    = null;   // requestAnimationFrame id
 let animPlaying  = false;
-let animHour     = 0;      // 0–24 float, current sim time
+let animHour     = 0;      // 0–totalHours float, current sim time
 let animLastTs   = null;   // last rAF timestamp
 let animLastUpdateHour = -1;
 let animTrailHours  = 3;
-let animMaxDensity  = 1;   // max incidents in any single hour bucket
+let animMaxDensity  = 1;   // max incidents in any single slot
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 // ── Map init ──────────────────────────────────────────────────
 const map = new maplibregl.Map({
@@ -194,12 +197,13 @@ function popFade(age, trailHours) {
 function buildActiveSet(hour = animHour) {
   if (!animData) return;
 
+  const total    = animTotalHours();
   const features = [];
-  for (let h = 0; h < 24; h++) {
-    const bucket = animData.get(h);
+  for (let s = 0; s < total; s++) {
+    const bucket = animData.get(s);
     if (!bucket) continue;
 
-    const age = (hour - h + 24) % 24;
+    const age = (hour - s + total) % total;
     const pf  = popFade(age, animTrailHours);
     if (!pf) continue;
 
@@ -218,12 +222,17 @@ function buildActiveSet(hour = animHour) {
   map.getSource('incidents').setData({ type: 'FeatureCollection', features });
 
   // Clock display
-  const h    = Math.floor(hour) % 24;
-  const m    = Math.round((hour % 1) * 60);
-  const ampm = h < 12 ? 'AM' : 'PM';
-  const dh   = h % 12 || 12;
-  const dm   = String(m).padStart(2, '0');
-  countEl.textContent = `${dh}:${dm} ${ampm}`;
+  const totalH = animTotalHours();
+  const absH   = Math.floor(hour) % totalH;
+  const h      = absH % 24;
+  const m      = Math.round((hour % 1) * 60);
+  const ampm   = h < 12 ? 'AM' : 'PM';
+  const dh     = h % 12 || 12;
+  const dm     = String(m).padStart(2, '0');
+  const timeStr = `${dh}:${dm} ${ampm}`;
+  countEl.textContent = animMode === 'week'
+    ? `${DAYS[Math.floor(absH / 24)]} ${timeStr}`
+    : timeStr;
   countEl.classList.add('anim-clock');
   trendEl.textContent = '';
 }
@@ -231,10 +240,12 @@ function buildActiveSet(hour = animHour) {
 // ── Dynamic speed ────────────────────────────────────────────
 // Slows when the current hour has many incidents, speeds up when sparse.
 // Square-root easing softens the mapping so transitions feel gradual.
+function animTotalHours() { return animMode === 'week' ? 168 : 24; }
+
 function getDynamicSpeed() {
-  const hour    = Math.floor(animHour) % 24;
-  const count   = animData?.get(hour)?.length ?? 0;
-  const density = Math.sqrt(count / animMaxDensity); // 0–1, eased
+  const slot    = Math.floor(animHour) % animTotalHours();
+  const count   = animData?.get(slot)?.length ?? 0;
+  const density = Math.sqrt(count / animMaxDensity);
   return ANIM_SPEED_FAST + (ANIM_SPEED_SLOW - ANIM_SPEED_FAST) * density;
 }
 
@@ -242,7 +253,7 @@ function getDynamicSpeed() {
 function animTick(ts) {
   if (animPlaying && animLastTs !== null) {
     const dtHours = ((ts - animLastTs) / 1000) * getDynamicSpeed();
-    animHour = (animHour + dtHours) % 24;
+    animHour = (animHour + dtHours) % animTotalHours();
 
     const snapped = Math.floor(animHour / ANIM_STEP) * ANIM_STEP;
     if (snapped !== animLastUpdateHour) {
@@ -272,8 +283,19 @@ async function loadAnimData() {
     for (const feat of geojson.features) {
       const h = feat.properties.hour;
       if (h == null || h > 23) continue; // skip unknown (99) and sentinel
-      if (!animData.has(h)) animData.set(h, []);
-      animData.get(h).push(feat);
+
+      let slot;
+      if (animMode === 'week') {
+        const { year, month, day } = feat.properties;
+        if (!year || !month || !day) continue;
+        const dow = (new Date(year, month - 1, day).getDay() + 6) % 7; // Mon=0…Sun=6
+        slot = dow * 24 + h;
+      } else {
+        slot = h;
+      }
+
+      if (!animData.has(slot)) animData.set(slot, []);
+      animData.get(slot).push(feat);
     }
 
     // Pre-compute peak density for dynamic speed
@@ -331,8 +353,11 @@ function exitAnimMode() {
   animPlaying = false;
   animData    = null;
 
-  // Hide animation controls, clear clock display
+  // Hide animation controls, reset mode, clear clock display
   document.getElementById('anim-controls').classList.add('hidden');
+  animMode = 'day';
+  document.getElementById('anim-mode-day').classList.add('active');
+  document.getElementById('anim-mode-week').classList.remove('active');
   countEl.classList.remove('anim-clock');
 
   // Restore static paint properties
@@ -382,6 +407,22 @@ animPlayPauseBtn.addEventListener('click', () => {
   animPlaying = !animPlaying;
   if (animPlaying) animLastTs = null; // prevent time-jump on resume
   updatePlayPauseBtn();
+});
+
+document.getElementById('anim-mode-day').addEventListener('click', () => {
+  if (animMode === 'day') return;
+  animMode = 'day';
+  document.getElementById('anim-mode-day').classList.add('active');
+  document.getElementById('anim-mode-week').classList.remove('active');
+  loadAnimData();
+});
+
+document.getElementById('anim-mode-week').addEventListener('click', () => {
+  if (animMode === 'week') return;
+  animMode = 'week';
+  document.getElementById('anim-mode-week').classList.add('active');
+  document.getElementById('anim-mode-day').classList.remove('active');
+  loadAnimData();
 });
 
 trailSlider.addEventListener('input', () => {
