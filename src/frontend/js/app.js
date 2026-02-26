@@ -290,8 +290,8 @@ function enterAnimMode() {
 
   // Switch to data-driven paint — single high-contrast colour, no encoding
   map.setLayoutProperty('incidents-heat', 'visibility', 'none');
-  map.setPaintProperty('incidents-circle', 'circle-color',   '#ffffff');
-  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.35)');
+  map.setPaintProperty('incidents-circle', 'circle-color',   '#e63946');
+  map.setPaintProperty('incidents-circle', 'circle-stroke-color', 'rgba(0,0,0,0.4)');
   map.setPaintProperty('incidents-circle', 'circle-opacity', ['get', 'anim_opacity']);
   map.setPaintProperty('incidents-circle', 'circle-radius',  ['get', 'anim_radius']);
 
