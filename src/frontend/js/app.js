@@ -30,6 +30,9 @@ let animLastTs  = null;
 let animLastUpdateHour = -1;
 let animTrailHours  = 3;
 let animMaxDensity  = 1;
+let animCentLat     = 39.5;   // updated by updateSolarThresholds()
+let animCentLon     = -98.35;
+let animUtcOffset   = -6;
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -156,18 +159,23 @@ function buildActiveSet(hour = animHour) {
 
   updateMapFilter(hour % 24);
 
-  // Clock display
-  const totalH  = animTotalHours();
-  const absH    = Math.floor(hour) % totalH;
-  const h       = absH % 24;
-  const m       = Math.round((hour % 1) * 60);
-  const ampm    = h < 12 ? 'AM' : 'PM';
-  const dh      = h % 12 || 12;
-  const dm      = String(m).padStart(2, '0');
-  const timeStr = `${dh}:${dm} ${ampm}`;
-  countEl.textContent = animMode === 'week'
-    ? `${DAYS[Math.floor(absH / 24)]} ${timeStr}`
-    : timeStr;
+  // Solar elevation display — shows sun angle at equinox reference point
+  const h24     = hour % 24;
+  const utcHour = ((h24 - animUtcOffset) % 24 + 24) % 24;
+  const posDate = new Date(Date.UTC(2024, 2, 20, Math.floor(utcHour),
+                    Math.round((utcHour % 1) * 60), 0));
+  const pos     = SunCalc.getPosition(posDate, animCentLat, animCentLon);
+  const altDeg  = pos.altitude * (180 / Math.PI);
+  const icon    = altDeg > 0 ? '☀' : altDeg > -6 ? '◐' : '☾';
+  const sign    = altDeg >= 0 ? '+' : '−';
+  const absAlt  = Math.abs(altDeg).toFixed(1);
+
+  // In week mode, prepend day name
+  const totalH = animTotalHours();
+  const absH   = Math.floor(hour) % totalH;
+  const prefix = animMode === 'week' ? `${DAYS[Math.floor(absH / 24)]}  ` : '';
+
+  countEl.textContent = `${prefix}${icon} ${sign}${absAlt}°`;
   countEl.classList.add('anim-clock');
 }
 
@@ -186,7 +194,10 @@ function computeCentroid(features) {
 // spring equinox for the data centroid. UTC offset approximated from
 // centroid longitude: utcOffset = Math.round(centLon / 15).
 function updateSolarThresholds(centLat, centLon) {
+  animCentLat   = centLat;
+  animCentLon   = centLon;
   const utcOffset = Math.round(centLon / 15);
+  animUtcOffset = utcOffset;
   const equinox   = new Date(Date.UTC(2024, 2, 20, 12, 0, 0)); // March 20, 2024
 
   function toLocalHour(date) {
