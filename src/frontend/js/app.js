@@ -46,8 +46,8 @@ let animDows = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 
 // ── Filter state ───────────────────────────────────────────────
 let viewMode        = 'filter';  // 'animate' | 'filter'
-let filterFrom      = 16; // slider value 12–35 (noon-based) — sunset preset default
-let filterTo        = 21; // 9:00 PM default
+let filterFrom      = 12; // slider value 12–35 (noon-based) — all day default
+let filterTo        = 35; // 11:00 AM next day default
 let filterDows      = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 let filteredFeatures = []; // current filter result, kept for viewport count updates
 
