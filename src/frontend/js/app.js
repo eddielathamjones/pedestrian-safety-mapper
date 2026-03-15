@@ -37,6 +37,12 @@ let animUtcOffset   = -6;
 let animSolarCurve  = null;   // Float32Array[24] of solar altitudes in degrees, one per hour slot
 let allLoadedFeatures = [];   // all features from the last loadAnimData() call
 
+// ── Filter state ───────────────────────────────────────────────
+let viewMode    = 'animate'; // 'animate' | 'filter'
+let filterFrom  = 17;
+let filterTo    = 21;
+let filterDows  = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
+
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 // ── DOM refs ──────────────────────────────────────────────────
@@ -633,13 +639,16 @@ async function loadAnimData() {
 
     map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
 
-    // Show total + visible count
-    updateVisibleCount();
-
     endLoad();
-    animPlaying = true;
-    updatePlayPauseBtn();
-    animFrame = requestAnimationFrame(animTick);
+
+    if (viewMode === 'filter') {
+      applyFilter();
+    } else {
+      updateVisibleCount();
+      animPlaying = true;
+      updatePlayPauseBtn();
+      animFrame = requestAnimationFrame(animTick);
+    }
   } catch (err) {
     countEl.textContent = 'Error loading data';
     endLoad();
@@ -735,6 +744,7 @@ document.querySelectorAll('[data-sprite]').forEach(btn => {
 const incidentTotalEl = document.getElementById('incident-total');
 
 function updateVisibleCount() {
+  if (viewMode === 'filter') return;
   if (!incidentTotalEl || allLoadedFeatures.length === 0) return;
   const b = map.getBounds();
   const w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
@@ -750,6 +760,148 @@ function updateVisibleCount() {
 
 map.on('moveend', updateVisibleCount);
 map.on('zoomend', updateVisibleCount);
+
+// ── Filter mode ───────────────────────────────────────────────
+function formatHour(h) {
+  const h12 = h % 12 || 12;
+  return `${h12}:00 ${h < 12 ? 'AM' : 'PM'}`;
+}
+
+function getDow(feat) {
+  const { year, month, day } = feat.properties;
+  if (!year || !month || !day) return -1;
+  return (new Date(year, month - 1, day).getDay() + 6) % 7; // Mon=0…Sun=6
+}
+
+function applyFilter() {
+  if (!allLoadedFeatures.length) return;
+
+  const from   = filterFrom;
+  const to     = filterTo;
+  const wraps  = from > to; // window crosses midnight
+
+  const matched = allLoadedFeatures.filter(f => {
+    const h = f.properties.hour;
+    if (h == null) return false;
+    const hourMatch = wraps ? (h >= from || h <= to) : (h >= from && h <= to);
+    if (!hourMatch) return false;
+    if (filterDows.size < 7) {
+      const dow = getDow(f);
+      if (dow < 0 || !filterDows.has(dow)) return false;
+    }
+    return true;
+  });
+
+  map.getSource('incidents').setData({ type: 'FeatureCollection', features: [] });
+  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: matched });
+  map.getSource('road-heat-lines').setData(buildRoadHeatLines(matched));
+
+  // Solar context at midpoint of window
+  const midHour = wraps ? ((from + to + 24) / 2) % 24 : (from + to) / 2;
+  updateMapFilter(midHour);
+
+  // Clock shows the time range
+  countEl.textContent = `${formatHour(from)} – ${formatHour(to)}`;
+  countEl.classList.add('anim-clock');
+
+  // Count
+  const total = allLoadedFeatures.length.toLocaleString();
+  incidentTotalEl.textContent = `${total} total · ${matched.length.toLocaleString()} in window`;
+
+  // Progress bar: highlight the selected window
+  const fill   = document.getElementById('anim-progress-fill');
+  const win    = document.getElementById('anim-progress-window');
+  if (fill) fill.style.width = '0';
+  if (win) {
+    if (!wraps) {
+      win.style.left  = `${(from / 24) * 100}%`;
+      win.style.width = `${((to - from + 1) / 24) * 100}%`;
+    } else {
+      // crosses midnight — anchor from left edge, width wraps around
+      win.style.left  = `${(from / 24) * 100}%`;
+      win.style.width = `${((24 - from + to + 1) / 24) * 100}%`;
+    }
+    win.style.display = 'block';
+  }
+
+  // Solar condition label
+  const solarRef = document.getElementById('solar-ref');
+  if (solarRef && animSolarCurve) {
+    const altDeg = animSolarCurve[Math.round(midHour) % 24];
+    const condition = altDeg > 6   ? 'Daytime'
+                    : altDeg > 0   ? 'Sunrise / Sunset'
+                    : altDeg > -6  ? 'Civil twilight'
+                    : altDeg > -12 ? 'Nautical twilight'
+                    :                'Night';
+    const sign   = altDeg >= 0 ? '+' : '−';
+    const note   = wraps ? ' · crosses midnight' : '';
+    solarRef.textContent = `${condition} · ${sign}${Math.abs(altDeg).toFixed(1)}° at midpoint${note}`;
+  }
+}
+
+function enterFilterMode() {
+  viewMode = 'filter';
+  animPlaying = false;
+  updatePlayPauseBtn();
+  document.getElementById('animate-sub').classList.add('hidden');
+  document.getElementById('filter-sub').classList.remove('hidden');
+  document.getElementById('view-animate').classList.remove('active');
+  document.getElementById('view-filter').classList.add('active');
+  applyFilter();
+}
+
+function enterAnimateMode() {
+  viewMode = 'animate';
+  document.getElementById('animate-sub').classList.remove('hidden');
+  document.getElementById('filter-sub').classList.add('hidden');
+  document.getElementById('view-filter').classList.remove('active');
+  document.getElementById('view-animate').classList.add('active');
+  const win = document.getElementById('anim-progress-window');
+  if (win) win.style.display = 'none';
+  loadAnimData();
+}
+
+// View toggle
+document.getElementById('view-animate').addEventListener('click', () => {
+  if (viewMode !== 'animate') enterAnimateMode();
+});
+document.getElementById('view-filter').addEventListener('click', () => {
+  if (viewMode !== 'filter') enterFilterMode();
+});
+
+// Hour sliders
+const filterFromEl       = document.getElementById('filter-from');
+const filterToEl         = document.getElementById('filter-to');
+const filterFromValueEl  = document.getElementById('filter-from-value');
+const filterToValueEl    = document.getElementById('filter-to-value');
+
+filterFromEl.addEventListener('input', () => {
+  filterFrom = Number(filterFromEl.value);
+  filterFromValueEl.textContent = formatHour(filterFrom);
+  if (viewMode === 'filter') applyFilter();
+});
+filterToEl.addEventListener('input', () => {
+  filterTo = Number(filterToEl.value);
+  filterToValueEl.textContent = formatHour(filterTo);
+  if (viewMode === 'filter') applyFilter();
+});
+
+// Day-of-week chips
+document.querySelectorAll('[data-dow]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dow = Number(btn.dataset.dow);
+    if (filterDows.has(dow)) {
+      if (filterDows.size > 1) { // don't allow deselecting all
+        filterDows.delete(dow);
+        btn.classList.remove('active');
+      }
+    } else {
+      filterDows.add(dow);
+      btn.classList.add('active');
+    }
+    if (viewMode === 'filter') applyFilter();
+  });
+});
 
 // ── Loading bar ───────────────────────────────────────────────
 function startLoad() {

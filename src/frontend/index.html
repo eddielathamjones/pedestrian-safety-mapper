@@ -34,29 +34,67 @@
 
     <div id="anim-progress-bar">
       <div id="anim-progress-fill"></div>
+      <div id="anim-progress-window"></div>
     </div>
 
     <div class="divider"></div>
 
     <div id="anim-controls">
+
       <div class="control-group">
-        <label>Mode</label>
+        <label>View</label>
         <div class="view-toggle">
-          <button class="view-btn" id="anim-mode-day">Day</button>
-          <button class="view-btn active" id="anim-mode-week">Week</button>
+          <button class="view-btn active" id="view-animate">Animate</button>
+          <button class="view-btn" id="view-filter">Filter</button>
         </div>
       </div>
-      <div class="control-group">
-        <label>Playback</label>
-        <div style="display:flex;gap:6px;">
-          <button id="anim-playpause" style="flex:1">⏸ Pause</button>
-          <button id="anim-rewind">⏮</button>
+
+      <!-- Animate-specific controls -->
+      <div id="animate-sub">
+        <div class="control-group">
+          <label>Mode</label>
+          <div class="view-toggle">
+            <button class="view-btn" id="anim-mode-day">Day</button>
+            <button class="view-btn active" id="anim-mode-week">Week</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Playback</label>
+          <div style="display:flex;gap:6px;">
+            <button id="anim-playpause" style="flex:1">⏸ Pause</button>
+            <button id="anim-rewind">⏮</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Trail — <span id="trail-value">3h</span></label>
+          <input type="range" id="trail-slider" min="1" max="12" step="0.5" value="3" />
         </div>
       </div>
-      <div class="control-group">
-        <label>Trail — <span id="trail-value">3h</span></label>
-        <input type="range" id="trail-slider" min="1" max="12" step="0.5" value="3" />
+
+      <!-- Filter-specific controls -->
+      <div id="filter-sub" class="hidden">
+        <div class="control-group">
+          <label>Days</label>
+          <div class="filter-chips" id="dow-chips">
+            <button class="chip active" data-dow="0">Mon</button>
+            <button class="chip active" data-dow="1">Tue</button>
+            <button class="chip active" data-dow="2">Wed</button>
+            <button class="chip active" data-dow="3">Thu</button>
+            <button class="chip active" data-dow="4">Fri</button>
+            <button class="chip active" data-dow="5">Sat</button>
+            <button class="chip active" data-dow="6">Sun</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>From — <span id="filter-from-value">5:00 PM</span></label>
+          <input type="range" id="filter-from" min="0" max="23" step="1" value="17" />
+        </div>
+        <div class="control-group">
+          <label>To — <span id="filter-to-value">9:00 PM</span></label>
+          <input type="range" id="filter-to" min="0" max="23" step="1" value="21" />
+        </div>
       </div>
+
     </div>
 
     <div class="divider"></div>

@@ -37,6 +37,7 @@ body {
 #loading-bar.active { width: 70%; }
 #loading-bar.done   { width: 100%; opacity: 0; }
 #loading-bar.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* ── Controls panel ────────────────────────────────────────── */
 #controls {
@@ -294,6 +295,7 @@ body {
   height: 4px;
   background: var(--bg-raise);
   border-radius: 2px;
+  position: relative;
   overflow: hidden;
 }
 
@@ -303,6 +305,25 @@ body {
   background: var(--accent);
   border-radius: 2px;
   transition: width 0.1s linear;
+}
+
+/* Filter mode: window highlight */
+#anim-progress-window {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.7;
+  border-radius: 2px;
+  display: none;
+  transition: left 0.1s, width 0.1s;
+}
+
+/* Filter sub-controls spacing */
+#filter-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .solar-condition {
