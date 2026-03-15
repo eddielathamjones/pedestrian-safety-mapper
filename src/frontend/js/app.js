@@ -75,49 +75,58 @@ for (let y = YEAR_MAX; y >= YEAR_MIN; y--) {
 yearFromEl.value = DEFAULT_YEAR;
 yearToEl.value   = DEFAULT_YEAR;
 
-// ── Explosion sprite ──────────────────────────────────────────
+// ── Blast sprite ──────────────────────────────────────────────
+// 7 irregular spikes, harsh amber/white core, no black outline.
+// Feels like a burst of light under sodium streetlamps, not a cartoon.
 function createExplosionSprite(size) {
   const canvas = document.createElement('canvas');
-  canvas.width  = size;
-  canvas.height = size;
+  canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
   const cx = size / 2, cy = size / 2;
 
-  // Irregular starburst — 11 outer spikes with hand-drawn feel
-  const outerR = size * 0.46;
-  const innerR = size * 0.20;
-  const spikes = 11;
-  // Per-spike jitter: angle offset and radius scale, tuned by hand
-  const angleJitter = [0, 0.06, -0.04, 0.09, -0.03, 0.05, -0.07, 0.04, -0.05, 0.08, -0.02];
-  const radiusScale = [1.00, 0.88, 1.12, 0.92, 1.08, 0.85, 1.05, 0.95, 1.10, 0.90, 1.03];
+  // Soft outer halo — light bleeding into dark
+  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.48);
+  halo.addColorStop(0.0, 'rgba(255,160,40,0.0)');
+  halo.addColorStop(0.5, 'rgba(200,60,0,0.18)');
+  halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
+  ctx.fillStyle = halo;
+  ctx.fill();
+
+  // 7 asymmetric spikes — highly varied, nothing regular
+  const outerR = size * 0.44;
+  const innerR = size * 0.13;
+  const spikes = 7;
+  const angleJitter = [0.00, -0.14, 0.20, -0.09, 0.17, -0.18, 0.11];
+  const radiusScale = [1.30, 0.52, 1.08, 0.70, 0.95, 1.22, 0.60];
 
   ctx.beginPath();
   for (let i = 0; i < spikes * 2; i++) {
     const spike   = Math.floor(i / 2);
     const isOuter = i % 2 === 0;
     const baseAngle = -Math.PI / 2 + (i * Math.PI / spikes);
-    const angle = baseAngle + (isOuter ? angleJitter[spike % spikes] : 0);
-    const r = isOuter ? outerR * (radiusScale[spike % spikes] || 1) : innerR;
+    const angle = baseAngle + (isOuter ? angleJitter[spike] : 0);
+    const r = isOuter ? outerR * radiusScale[spike] : innerR;
     const x = cx + Math.cos(angle) * r;
     const y = cy + Math.sin(angle) * r;
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
   ctx.closePath();
 
-  // Yellow → orange → red radial fill
-  const grad = ctx.createRadialGradient(cx, cy - size * 0.06, size * 0.04, cx, cy, outerR);
-  grad.addColorStop(0.00, '#ffe566');
-  grad.addColorStop(0.30, '#ff6a00');
-  grad.addColorStop(0.70, '#e8001a');
-  grad.addColorStop(1.00, '#8b0000');
+  // White-hot core → harsh amber → deep red — sodium lamp palette
+  const grad = ctx.createRadialGradient(cx, cy, size * 0.02, cx, cy, outerR);
+  grad.addColorStop(0.00, '#ffffff');
+  grad.addColorStop(0.08, '#fff2a0');
+  grad.addColorStop(0.28, '#ff8800');
+  grad.addColorStop(0.62, '#cc2000');
+  grad.addColorStop(1.00, '#4a0000');
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Bold black comic-book outline
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth   = size * 0.07;
-  ctx.lineJoin    = 'miter';
-  ctx.miterLimit  = 8;
+  // No black outline — very faint amber rim only
+  ctx.strokeStyle = 'rgba(255,160,40,0.25)';
+  ctx.lineWidth   = size * 0.025;
   ctx.stroke();
 
   return ctx.getImageData(0, 0, size, size);
@@ -154,40 +163,6 @@ function createEmberSprite(size) {
   return ctx.getImageData(0, 0, size, size);
 }
 
-// ── Sprite: sharp 4-pointed spark ─────────────────────────────
-function createSparkSprite(size) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const cx = size / 2, cy = size / 2;
-  const outer = size * 0.46, inner = size * 0.10;
-
-  ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const angle = (i * Math.PI / 4) - Math.PI / 2;
-    const r = i % 2 === 0 ? outer : inner;
-    const x = cx + Math.cos(angle) * r;
-    const y = cy + Math.sin(angle) * r;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outer);
-  grad.addColorStop(0,   '#ffffff');
-  grad.addColorStop(0.2, '#ffee88');
-  grad.addColorStop(0.6, '#ff3300');
-  grad.addColorStop(1,   '#660000');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth   = size * 0.05;
-  ctx.lineJoin    = 'miter';
-  ctx.miterLimit  = 6;
-  ctx.stroke();
-
-  return ctx.getImageData(0, 0, size, size);
-}
 
 // ── Road heat lines ───────────────────────────────────────────
 // Connect each dead point to its nearest neighbor(s) within THRESHOLD degrees.
@@ -258,7 +233,6 @@ function buildRoadHeatLines(features) {
 map.on('load', () => {
   map.addImage('explosion', createExplosionSprite(64));
   map.addImage('ember',     createEmberSprite(64));
-  map.addImage('spark',     createSparkSprite(64));
 
   // Road heat lines source
   map.addSource('road-heat-lines', {
