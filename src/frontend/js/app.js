@@ -29,7 +29,7 @@ let animPlaying = false;
 let animHour    = ANIM_START_HOUR;
 let animLastTs  = null;
 let animLastUpdateHour = -1;
-let animTrailHours  = 3;
+const animTrailHours = 3;
 let animMaxDensity  = 1;
 let animCentLat     = 39.5;   // updated by updateSolarThresholds()
 let animCentLon     = -98.35;
@@ -658,8 +658,6 @@ async function loadAnimData() {
 
 // ── Playback controls ─────────────────────────────────────────
 const animPlayPauseBtn = document.getElementById('anim-playpause');
-const trailSlider      = document.getElementById('trail-slider');
-const trailValueEl     = document.getElementById('trail-value');
 
 function updatePlayPauseBtn() {
   animPlayPauseBtn.textContent = animPlaying ? '⏸ Pause' : '▶ Play';
@@ -697,11 +695,6 @@ document.getElementById('anim-mode-week').addEventListener('click', () => {
   loadAnimData();
 });
 
-trailSlider.addEventListener('input', () => {
-  animTrailHours = Number(trailSlider.value);
-  trailValueEl.textContent = `${animTrailHours}h`;
-  if (animData) buildActiveSet();
-});
 
 yearFromEl.addEventListener('change', () => {
   yearFrom = Number(yearFromEl.value);
