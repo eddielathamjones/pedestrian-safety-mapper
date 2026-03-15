@@ -22,7 +22,7 @@ let DUSK_END   = 20.5;
 // ── State ─────────────────────────────────────────────────────
 let yearFrom = DEFAULT_YEAR;
 let yearTo   = DEFAULT_YEAR;
-let animMode    = 'day';  // 'day' | 'week'
+let animMode    = 'week';  // 'day' | 'week'
 let animData    = null;   // Map<slot, Feature[]>
 let animFrame   = null;
 let animPlaying = false;
@@ -35,6 +35,7 @@ let animCentLat     = 39.5;   // updated by updateSolarThresholds()
 let animCentLon     = -98.35;
 let animUtcOffset   = -6;
 let animSolarCurve  = null;   // Float32Array[24] of solar altitudes in degrees, one per hour slot
+let allLoadedFeatures = [];   // all features from the last loadAnimData() call
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -286,7 +287,7 @@ map.on('load', () => {
       'icon-image':             'explosion',
       'icon-allow-overlap':     true,
       'icon-ignore-placement':  true,
-      'icon-size': ['interpolate', ['linear'], ['get', 'anim_radius'], 4, 0.38, 6, 0.58],
+      'icon-size': ['interpolate', ['linear'], ['get', 'anim_radius'], 4, 0.32, 6, 0.55, 8, 0.85],
     },
     paint: {
       'icon-opacity': ['get', 'anim_opacity'],
@@ -357,7 +358,7 @@ map.on('load', () => {
       'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.10, 10, 0.22],
     },
     paint: {
-      'icon-opacity': 0.7,
+      'icon-opacity': 0.3,
     },
   });
 
@@ -370,7 +371,7 @@ function popFade(age, trailHours) {
   const t         = age / trailHours;
   const opacity   = Math.pow(1 - t, 1.5);
   const popFactor = Math.max(0, 1 - age * 3);
-  const radius    = ANIM_BASE_RADIUS * (1 + 0.5 * popFactor);
+  const radius    = ANIM_BASE_RADIUS * (1 + popFactor);
   return { opacity, radius };
 }
 
@@ -419,13 +420,35 @@ function buildActiveSet(hour = animHour) {
   const sign    = altDeg >= 0 ? '+' : '−';
   const absAlt  = Math.abs(altDeg).toFixed(1);
 
+  // Build clock string (12h AM/PM)
+  const hInt   = Math.floor(h24);
+  const mInt   = Math.floor((h24 % 1) * 60);
+  const h12    = hInt % 12 || 12;
+  const ampm   = hInt < 12 ? 'AM' : 'PM';
+  const timeStr = `${h12}:${mInt.toString().padStart(2, '0')} ${ampm}`;
+
   // In week mode, prepend day name
   const totalH = animTotalHours();
   const absH   = Math.floor(hour) % totalH;
   const prefix = animMode === 'week' ? `${DAYS[Math.floor(absH / 24)]}  ` : '';
 
-  countEl.textContent = `${prefix}${icon} ${sign}${absAlt}°`;
+  countEl.textContent = `${prefix}${timeStr}`;
   countEl.classList.add('anim-clock');
+
+  // Progress bar
+  const progressFill = document.getElementById('anim-progress-fill');
+  if (progressFill) progressFill.style.width = `${(h24 / 24) * 100}%`;
+
+  // Solar condition label
+  const solarRef = document.getElementById('solar-ref');
+  if (solarRef) {
+    const condition = altDeg > 6   ? 'Daytime'
+                    : altDeg > 0   ? 'Sunrise / Sunset'
+                    : altDeg > -6  ? 'Civil twilight'
+                    : altDeg > -12 ? 'Nautical twilight'
+                    :                'Night';
+    solarRef.textContent = `${condition}  ·  sun ${sign}${absAlt}° altitude`;
+  }
 }
 
 // ── A2: Centroid computer ─────────────────────────────────────
@@ -567,6 +590,7 @@ async function loadAnimData() {
       years.map(y => fetch(`/api/incidents?year=${y}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }))
     );
     const allFeatures = responses.flatMap(r => r.features);
+    allLoadedFeatures = allFeatures;
     const geojson = { features: allFeatures };
 
     // A2 + A3: compute centroid, update solar thresholds
@@ -608,6 +632,10 @@ async function loadAnimData() {
     animSolarCurve = buildSolarCurve(hourBuckets);
 
     map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
+
+    // Show total + visible count
+    updateVisibleCount();
+
     endLoad();
     animPlaying = true;
     updatePlayPauseBtn();
@@ -702,6 +730,26 @@ document.querySelectorAll('[data-sprite]').forEach(btn => {
     btn.classList.add('active');
   });
 });
+
+// ── Visible feature counter ───────────────────────────────────
+const incidentTotalEl = document.getElementById('incident-total');
+
+function updateVisibleCount() {
+  if (!incidentTotalEl || allLoadedFeatures.length === 0) return;
+  const b = map.getBounds();
+  const w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+  let visible = 0;
+  for (const f of allLoadedFeatures) {
+    const [lon, lat] = f.geometry.coordinates;
+    if (lon >= w && lon <= e && lat >= s && lat <= n) visible++;
+  }
+  const total = allLoadedFeatures.length.toLocaleString();
+  const vis   = visible.toLocaleString();
+  incidentTotalEl.textContent = `${total} total · ${vis} in view`;
+}
+
+map.on('moveend', updateVisibleCount);
+map.on('zoomend', updateVisibleCount);
 
 // ── Loading bar ───────────────────────────────────────────────
 function startLoad() {

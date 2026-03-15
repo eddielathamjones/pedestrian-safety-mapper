@@ -29,6 +29,11 @@
 
     <div id="stats">
       <div id="count"></div>
+      <div id="incident-total"></div>
+    </div>
+
+    <div id="anim-progress-bar">
+      <div id="anim-progress-fill"></div>
     </div>
 
     <div class="divider"></div>
@@ -37,8 +42,8 @@
       <div class="control-group">
         <label>Mode</label>
         <div class="view-toggle">
-          <button class="view-btn active" id="anim-mode-day">Day</button>
-          <button class="view-btn" id="anim-mode-week">Week</button>
+          <button class="view-btn" id="anim-mode-day">Day</button>
+          <button class="view-btn active" id="anim-mode-week">Week</button>
         </div>
       </div>
       <div class="control-group">
@@ -74,7 +79,7 @@
     </div>
 
     <div class="divider"></div>
-    <p id="solar-ref" class="subtitle"></p>
+    <p id="solar-ref" class="subtitle solar-condition"></p>
   </div>
 
   <div id="loading-bar" class="hidden"></div>

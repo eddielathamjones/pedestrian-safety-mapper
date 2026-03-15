@@ -82,7 +82,7 @@ body {
   color: var(--text-muted);
 }
 
-#year-select {
+#year-from, #year-to {
   width: 100%;
   padding: 7px 10px;
   background: var(--bg-raise);
@@ -98,14 +98,14 @@ body {
   background-position: right 10px center;
   padding-right: 28px;
 }
-#year-select:focus {
+#year-from:focus, #year-to:focus {
   outline: none;
   border-color: var(--accent);
 }
-#year-select option { background: var(--bg-raise); }
+#year-from option, #year-to option { background: var(--bg-raise); }
 
 /* ── Stats ─────────────────────────────────────────────────── */
-#stats { min-height: 36px; }
+#stats { display: flex; flex-direction: column; gap: 2px; }
 
 #count {
   font-size: 22px;
@@ -280,6 +280,36 @@ body {
   letter-spacing: 0.02em;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+}
+
+#incident-total {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 24-hour progress bar */
+#anim-progress-bar {
+  height: 4px;
+  background: var(--bg-raise);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#anim-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.solar-condition {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 /* ── Legend ────────────────────────────────────────────────── */
