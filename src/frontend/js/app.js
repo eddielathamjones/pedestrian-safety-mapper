@@ -919,11 +919,13 @@ async function loadAnimData() {
       if (h == null || h > 23) continue;
 
       let slot;
+      const { year, month, day } = feat.properties;
+      const dow = (year && month && day)
+        ? (new Date(year, month - 1, day).getDay() + 6) % 7
+        : -1;
+      if (!animDows.has(dow)) continue; // filter by selected days in both modes
       if (animMode === 'week') {
-        const { year, month, day } = feat.properties;
-        if (!year || !month || !day) continue;
-        const dow = (new Date(year, month - 1, day).getDay() + 6) % 7; // Mon=0…Sun=6
-        if (!animDows.has(dow)) continue;
+        if (dow < 0) continue;
         slot = dow * 24 + h;
       } else {
         slot = h;
@@ -982,11 +984,13 @@ function rebuildAnimData() {
     if (h == null || h > 23) continue;
 
     let slot;
+    const { year, month, day } = feat.properties;
+    const dow = (year && month && day)
+      ? (new Date(year, month - 1, day).getDay() + 6) % 7
+      : -1;
+    if (!animDows.has(dow)) continue;
     if (animMode === 'week') {
-      const { year, month, day } = feat.properties;
-      if (!year || !month || !day) continue;
-      const dow = (new Date(year, month - 1, day).getDay() + 6) % 7;
-      if (!animDows.has(dow)) continue;
+      if (dow < 0) continue;
       slot = dow * 24 + h;
     } else {
       slot = h;
@@ -1053,7 +1057,7 @@ document.getElementById('anim-mode-day').addEventListener('click', () => {
   animMode = 'day';
   document.getElementById('anim-mode-day').classList.add('active');
   document.getElementById('anim-mode-week').classList.remove('active');
-  document.getElementById('anim-dow-wrap').classList.add('hidden');
+  document.getElementById('anim-dow-wrap').classList.remove('hidden');
   rebuildAnimData();
 });
 
@@ -1062,7 +1066,7 @@ document.getElementById('anim-mode-week').addEventListener('click', () => {
   animMode = 'week';
   document.getElementById('anim-mode-week').classList.add('active');
   document.getElementById('anim-mode-day').classList.remove('active');
-  document.getElementById('anim-dow-wrap').classList.remove('hidden');
+  document.getElementById('anim-dow-wrap').classList.add('hidden');
   rebuildAnimData();
 });
 
