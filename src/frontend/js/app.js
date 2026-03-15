@@ -37,6 +37,9 @@ let animUtcOffset   = -6;
 let animSolarCurve  = null;   // Float32Array[24] of solar altitudes in degrees, one per hour slot
 let allLoadedFeatures = [];   // all features from the last loadAnimData() call
 
+// ── Animate day-of-week filter ─────────────────────────────────
+let animDows = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
+
 // ── Filter state ───────────────────────────────────────────────
 let viewMode    = 'animate'; // 'animate' | 'filter'
 let filterFrom  = 17;
@@ -613,6 +616,7 @@ async function loadAnimData() {
         const { year, month, day } = feat.properties;
         if (!year || !month || !day) continue;
         const dow = (new Date(year, month - 1, day).getDay() + 6) % 7; // Mon=0…Sun=6
+        if (!animDows.has(dow)) continue;
         slot = dow * 24 + h;
       } else {
         slot = h;
@@ -656,6 +660,55 @@ async function loadAnimData() {
   }
 }
 
+// ── Rebuild anim data from already-loaded features ────────────
+// Used when animMode or animDows changes — avoids re-fetching.
+function rebuildAnimData() {
+  if (!allLoadedFeatures.length) return;
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  animHour = ANIM_START_HOUR;
+  animLastTs = null;
+  animLastUpdateHour = -1;
+
+  animData = new Map();
+  for (const feat of allLoadedFeatures) {
+    const h = feat.properties.hour;
+    if (h == null || h > 23) continue;
+
+    let slot;
+    if (animMode === 'week') {
+      const { year, month, day } = feat.properties;
+      if (!year || !month || !day) continue;
+      const dow = (new Date(year, month - 1, day).getDay() + 6) % 7;
+      if (!animDows.has(dow)) continue;
+      slot = dow * 24 + h;
+    } else {
+      slot = h;
+    }
+
+    if (!animData.has(slot)) animData.set(slot, []);
+    animData.get(slot).push(feat);
+  }
+
+  animMaxDensity = 1;
+  for (const bucket of animData.values()) {
+    if (bucket.length > animMaxDensity) animMaxDensity = bucket.length;
+  }
+
+  const hourBuckets = new Map();
+  for (const [slot, bucket] of animData.entries()) {
+    const h = slot % 24;
+    if (!hourBuckets.has(h)) hourBuckets.set(h, []);
+    hourBuckets.get(h).push(...bucket);
+  }
+  animSolarCurve = buildSolarCurve(hourBuckets);
+
+  map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
+  updateVisibleCount();
+  animPlaying = true;
+  updatePlayPauseBtn();
+  animFrame = requestAnimationFrame(animTick);
+}
+
 // ── Playback controls ─────────────────────────────────────────
 const animPlayPauseBtn = document.getElementById('anim-playpause');
 
@@ -684,7 +737,8 @@ document.getElementById('anim-mode-day').addEventListener('click', () => {
   animMode = 'day';
   document.getElementById('anim-mode-day').classList.add('active');
   document.getElementById('anim-mode-week').classList.remove('active');
-  loadAnimData();
+  document.getElementById('anim-dow-wrap').classList.add('hidden');
+  rebuildAnimData();
 });
 
 document.getElementById('anim-mode-week').addEventListener('click', () => {
@@ -692,7 +746,25 @@ document.getElementById('anim-mode-week').addEventListener('click', () => {
   animMode = 'week';
   document.getElementById('anim-mode-week').classList.add('active');
   document.getElementById('anim-mode-day').classList.remove('active');
-  loadAnimData();
+  document.getElementById('anim-dow-wrap').classList.remove('hidden');
+  rebuildAnimData();
+});
+
+// Animate day-of-week chips
+document.querySelectorAll('[data-anim-dow]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dow = Number(btn.dataset.animDow);
+    if (animDows.has(dow)) {
+      if (animDows.size > 1) {
+        animDows.delete(dow);
+        btn.classList.remove('active');
+      }
+    } else {
+      animDows.add(dow);
+      btn.classList.add('active');
+    }
+    rebuildAnimData();
+  });
 });
 
 
