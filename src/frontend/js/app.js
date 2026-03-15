@@ -10,7 +10,7 @@ const ANIM_STEP        = 0.25;   // advance in 15-min increments
 const ANIM_SPEED_FAST  = 1.2;    // sim-hours/sec when sparse
 const ANIM_SPEED_SLOW  = 0.15;   // sim-hours/sec when dense
 const ANIM_BASE_RADIUS = 4;
-const ANIM_START_HOUR  = 4;      // clock and dead-dot accumulation begin here
+const ANIM_START_HOUR  = 12;     // clock and dead-dot accumulation begin here
 
 // ── Solar thresholds — set by updateSolarThresholds() after data loads ──
 // Defaults are equinox approximations; replaced with SunCalc values at runtime.
