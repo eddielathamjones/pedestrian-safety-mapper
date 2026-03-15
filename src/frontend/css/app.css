@@ -446,6 +446,24 @@ body {
   text-align: right;
 }
 
+.sv-link {
+  display: block;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
+}
+.sv-link:hover { border-color: var(--accent); color: var(--text); }
+
 /* ── Sun HUD ───────────────────────────────────────────────── */
 #sun-hud {
   position: absolute;

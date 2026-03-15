@@ -379,6 +379,66 @@ map.on('load', () => {
   });
 
   loadAnimData();
+
+  // ── Incident popup + Street View ────────────────────────────
+  const LGT = {
+    1:'Daylight', 2:'Dark – no light', 3:'Dark – lighted',
+    4:'Dawn', 5:'Dusk', 6:'Dark – unknown', 7:'Glare', 9:'Unknown',
+  };
+  const ROUTE = {
+    1:'Interstate', 2:'US Highway', 3:'State Highway',
+    4:'County Road', 5:'City Street', 6:'Local Road',
+    7:'Private Road', 8:'Park / Forest', 9:'Unknown',
+  };
+  const WEATHER = {
+    1:'Clear', 2:'Rain', 3:'Sleet / Hail', 4:'Snow',
+    5:'Fog / Smoke', 6:'Crosswinds', 7:'Blowing Sand', 9:'Unknown',
+  };
+  const SEX = { 1: 'Male', 2: 'Female' };
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const popupEl      = document.getElementById('popup');
+  const popupContent = document.getElementById('popup-content');
+
+  function showIncidentPopup(props, lngLat) {
+    const date  = `${MONTHS[(props.month || 1) - 1]} ${props.day}, ${props.year}`;
+    const time  = props.hour != null ? formatHour(props.hour) : 'Unknown';
+    const lat   = lngLat.lat.toFixed(6);
+    const lng   = lngLat.lng.toFixed(6);
+    const svUrl = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=12,0,0,0,5&z=17`;
+
+    const row = (label, val) =>
+      `<div class="row"><span class="label">${label}</span><span class="value">${val}</span></div>`;
+
+    popupContent.innerHTML = [
+      row('Date',     date),
+      row('Time',     time),
+      row('Lighting', LGT[props.lgt_cond]   || 'Unknown'),
+      row('Weather',  WEATHER[props.weather] || 'Unknown'),
+      props.age && props.age < 998 ? row('Age', props.age) : '',
+      SEX[props.sex] ? row('Sex', SEX[props.sex]) : '',
+      `<a class="sv-link" href="${svUrl}" target="_blank" rel="noopener">Open Street View →</a>`,
+    ].join('');
+
+    popupEl.classList.remove('hidden');
+  }
+
+  for (const layer of ['incidents-dead', 'incidents-circle']) {
+    map.on('click', layer, e => {
+      if (e.features.length) showIncidentPopup(e.features[0].properties, e.lngLat);
+    });
+    map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+  }
+
+  map.on('click', e => {
+    const hits = map.queryRenderedFeatures(e.point, { layers: ['incidents-dead', 'incidents-circle'] });
+    if (!hits.length) popupEl.classList.add('hidden');
+  });
+
+  document.getElementById('popup-close').addEventListener('click', () => {
+    popupEl.classList.add('hidden');
+  });
 });
 
 // ── N6: Pop/fade function ─────────────────────────────────────

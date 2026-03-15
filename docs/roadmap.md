@@ -30,9 +30,8 @@ mood, it doesn't need a filter applied from outside.
 - [x] Sprite differentiation — active dots loud/vivid on first appearance, accumulated/dead dots
       smaller and quieter; the moment of impact should matter visually (Byrne)
 - [x] Week mode elevated — default mode, day name prepended to clock display (Byrne)
-- [ ] Static time-window filter mode — hour range sliders, solar-adjusted, multi-year density
-      heatmap (issue #5); use raw `hour` data as ground truth, cross-reference `tod` field as
-      data quality validation (Tufte)
+- [x] Static time-window filter mode — hour range sliders, solar-adjusted, presets (Day/Sunset/
+      Night/Sunrise/All), day-of-week chips, solar condition label, Sun HUD compass (issue #5)
 - [ ] Street View integration — pull imagery for incident locations on click; only valuable if
       it shows something causal (no crosswalk, unlit road, high-speed geometry) (Tufte)
 - [ ] Performance and UX polish
