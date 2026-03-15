@@ -55,6 +55,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  max-height: calc(100vh - 32px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 #controls-header h1 {
@@ -296,12 +300,16 @@ body {
 }
 #anim-rewind:hover { border-color: var(--accent); color: var(--text); }
 
-#trail-slider {
+#trail-slider,
+#filter-from,
+#filter-to {
   width: 100%;
   accent-color: var(--accent);
   cursor: pointer;
   margin-top: 2px;
 }
+
+#filter-to { margin-top: 6px; }
 
 /* Clock display in count el during animation */
 #count.anim-clock {
@@ -448,6 +456,7 @@ body {
 
 .sv-link {
   display: block;
+  width: 100%;
   margin-top: 10px;
   padding: 6px 10px;
   background: var(--bg-raise);
@@ -455,12 +464,15 @@ body {
   border-radius: 6px;
   color: var(--text-muted);
   font-size: 11px;
+  font-family: var(--font);
   font-weight: 600;
   text-decoration: none;
   text-align: center;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
+  box-sizing: border-box;
 }
 .sv-link:hover { border-color: var(--accent); color: var(--text); }
 

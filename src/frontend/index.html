@@ -47,13 +47,13 @@
       <div class="control-group">
         <label>View</label>
         <div class="view-toggle">
-          <button class="view-btn active" id="view-animate">Animate</button>
-          <button class="view-btn" id="view-filter">Filter</button>
+          <button class="view-btn active" id="view-filter">Static</button>
+          <button class="view-btn" id="view-animate">Animate</button>
         </div>
       </div>
 
       <!-- Animate-specific controls -->
-      <div id="animate-sub">
+      <div id="animate-sub" class="hidden">
         <div class="control-group">
           <label>Mode</label>
           <div class="view-toggle">
@@ -76,13 +76,10 @@
         <div class="control-group">
           <label>Playback</label>
           <div style="display:flex;gap:6px;">
-            <button id="anim-playpause" style="flex:1" data-tooltip="Play / pause">⏸ Pause</button>
-            <button id="anim-rewind" data-tooltip="Reset to start">↺</button>
+            <button id="anim-playpause" style="flex:1">⏸ Pause</button>
+            <button id="anim-rewind">↺ Restart</button>
           </div>
-        </div>
-        <div class="control-group">
-          <label>Speed</label>
-          <div class="view-toggle">
+          <div class="view-toggle" style="margin-top:4px;">
             <button class="view-btn" data-speed="0.4">Slow</button>
             <button class="view-btn active" data-speed="1">Normal</button>
             <button class="view-btn" data-speed="2.5">Fast</button>
@@ -90,8 +87,23 @@
         </div>
       </div>
 
-      <!-- Filter-specific controls -->
-      <div id="filter-sub" class="hidden">
+      <!-- Static-specific controls -->
+      <div id="filter-sub">
+        <div class="control-group">
+          <label>Presets</label>
+          <div class="filter-chips">
+            <button class="chip" data-preset="day">Day</button>
+            <button class="chip active" data-preset="sunset">Sunset</button>
+            <button class="chip" data-preset="night">Night</button>
+            <button class="chip" data-preset="sunrise">Sunrise</button>
+            <button class="chip" data-preset="all">All Day</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Time window<br><span id="filter-range-label" style="font-size:11px;color:var(--text);text-transform:none;letter-spacing:0;font-weight:500;">4:00 PM – 9:00 PM</span></label>
+          <input type="range" id="filter-from" min="12" max="35" step="1" value="16" />
+          <input type="range" id="filter-to" min="12" max="35" step="1" value="21" />
+        </div>
         <div class="control-group">
           <label>Days</label>
           <div class="filter-chips" id="dow-chips">
@@ -102,24 +114,6 @@
             <button class="chip active" data-dow="4">Fri</button>
             <button class="chip active" data-dow="5">Sat</button>
             <button class="chip active" data-dow="6">Sun</button>
-          </div>
-        </div>
-        <div class="control-group">
-          <label>From — <span id="filter-from-value">5:00 PM</span></label>
-          <input type="range" id="filter-from" min="12" max="35" step="1" value="17" />
-        </div>
-        <div class="control-group">
-          <label>To — <span id="filter-to-value">11:00 PM</span></label>
-          <input type="range" id="filter-to" min="12" max="35" step="1" value="23" />
-        </div>
-        <div class="control-group">
-          <label>Presets</label>
-          <div class="filter-chips">
-            <button class="chip" data-preset="day">Day</button>
-            <button class="chip" data-preset="sunset">Sunset</button>
-            <button class="chip" data-preset="night">Night</button>
-            <button class="chip" data-preset="sunrise">Sunrise</button>
-            <button class="chip" data-preset="all">All</button>
           </div>
         </div>
       </div>

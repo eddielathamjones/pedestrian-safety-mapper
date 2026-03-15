@@ -3,7 +3,8 @@
 // ── Config ────────────────────────────────────────────────────
 const YEAR_MIN = 2001;
 const YEAR_MAX = 2023;
-const DEFAULT_YEAR = YEAR_MAX;
+const DEFAULT_YEAR_FROM = YEAR_MAX - 4;  // last 5 years
+const DEFAULT_YEAR_TO   = YEAR_MAX;
 
 // ── Animation constants ────────────────────────────────────────
 const ANIM_STEP        = 0.25;   // advance in 15-min increments
@@ -20,8 +21,8 @@ let DUSK_START = 19.0;
 let DUSK_END   = 20.5;
 
 // ── State ─────────────────────────────────────────────────────
-let yearFrom = DEFAULT_YEAR;
-let yearTo   = DEFAULT_YEAR;
+let yearFrom = DEFAULT_YEAR_FROM;
+let yearTo   = DEFAULT_YEAR_TO;
 let animMode    = 'week';  // 'day' | 'week'
 let animData    = null;   // Map<slot, Feature[]>
 let animFrame   = null;
@@ -44,9 +45,9 @@ let animSpeedMult = 1.0;
 let animDows = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 
 // ── Filter state ───────────────────────────────────────────────
-let viewMode        = 'animate'; // 'animate' | 'filter'
-let filterFrom      = 17; // slider value 12–35 (noon-based)
-let filterTo        = 23; // 11:00 PM default
+let viewMode        = 'filter';  // 'animate' | 'filter'
+let filterFrom      = 16; // slider value 12–35 (noon-based) — sunset preset default
+let filterTo        = 21; // 9:00 PM default
 let filterDows      = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 let filteredFeatures = []; // current filter result, kept for viewport count updates
 
@@ -88,8 +89,8 @@ for (let y = YEAR_MAX; y >= YEAR_MIN; y--) {
   yearFromEl.appendChild(makeOpt());
   yearToEl.appendChild(makeOpt());
 }
-yearFromEl.value = DEFAULT_YEAR;
-yearToEl.value   = DEFAULT_YEAR;
+yearFromEl.value = DEFAULT_YEAR_FROM;
+yearToEl.value   = DEFAULT_YEAR_TO;
 
 // ── Sprite: sun marker ────────────────────────────────────────
 function createSunSprite(size) {
@@ -400,12 +401,33 @@ map.on('load', () => {
   const popupEl      = document.getElementById('popup');
   const popupContent = document.getElementById('popup-content');
 
+  async function getRoadBearing(lat, lng) {
+    const q = `[out:json];way(around:30,${lat},${lng})[highway];out geom qt 1;`;
+    const res = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`
+    );
+    const data = await res.json();
+    if (!data.elements.length) return null;
+    const nodes = data.elements[0].geometry;
+    // Find segment midpoint closest to incident
+    let minDist = Infinity, bestIdx = 0;
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const mx = (nodes[i].lon + nodes[i + 1].lon) / 2;
+      const my = (nodes[i].lat + nodes[i + 1].lat) / 2;
+      const d  = Math.hypot(mx - lng, my - lat);
+      if (d < minDist) { minDist = d; bestIdx = i; }
+    }
+    const a = nodes[bestIdx], b = nodes[bestIdx + 1];
+    const dLon = (b.lon - a.lon) * Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180);
+    const dLat = b.lat - a.lat;
+    return Math.round((Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360);
+  }
+
   function showIncidentPopup(props, lngLat) {
     const date  = `${MONTHS[(props.month || 1) - 1]} ${props.day}, ${props.year}`;
     const time  = props.hour != null ? formatHour(props.hour) : 'Unknown';
     const lat   = lngLat.lat.toFixed(6);
     const lng   = lngLat.lng.toFixed(6);
-    const svUrl = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=12,0,0,0,5&z=17`;
 
     const row = (label, val) =>
       `<div class="row"><span class="label">${label}</span><span class="value">${val}</span></div>`;
@@ -417,8 +439,19 @@ map.on('load', () => {
       row('Weather',  WEATHER[props.weather] || 'Unknown'),
       props.age && props.age < 998 ? row('Age', props.age) : '',
       SEX[props.sex] ? row('Sex', SEX[props.sex]) : '',
-      `<a class="sv-link" href="${svUrl}" target="_blank" rel="noopener">Open Street View →</a>`,
+      `<button class="sv-link" id="sv-open-btn">Open Street View →</button>`,
     ].join('');
+
+    // Async: fetch road bearing, then open Street View aligned to road
+    document.getElementById('sv-open-btn').addEventListener('click', async () => {
+      const baseUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+      try {
+        const heading = await getRoadBearing(parseFloat(lat), parseFloat(lng));
+        window.open(heading != null ? `${baseUrl}&heading=${heading}` : baseUrl, '_blank');
+      } catch {
+        window.open(baseUrl, '_blank');
+      }
+    });
 
     popupEl.classList.remove('hidden');
   }
@@ -1247,18 +1280,21 @@ document.getElementById('view-filter').addEventListener('click', () => {
 // Hour sliders
 const filterFromEl       = document.getElementById('filter-from');
 const filterToEl         = document.getElementById('filter-to');
-const filterFromValueEl  = document.getElementById('filter-from-value');
-const filterToValueEl    = document.getElementById('filter-to-value');
+const filterRangeLabelEl = document.getElementById('filter-range-label');
+
+function updateFilterRangeLabel() {
+  filterRangeLabelEl.textContent = `${formatHour(filterFrom % 24)} – ${formatHour(filterTo % 24)}`;
+}
 
 filterFromEl.addEventListener('input', () => {
   filterFrom = Number(filterFromEl.value);
-  filterFromValueEl.textContent = formatHour(filterFrom % 24);
+  updateFilterRangeLabel();
   document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
   if (viewMode === 'filter') applyFilter();
 });
 filterToEl.addEventListener('input', () => {
   filterTo = Number(filterToEl.value);
-  filterToValueEl.textContent = formatHour(filterTo % 24);
+  updateFilterRangeLabel();
   document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
   if (viewMode === 'filter') applyFilter();
 });
@@ -1277,8 +1313,7 @@ function setFilterWindow(from, to) {
   filterTo   = to;
   filterFromEl.value = from;
   filterToEl.value   = to;
-  filterFromValueEl.textContent = formatHour(from % 24);
-  filterToValueEl.textContent   = formatHour(to % 24);
+  updateFilterRangeLabel();
   if (viewMode === 'filter') applyFilter();
 }
 
