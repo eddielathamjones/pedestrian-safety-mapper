@@ -42,8 +42,8 @@ let animDows = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 
 // ── Filter state ───────────────────────────────────────────────
 let viewMode    = 'animate'; // 'animate' | 'filter'
-let filterFrom  = 17;
-let filterTo    = 21;
+let filterFrom  = 17; // slider value 12–35 (noon-based)
+let filterTo    = 23; // 11:00 PM default
 let filterDows  = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -841,15 +841,15 @@ function getDow(feat) {
 function applyFilter() {
   if (!allLoadedFeatures.length) return;
 
-  const from   = filterFrom;
-  const to     = filterTo;
-  const wraps  = from > to; // window crosses midnight
+  const from = filterFrom; // slider value in 12–35 range
+  const to   = filterTo;
 
   const matched = allLoadedFeatures.filter(f => {
     const h = f.properties.hour;
     if (h == null) return false;
-    const hourMatch = wraps ? (h >= from || h <= to) : (h >= from && h <= to);
-    if (!hourMatch) return false;
+    // Normalize to noon-based range: noon=12, midnight=24, 11am=35
+    const normH = h >= 12 ? h : h + 24;
+    if (normH < from || normH > to) return false;
     if (filterDows.size < 7) {
       const dow = getDow(f);
       if (dow < 0 || !filterDows.has(dow)) return false;
@@ -861,12 +861,12 @@ function applyFilter() {
   map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: matched });
   map.getSource('road-heat-lines').setData(buildRoadHeatLines(matched));
 
-  // Solar context at midpoint of window
-  const midHour = wraps ? ((from + to + 24) / 2) % 24 : (from + to) / 2;
+  // Solar context at midpoint of window (convert back to 0-23)
+  const midHour = ((from + to) / 2) % 24;
   updateMapFilter(midHour);
 
-  // Clock shows the time range
-  countEl.textContent = `${formatHour(from)} – ${formatHour(to)}`;
+  // Clock shows the time range (convert to 0-23 for display)
+  countEl.textContent = `${formatHour(from % 24)} – ${formatHour(to % 24)}`;
   countEl.classList.add('anim-clock');
 
   // Count
@@ -878,14 +878,9 @@ function applyFilter() {
   const win    = document.getElementById('anim-progress-window');
   if (fill) fill.style.width = '0';
   if (win) {
-    if (!wraps) {
-      win.style.left  = `${(from / 24) * 100}%`;
-      win.style.width = `${((to - from + 1) / 24) * 100}%`;
-    } else {
-      // crosses midnight — anchor from left edge, width wraps around
-      win.style.left  = `${(from / 24) * 100}%`;
-      win.style.width = `${((24 - from + to + 1) / 24) * 100}%`;
-    }
+    // Slider is 12–35; map to 0–100% of the progress bar
+    win.style.left  = `${((from - 12) / 24) * 100}%`;
+    win.style.width = `${((to - from + 1) / 24) * 100}%`;
     win.style.display = 'block';
   }
 
@@ -899,7 +894,7 @@ function applyFilter() {
                     : altDeg > -12 ? 'Nautical twilight'
                     :                'Night';
     const sign   = altDeg >= 0 ? '+' : '−';
-    const note   = wraps ? ' · crosses midnight' : '';
+    const note   = to >= 24 ? ' · crosses midnight' : '';
     solarRef.textContent = `${condition} · ${sign}${Math.abs(altDeg).toFixed(1)}° at midpoint${note}`;
   }
 }
@@ -942,12 +937,12 @@ const filterToValueEl    = document.getElementById('filter-to-value');
 
 filterFromEl.addEventListener('input', () => {
   filterFrom = Number(filterFromEl.value);
-  filterFromValueEl.textContent = formatHour(filterFrom);
+  filterFromValueEl.textContent = formatHour(filterFrom % 24);
   if (viewMode === 'filter') applyFilter();
 });
 filterToEl.addEventListener('input', () => {
   filterTo = Number(filterToEl.value);
-  filterToValueEl.textContent = formatHour(filterTo);
+  filterToValueEl.textContent = formatHour(filterTo % 24);
   if (viewMode === 'filter') applyFilter();
 });
 
