@@ -73,6 +73,34 @@ body {
   text-transform: uppercase;
 }
 
+.subtitle-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.subtitle-link:hover {
+  color: var(--text);
+  border-bottom-color: var(--text-muted);
+}
+
+.data-update-badge {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+.data-update-badge:hover { opacity: 1; }
+
 .control-group { display: flex; flex-direction: column; gap: 6px; }
 
 .control-group > label {
@@ -417,6 +445,45 @@ body {
   font-weight: 500;
   text-align: right;
 }
+
+/* ── Sun HUD ───────────────────────────────────────────────── */
+#sun-hud {
+  position: absolute;
+  bottom: 40px;
+  right: 12px;
+  z-index: 10;
+}
+#sun-hud canvas {
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7));
+  pointer-events: none;
+}
+
+/* ── Tooltip ───────────────────────────────────────────────── */
+[data-tooltip] { position: relative; }
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  font-family: var(--font);
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 20;
+}
+
+[data-tooltip]:hover::after { opacity: 1; }
 
 /* ── MapLibre attribution ──────────────────────────────────── */
 .maplibregl-ctrl-attrib {

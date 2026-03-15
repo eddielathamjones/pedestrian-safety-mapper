@@ -2,6 +2,10 @@
 
 ## Design direction
 
+A map is always an argument. The cartographic voice lives in the rendering layer — the dark palette,
+the heat lines, the ember dots are not decoration. They are the claim the map is making. The code
+is the brushstroke.
+
 Two perspectives inform this project's visual and analytical direction:
 
 **Tufte:** Show the data honestly. Maximise data-ink ratio. Every visual element should encode

@@ -15,7 +15,10 @@
   <div id="controls">
     <div id="controls-header">
       <h1>Pedestrian Fatalities</h1>
-      <p class="subtitle">FARS · 2001–2022</p>
+      <p class="subtitle"><a class="subtitle-link" href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars" target="_blank" rel="noopener">FARS · 2001–2023</a></p>
+      <a id="data-update-badge" class="data-update-badge hidden"
+         href="https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars"
+         target="_blank" rel="noopener"></a>
     </div>
 
     <div class="control-group">
@@ -73,8 +76,16 @@
         <div class="control-group">
           <label>Playback</label>
           <div style="display:flex;gap:6px;">
-            <button id="anim-playpause" style="flex:1">⏸ Pause</button>
-            <button id="anim-rewind">⏮</button>
+            <button id="anim-playpause" style="flex:1" data-tooltip="Play / pause">⏸ Pause</button>
+            <button id="anim-rewind" data-tooltip="Reset to start">↺</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Speed</label>
+          <div class="view-toggle">
+            <button class="view-btn" data-speed="0.4">Slow</button>
+            <button class="view-btn active" data-speed="1">Normal</button>
+            <button class="view-btn" data-speed="2.5">Fast</button>
           </div>
         </div>
       </div>
@@ -101,6 +112,16 @@
           <label>To — <span id="filter-to-value">11:00 PM</span></label>
           <input type="range" id="filter-to" min="12" max="35" step="1" value="23" />
         </div>
+        <div class="control-group">
+          <label>Presets</label>
+          <div class="filter-chips">
+            <button class="chip" data-preset="day">Day</button>
+            <button class="chip" data-preset="sunset">Sunset</button>
+            <button class="chip" data-preset="night">Night</button>
+            <button class="chip" data-preset="sunrise">Sunrise</button>
+            <button class="chip" data-preset="all">All</button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -115,19 +136,15 @@
       </div>
     </div>
 
-    <div class="control-group">
-      <label>Dot Style</label>
-      <div class="view-toggle">
-        <button class="view-btn active" data-sprite="explosion">Blast</button>
-        <button class="view-btn" data-sprite="ember">Ember</button>
-      </div>
-    </div>
-
     <div class="divider"></div>
     <p id="solar-ref" class="subtitle solar-condition"></p>
   </div>
 
   <div id="loading-bar" class="hidden"></div>
+
+  <div id="sun-hud" class="hidden" data-tooltip="Sun position · dot shows bearing and altitude above horizon">
+    <canvas id="sun-hud-canvas" width="80" height="90"></canvas>
+  </div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>

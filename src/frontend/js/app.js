@@ -2,7 +2,7 @@
 
 // ── Config ────────────────────────────────────────────────────
 const YEAR_MIN = 2001;
-const YEAR_MAX = 2022;
+const YEAR_MAX = 2023;
 const DEFAULT_YEAR = YEAR_MAX;
 
 // ── Animation constants ────────────────────────────────────────
@@ -37,14 +37,18 @@ let animUtcOffset   = -6;
 let animSolarCurve  = null;   // Float32Array[24] of solar altitudes in degrees, one per hour slot
 let allLoadedFeatures = [];   // all features from the last loadAnimData() call
 
+// ── Animation speed multiplier ────────────────────────────────
+let animSpeedMult = 1.0;
+
 // ── Animate day-of-week filter ─────────────────────────────────
 let animDows = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
 
 // ── Filter state ───────────────────────────────────────────────
-let viewMode    = 'animate'; // 'animate' | 'filter'
-let filterFrom  = 17; // slider value 12–35 (noon-based)
-let filterTo    = 23; // 11:00 PM default
-let filterDows  = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
+let viewMode        = 'animate'; // 'animate' | 'filter'
+let filterFrom      = 17; // slider value 12–35 (noon-based)
+let filterTo        = 23; // 11:00 PM default
+let filterDows      = new Set([0, 1, 2, 3, 4, 5, 6]); // Mon=0…Sun=6
+let filteredFeatures = []; // current filter result, kept for viewport count updates
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -63,6 +67,18 @@ const map = new maplibregl.Map({
 
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
+// Double-click the compass to reset pitch back to top-down view.
+// Single click (MapLibre default) already resets bearing to north.
+setTimeout(() => {
+  const compassBtn = document.querySelector('.maplibregl-ctrl-compass');
+  if (!compassBtn) return;
+  compassBtn.title = 'Click: reset north  ·  Double-click: top-down view';
+  compassBtn.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    map.easeTo({ pitch: 0, bearing: 0, duration: 400 });
+  });
+}, 0);
+
 // ── Year range selectors ──────────────────────────────────────
 const yearFromEl = document.getElementById('year-from');
 const yearToEl   = document.getElementById('year-to');
@@ -75,59 +91,28 @@ for (let y = YEAR_MAX; y >= YEAR_MIN; y--) {
 yearFromEl.value = DEFAULT_YEAR;
 yearToEl.value   = DEFAULT_YEAR;
 
-// ── Blast sprite ──────────────────────────────────────────────
-// 7 irregular spikes, harsh amber/white core, no black outline.
-// Feels like a burst of light under sodium streetlamps, not a cartoon.
-function createExplosionSprite(size) {
+// ── Sprite: sun marker ────────────────────────────────────────
+function createSunSprite(size) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
   const cx = size / 2, cy = size / 2;
 
-  // Soft outer halo — light bleeding into dark
-  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.48);
-  halo.addColorStop(0.0, 'rgba(255,160,40,0.0)');
-  halo.addColorStop(0.5, 'rgba(200,60,0,0.18)');
-  halo.addColorStop(1.0, 'rgba(0,0,0,0)');
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
-  ctx.fillStyle = halo;
-  ctx.fill();
+  // Soft outer corona
+  const corona = ctx.createRadialGradient(cx, cy, size * 0.12, cx, cy, size * 0.48);
+  corona.addColorStop(0,   'rgba(255,230,80,0.7)');
+  corona.addColorStop(0.5, 'rgba(255,180,0,0.3)');
+  corona.addColorStop(1,   'rgba(255,120,0,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
+  ctx.fillStyle = corona; ctx.fill();
 
-  // 7 asymmetric spikes — highly varied, nothing regular
-  const outerR = size * 0.44;
-  const innerR = size * 0.13;
-  const spikes = 7;
-  const angleJitter = [0.00, -0.14, 0.20, -0.09, 0.17, -0.18, 0.11];
-  const radiusScale = [1.30, 0.52, 1.08, 0.70, 0.95, 1.22, 0.60];
-
-  ctx.beginPath();
-  for (let i = 0; i < spikes * 2; i++) {
-    const spike   = Math.floor(i / 2);
-    const isOuter = i % 2 === 0;
-    const baseAngle = -Math.PI / 2 + (i * Math.PI / spikes);
-    const angle = baseAngle + (isOuter ? angleJitter[spike] : 0);
-    const r = isOuter ? outerR * radiusScale[spike] : innerR;
-    const x = cx + Math.cos(angle) * r;
-    const y = cy + Math.sin(angle) * r;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-
-  // White-hot core → harsh amber → deep red — sodium lamp palette
-  const grad = ctx.createRadialGradient(cx, cy, size * 0.02, cx, cy, outerR);
-  grad.addColorStop(0.00, '#ffffff');
-  grad.addColorStop(0.08, '#fff2a0');
-  grad.addColorStop(0.28, '#ff8800');
-  grad.addColorStop(0.62, '#cc2000');
-  grad.addColorStop(1.00, '#4a0000');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // No black outline — very faint amber rim only
-  ctx.strokeStyle = 'rgba(255,160,40,0.25)';
-  ctx.lineWidth   = size * 0.025;
-  ctx.stroke();
+  // Disc
+  const disc = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.18);
+  disc.addColorStop(0,   '#fffde0');
+  disc.addColorStop(0.6, '#ffe066');
+  disc.addColorStop(1,   '#ffa500');
+  ctx.beginPath(); ctx.arc(cx, cy, size * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = disc; ctx.fill();
 
   return ctx.getImageData(0, 0, size, size);
 }
@@ -139,11 +124,12 @@ function createEmberSprite(size) {
   const ctx = canvas.getContext('2d');
   const cx = size / 2, cy = size / 2;
 
-  // Outer soft halo
+  // Outer halo — three-phase decay: bright → ember → dark → gone
   const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.48);
   halo.addColorStop(0.0,  'rgba(255,200,80,0.9)');
   halo.addColorStop(0.35, 'rgba(255,60,0,0.7)');
   halo.addColorStop(0.7,  'rgba(180,0,0,0.3)');
+  halo.addColorStop(0.88, 'rgba(80,0,0,0.08)');
   halo.addColorStop(1.0,  'rgba(0,0,0,0)');
   ctx.beginPath();
   ctx.arc(cx, cy, size * 0.48, 0, Math.PI * 2);
@@ -231,8 +217,8 @@ function buildRoadHeatLines(features) {
 
 // ── Map layers + boot ─────────────────────────────────────────
 map.on('load', () => {
-  map.addImage('explosion', createExplosionSprite(64));
-  map.addImage('ember',     createEmberSprite(64));
+  map.addImage('ember', createEmberSprite(64));
+  map.addImage('sun',   createSunSprite(48));
 
   // Road heat lines source
   map.addSource('road-heat-lines', {
@@ -261,13 +247,60 @@ map.on('load', () => {
   map.addLayer({ id: 'night-overlay', type: 'fill', source: 'night-overlay-src',
     paint: { 'fill-color': '#0a1628', 'fill-opacity': 0 } });
 
+  // Solar terminator + sun marker
+  map.addSource('terminator-src', {
+    type: 'geojson',
+    data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} },
+  });
+  // Wide soft glow behind the line
+  map.addLayer({
+    id: 'terminator-glow',
+    type: 'line',
+    source: 'terminator-src',
+    paint: {
+      'line-color': '#fbbf24',
+      'line-width': 12,
+      'line-opacity': 0.18,
+      'line-blur': 8,
+    },
+  });
+  // Crisp line on top
+  map.addLayer({
+    id: 'terminator',
+    type: 'line',
+    source: 'terminator-src',
+    paint: {
+      'line-color': '#fde68a',
+      'line-width': 2,
+      'line-opacity': 0.9,
+    },
+  });
+
+  // Sun marker at the subsolar point
+  map.addSource('sun-src', {
+    type: 'geojson',
+    data: { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} },
+  });
+  map.addLayer({
+    id: 'sun-marker',
+    type: 'symbol',
+    source: 'sun-src',
+    layout: {
+      'icon-image': 'sun',
+      'icon-size': 1,
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
+    },
+    paint: { 'icon-opacity': 0 },  // hidden until terminator is active
+  });
+
   // Active animated dots
   map.addLayer({
     id: 'incidents-circle',
     type: 'symbol',
     source: 'incidents',
     layout: {
-      'icon-image':             'explosion',
+      'icon-image':             'ember',
       'icon-allow-overlap':     true,
       'icon-ignore-placement':  true,
       'icon-size': ['interpolate', ['linear'], ['get', 'anim_radius'], 4, 0.32, 6, 0.55, 8, 0.85],
@@ -335,7 +368,7 @@ map.on('load', () => {
     type: 'symbol',
     source: 'incidents-dead',
     layout: {
-      'icon-image':             'explosion',
+      'icon-image':             'ember',
       'icon-allow-overlap':     true,
       'icon-ignore-placement':  true,
       'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.10, 10, 0.22],
@@ -352,7 +385,7 @@ map.on('load', () => {
 function popFade(age, trailHours) {
   if (age < 0 || age >= trailHours) return null;
   const t         = age / trailHours;
-  const opacity   = Math.pow(1 - t, 1.5);
+  const opacity   = Math.max(0.35, Math.pow(1 - t, 1.5));
   const popFactor = Math.max(0, 1 - age * 3);
   const radius    = ANIM_BASE_RADIUS * (1 + popFactor);
   return { opacity, radius };
@@ -380,16 +413,35 @@ function buildActiveSet(hour = animHour) {
           properties: { ...feat.properties, anim_opacity: pf.opacity, anim_radius: pf.radius },
         });
       }
-    } else if (s >= ANIM_START_HOUR && s <= hour - animTrailHours) {
-      for (const feat of bucket) dead.push(feat);
+    } else if (s >= getAnimStartHour() && s <= hour - animTrailHours) {
+      for (const feat of bucket) {
+        dead.push({ ...feat, properties: { ...feat.properties, died_at_slot: s } });
+      }
     }
   }
+
+  // Decay opacity: fresh dead dots start at 0.5, fade to 0.03 over DECAY_HOURS sim-hours.
+  // Expression is evaluated per-feature on the GPU; we just bake in the current cutoff.
+  const DECAY_HOURS  = 8;
+  const deathCutoff  = hour - animTrailHours;
+  map.setPaintProperty('incidents-dead', 'icon-opacity', [
+    'max', 0.30,
+    ['-', 0.35,
+      ['*', 0.05,
+        ['min', 1, ['max', 0,
+          ['/', ['-', deathCutoff, ['get', 'died_at_slot']], DECAY_HOURS],
+        ]],
+      ],
+    ],
+  ]);
 
   map.getSource('incidents').setData({ type: 'FeatureCollection', features: active });
   map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: dead });
   map.getSource('road-heat-lines').setData(buildRoadHeatLines(dead));
 
   updateMapFilter(hour % 24);
+  updateTerminator(hour % 24);
+  drawSunHUD(hour % 24);
 
   // Solar elevation display — interpolated from per-slot curve
   const h24    = hour % 24;
@@ -503,6 +555,194 @@ function buildSolarCurve(hourBuckets) {
   return curve;
 }
 
+// ── Solar terminator ──────────────────────────────────────────
+// Computes the great-circle boundary between day and night on Earth's surface.
+
+function getSubsolarPoint(utcDate) {
+  // Approximate subsolar longitude: the meridian where it is currently solar noon.
+  const utcH = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60;
+  const lon = ((12 - utcH) * 15 + 180) % 360 - 180;
+  // Binary-search for subsolar latitude (= solar declination).
+  let lat = 0;
+  for (let step = 45; step > 0.05; step /= 2) {
+    const up   = SunCalc.getPosition(utcDate, lat + step, lon).altitude;
+    const down = SunCalc.getPosition(utcDate, lat - step, lon).altitude;
+    if (up > down) lat += step; else lat -= step;
+  }
+  return { lat, lon };
+}
+
+function buildTerminatorGeoJSON(subsolarLat, subsolarLon) {
+  const φs = subsolarLat * Math.PI / 180;
+  const λs = subsolarLon * Math.PI / 180;
+
+  // Subsolar unit vector in 3-D Cartesian.
+  const sx = Math.cos(φs) * Math.cos(λs);
+  const sy = Math.cos(φs) * Math.sin(λs);
+  const sz = Math.sin(φs);
+
+  // Two orthogonal basis vectors in the terminator plane (perpendicular to S).
+  let ux, uy, uz;
+  if (Math.abs(sz) > 0.99) {
+    ux = 1; uy = 0; uz = 0;
+  } else {
+    const len = Math.hypot(sy, sx);
+    ux = sy / len; uy = -sx / len; uz = 0;
+  }
+  const vx = sy * uz - sz * uy;
+  const vy = sz * ux - sx * uz;
+  const vz = sx * uy - sy * ux;
+
+  // Parameterise the great circle and project back to (lon, lat).
+  const N = 180;
+  const raw = [];
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * 2 * Math.PI;
+    const c = Math.cos(t), s = Math.sin(t);
+    const px = c * ux + s * vx;
+    const py = c * uy + s * vy;
+    const pz = c * uz + s * vz;
+    raw.push([
+      Math.atan2(py, px) * 180 / Math.PI,
+      Math.asin(Math.max(-1, Math.min(1, pz))) * 180 / Math.PI,
+    ]);
+  }
+
+  // Split at antimeridian jumps to avoid lines crossing the whole map.
+  const segments = [[]];
+  for (let i = 0; i < raw.length; i++) {
+    if (i > 0 && Math.abs(raw[i][0] - raw[i - 1][0]) > 180) segments.push([]);
+    segments[segments.length - 1].push(raw[i]);
+  }
+  const lines = segments.filter(s => s.length > 1);
+
+  return {
+    type: 'Feature',
+    geometry: lines.length === 1
+      ? { type: 'LineString', coordinates: lines[0] }
+      : { type: 'MultiLineString', coordinates: lines },
+    properties: {},
+  };
+}
+
+// ── Sun HUD ───────────────────────────────────────────────────
+// A small compass drawn on a canvas fixed to the map corner.
+// The sun dot's angle = azimuth; distance from centre = 1 − (altitude/90°),
+// clamped so the dot sits on the ring when the sun is on the horizon.
+function drawSunHUD(hour24) {
+  const canvas = document.getElementById('sun-hud-canvas');
+  const hud    = document.getElementById('sun-hud');
+  if (!canvas || !hud) return;
+
+  const center = map.getCenter();
+  const utcH   = ((hour24 - animUtcOffset) % 24 + 24) % 24;
+  const date   = new Date(Date.UTC(2024, 2, 20, Math.floor(utcH),
+                                    Math.round((utcH % 1) * 60)));
+  const pos    = SunCalc.getPosition(date, center.lat, center.lng);
+  const altDeg = pos.altitude * 180 / Math.PI;
+  // SunCalc azimuth: 0 = south, clockwise positive when viewed from above.
+  // Convert to compass bearing (0 = north, clockwise).
+  const bearing = ((pos.azimuth * 180 / Math.PI) + 180 + 360) % 360;
+
+  const W = canvas.width, H = canvas.height;
+  // Compass occupies top 74px; bottom 16px reserved for time label.
+  const compassH = 74;
+  const cx = W / 2, cy = compassH / 2;
+  const R = cy - 5;  // ring radius
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Background disc
+  ctx.beginPath(); ctx.arc(cx, cy, R + 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(15,23,42,0.75)'; ctx.fill();
+
+  // Ring
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Horizon circle (dashed) — where altitude = 0
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.68, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.setLineDash([2, 4]); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
+
+  // Cardinal tick marks + labels — drawn before the sun dot
+  ctx.font = '8px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const [compassDeg, label] of [[0,'N'],[90,'E'],[180,'S'],[270,'W']]) {
+    const rad = (compassDeg - 90) * Math.PI / 180;
+    // Tick
+    ctx.beginPath();
+    ctx.moveTo(cx + (R - 5) * Math.cos(rad), cy + (R - 5) * Math.sin(rad));
+    ctx.lineTo(cx + R * Math.cos(rad), cy + R * Math.sin(rad));
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    // Label
+    ctx.fillStyle = label === 'N' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.45)';
+    ctx.fillText(label, cx + (R - 10) * Math.cos(rad), cy + (R - 10) * Math.sin(rad));
+  }
+
+  // ── Sun — rendered last so it always appears on top ───────────
+  const bearingRad = (bearing - 90) * Math.PI / 180;
+  const rawDist = altDeg >= 0
+    ? R * 0.68 * (1 - altDeg / 90)
+    : R * 0.68 + (R - R * 0.68) * Math.min(1, -altDeg / 18);
+  // Cap so dot never reaches the ring edge and disappears
+  const dist = Math.min(rawDist, R * 0.82);
+  const sx = cx + dist * Math.cos(bearingRad);
+  const sy = cy + dist * Math.sin(bearingRad);
+
+  // Direction tick on the ring
+  ctx.beginPath();
+  ctx.moveTo(cx + (R - 6) * Math.cos(bearingRad), cy + (R - 6) * Math.sin(bearingRad));
+  ctx.lineTo(cx + R * Math.cos(bearingRad), cy + R * Math.sin(bearingRad));
+  ctx.strokeStyle = altDeg >= 0 ? 'rgba(255,240,100,0.9)' : 'rgba(255,200,100,0.5)';
+  ctx.lineWidth = 2; ctx.stroke();
+
+  // Sun dot — pure radial glow, no hard edge
+  const sunAlpha = altDeg > -18 ? Math.max(0.5, 1 - Math.max(0, -altDeg) / 18) : 0;
+  if (sunAlpha > 0) {
+    const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 7);
+    sg.addColorStop(0,   `rgba(255,240,100,${sunAlpha})`);
+    sg.addColorStop(0.5, `rgba(255,160,0,${sunAlpha * 0.7})`);
+    sg.addColorStop(1,   'rgba(255,100,0,0)');
+    ctx.beginPath(); ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = sg; ctx.fill();
+  }
+
+  // Time label at bottom
+  const h = Math.round(hour24) % 24;
+  const h12 = h % 12 || 12;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  ctx.font = 'bold 9px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText(`${h12}:00 ${ampm}`, cx, compassH + 8);
+
+  hud.classList.remove('hidden');
+}
+
+function updateTerminator(hour24) {
+  const terminatorSrc = map.getSource('terminator-src');
+  const sunSrc        = map.getSource('sun-src');
+  if (!terminatorSrc) return;
+
+  const utcH = ((hour24 - animUtcOffset) % 24 + 24) % 24;
+  const date = new Date(Date.UTC(2024, 2, 20, Math.floor(utcH),
+                                  Math.round((utcH % 1) * 60)));
+  const { lat, lon } = getSubsolarPoint(date);
+
+  terminatorSrc.setData(buildTerminatorGeoJSON(lat, lon));
+
+  if (sunSrc) {
+    sunSrc.setData({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lon, lat] },
+      properties: {},
+    });
+    map.setPaintProperty('sun-marker', 'icon-opacity', 0.9);
+  }
+}
+
 // ── Map time-of-day filter ────────────────────────────────────
 function updateMapFilter(hour24) {
   let altDeg;
@@ -537,7 +777,7 @@ function getDynamicSpeed() {
   const slot    = Math.floor(animHour) % animTotalHours();
   const count   = animData?.get(slot)?.length ?? 0;
   const density = Math.sqrt(count / animMaxDensity);
-  return ANIM_SPEED_FAST + (ANIM_SPEED_SLOW - ANIM_SPEED_FAST) * density;
+  return (ANIM_SPEED_FAST + (ANIM_SPEED_SLOW - ANIM_SPEED_FAST) * density) * animSpeedMult;
 }
 
 // ── N5: Animation clock ───────────────────────────────────────
@@ -560,7 +800,7 @@ function animTick(ts) {
 async function loadAnimData() {
   startLoad();
   animPlaying = false;
-  animHour    = ANIM_START_HOUR;
+  animHour    = getAnimStartHour();
   animLastTs  = null;
   animLastUpdateHour = -1;
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
@@ -639,7 +879,7 @@ async function loadAnimData() {
 function rebuildAnimData() {
   if (!allLoadedFeatures.length) return;
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  animHour = ANIM_START_HOUR;
+  animHour = getAnimStartHour();
   animLastTs = null;
   animLastUpdateHour = -1;
 
@@ -683,6 +923,14 @@ function rebuildAnimData() {
   animFrame = requestAnimationFrame(animTick);
 }
 
+// ── Animation start hour ──────────────────────────────────────
+// In week mode, start at the first selected day's noon slot so the animation
+// doesn't always begin on Monday when other days are selected.
+function getAnimStartHour() {
+  if (animMode === 'week') return Math.min(...animDows) * 24 + ANIM_START_HOUR;
+  return ANIM_START_HOUR;
+}
+
 // ── Playback controls ─────────────────────────────────────────
 const animPlayPauseBtn = document.getElementById('anim-playpause');
 
@@ -699,11 +947,12 @@ animPlayPauseBtn.addEventListener('click', () => {
 
 document.getElementById('anim-rewind').addEventListener('click', () => {
   if (!animData) return;
-  animHour           = ANIM_START_HOUR;
+  const start        = getAnimStartHour();
+  animHour           = start;
   animLastTs         = null;
   animLastUpdateHour = -1;
   map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: [] });
-  buildActiveSet(ANIM_START_HOUR);
+  buildActiveSet(start);
 });
 
 document.getElementById('anim-mode-day').addEventListener('click', () => {
@@ -722,6 +971,15 @@ document.getElementById('anim-mode-week').addEventListener('click', () => {
   document.getElementById('anim-mode-day').classList.remove('active');
   document.getElementById('anim-dow-wrap').classList.remove('hidden');
   rebuildAnimData();
+});
+
+// Speed buttons
+document.querySelectorAll('[data-speed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    animSpeedMult = Number(btn.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
 });
 
 // Animate day-of-week chips
@@ -768,19 +1026,22 @@ document.getElementById('heat-off').addEventListener('click', () => {
   document.getElementById('heat-on').classList.remove('active');
 });
 
-// ── Sprite selector ───────────────────────────────────────────
-document.querySelectorAll('[data-sprite]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const sprite = btn.dataset.sprite;
-    map.setLayoutProperty('incidents-circle', 'icon-image', sprite);
-    map.setLayoutProperty('incidents-dead',   'icon-image', sprite);
-    document.querySelectorAll('[data-sprite]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
 // ── Visible feature counter ───────────────────────────────────
 const incidentTotalEl = document.getElementById('incident-total');
+
+function updateFilterCount() {
+  if (!incidentTotalEl) return;
+  const b = map.getBounds();
+  const w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+  let inView = 0;
+  for (const f of filteredFeatures) {
+    const [lon, lat] = f.geometry.coordinates;
+    if (lon >= w && lon <= e && lat >= s && lat <= n) inView++;
+  }
+  const total = allLoadedFeatures.length.toLocaleString();
+  incidentTotalEl.textContent =
+    `${total} total · ${inView.toLocaleString()} in view`;
+}
 
 function updateVisibleCount() {
   if (viewMode === 'filter') return;
@@ -797,7 +1058,11 @@ function updateVisibleCount() {
   incidentTotalEl.textContent = `${total} total · ${vis} in view`;
 }
 
-map.on('moveend', updateVisibleCount);
+map.on('moveend', () => {
+  if (viewMode === 'filter') updateFilterCount(); else updateVisibleCount();
+  const h = viewMode === 'filter' ? (filterFrom + filterTo) / 2 % 24 : animHour % 24;
+  drawSunHUD(h);
+});
 map.on('zoomend', updateVisibleCount);
 
 // ── Filter mode ───────────────────────────────────────────────
@@ -831,21 +1096,35 @@ function applyFilter() {
     return true;
   });
 
+  filteredFeatures = matched;
+
   map.getSource('incidents').setData({ type: 'FeatureCollection', features: [] });
   map.getSource('incidents-dead').setData({ type: 'FeatureCollection', features: matched });
   map.getSource('road-heat-lines').setData(buildRoadHeatLines(matched));
 
-  // Solar context at midpoint of window (convert back to 0-23)
+  // Solar context at midpoint of window (convert back to 0-23).
+  // Full-range "All" preset: clear the night overlay and hide solar indicators.
+  const isFullRange = (from === 12 && to === 35);
   const midHour = ((from + to) / 2) % 24;
-  updateMapFilter(midHour);
+  if (isFullRange) {
+    map.setPaintProperty('night-overlay', 'fill-opacity', 0);
+    map.setLayoutProperty('terminator', 'visibility', 'none');
+    map.setLayoutProperty('terminator-glow', 'visibility', 'none');
+    document.getElementById('sun-hud')?.classList.add('hidden');
+  } else {
+    map.setLayoutProperty('terminator', 'visibility', 'visible');
+    map.setLayoutProperty('terminator-glow', 'visibility', 'visible');
+    updateMapFilter(midHour);
+    updateTerminator(midHour);
+    drawSunHUD(midHour);
+  }
 
   // Clock shows the time range (convert to 0-23 for display)
   countEl.textContent = `${formatHour(from % 24)} – ${formatHour(to % 24)}`;
   countEl.classList.add('anim-clock');
 
   // Count
-  const total = allLoadedFeatures.length.toLocaleString();
-  incidentTotalEl.textContent = `${total} total · ${matched.length.toLocaleString()} in window`;
+  updateFilterCount();
 
   // Progress bar: highlight the selected window
   const fill   = document.getElementById('anim-progress-fill');
@@ -877,6 +1156,8 @@ function enterFilterMode() {
   viewMode = 'filter';
   animPlaying = false;
   updatePlayPauseBtn();
+  // Filter-mode features have no died_at_slot — restore static opacity
+  map.setPaintProperty('incidents-dead', 'icon-opacity', 0.3);
   document.getElementById('animate-sub').classList.add('hidden');
   document.getElementById('filter-sub').classList.remove('hidden');
   document.getElementById('view-animate').classList.remove('active');
@@ -912,12 +1193,43 @@ const filterToValueEl    = document.getElementById('filter-to-value');
 filterFromEl.addEventListener('input', () => {
   filterFrom = Number(filterFromEl.value);
   filterFromValueEl.textContent = formatHour(filterFrom % 24);
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
   if (viewMode === 'filter') applyFilter();
 });
 filterToEl.addEventListener('input', () => {
   filterTo = Number(filterToEl.value);
   filterToValueEl.textContent = formatHour(filterTo % 24);
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
   if (viewMode === 'filter') applyFilter();
+});
+
+// Time-of-day presets — noon-based slider values (12=noon … 35=11 AM next day)
+const TOD_PRESETS = {
+  day:     { from: 12, to: 17 },  // noon – 5 PM
+  sunset:  { from: 16, to: 21 },  // 4 PM – 9 PM
+  night:   { from: 21, to: 28 },  // 9 PM – 4 AM
+  sunrise: { from: 28, to: 32 },  // 4 AM – 8 AM
+  all:     { from: 12, to: 35 },  // full 24-hour range
+};
+
+function setFilterWindow(from, to) {
+  filterFrom = from;
+  filterTo   = to;
+  filterFromEl.value = from;
+  filterToEl.value   = to;
+  filterFromValueEl.textContent = formatHour(from % 24);
+  filterToValueEl.textContent   = formatHour(to % 24);
+  if (viewMode === 'filter') applyFilter();
+}
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = TOD_PRESETS[btn.dataset.preset];
+    if (!p) return;
+    document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    setFilterWindow(p.from, p.to);
+  });
 });
 
 // Day-of-week chips
@@ -936,6 +1248,25 @@ document.querySelectorAll('[data-dow]').forEach(btn => {
     if (viewMode === 'filter') applyFilter();
   });
 });
+
+// ── FARS data-currency check ──────────────────────────────────
+(async () => {
+  try {
+    const res = await fetch('/api/data-status');
+    if (!res.ok) return;
+    const { update_available, latest_available_year, db_max_year } = await res.json();
+    if (update_available) {
+      const badge = document.getElementById('data-update-badge');
+      if (badge) {
+        badge.textContent = `Data available through ${latest_available_year}`;
+        badge.classList.remove('hidden');
+      }
+      // Also update the subtitle link text to reflect what's actually in the DB
+      const subtitleLink = document.querySelector('#controls-header .subtitle-link');
+      if (subtitleLink) subtitleLink.textContent = `FARS · 2001–${db_max_year}`;
+    }
+  } catch (_) { /* network error — fail silently */ }
+})();
 
 // ── Loading bar ───────────────────────────────────────────────
 function startLoad() {
