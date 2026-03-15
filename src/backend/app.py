@@ -1,8 +1,10 @@
 import os
+import time
 
 import psycopg2
 import psycopg2.extras
 import psycopg2.pool
+import requests as _requests
 from flask import Flask, jsonify, request, send_from_directory
 from dotenv import load_dotenv
 
@@ -58,6 +60,55 @@ def index():
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok'})
+
+
+# ── FARS data-currency check ──────────────────────────────────────────────────
+_status_cache = {'result': None, 'ts': 0}
+_CACHE_TTL = 86400  # 24 hours
+
+FARS_BASE = 'https://static.nhtsa.gov/nhtsa/downloads/FARS'
+
+
+def _year_available_on_nhtsa(year: int) -> bool:
+    url = f'{FARS_BASE}/{year}/National/FARS{year}NationalCSV.zip'
+    try:
+        r = _requests.head(url, timeout=8, allow_redirects=True)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
+@app.route('/api/data-status')
+def data_status():
+    """Return the max year in the DB and whether newer FARS data exists on NHTSA."""
+    global _status_cache
+
+    if time.time() - _status_cache['ts'] < _CACHE_TTL and _status_cache['result']:
+        return jsonify(_status_cache['result'])
+
+    try:
+        with _PooledConn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('SELECT MAX(year) AS max_year FROM incidents')
+                db_max = cur.fetchone()['max_year'] or 2022
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 503
+
+    # Probe the next year; stop at the first miss (NHTSA releases one year at a time)
+    latest_available = db_max
+    for year in range(db_max + 1, db_max + 6):
+        if _year_available_on_nhtsa(year):
+            latest_available = year
+        else:
+            break
+
+    result = {
+        'db_max_year': db_max,
+        'latest_available_year': latest_available,
+        'update_available': latest_available > db_max,
+    }
+    _status_cache = {'result': result, 'ts': time.time()}
+    return jsonify(result)
 
 
 @app.route('/api/summary')
