@@ -16,13 +16,17 @@ app = Flask(__name__, static_folder='../frontend', static_url_path='')
 _pool = None
 
 
+_DEFAULT_DSN = 'postgresql://postgres:postgres@db:5432/pedestrian_safety'
+
+
 def _get_pool():
     global _pool
     if _pool is None:
+        dsn = os.environ.get('DATABASE_URL', _DEFAULT_DSN)
         _pool = psycopg2.pool.ThreadedConnectionPool(
             minconn=2,
             maxconn=10,
-            dsn=os.environ['DATABASE_URL'],
+            dsn=dsn,
             cursor_factory=psycopg2.extras.RealDictCursor,
         )
     return _pool
