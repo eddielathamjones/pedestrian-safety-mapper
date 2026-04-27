@@ -10,6 +10,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pedestrian_safety"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build:
@@ -21,7 +26,8 @@ services:
     volumes:
       - ./src:/app/src
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

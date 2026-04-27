@@ -36,9 +36,21 @@ class _PooledConn:
         return self.conn
 
     def __exit__(self, exc_type, *_):
+        global _pool
         if exc_type:
-            self.conn.rollback()
-        _get_pool().putconn(self.conn)
+            try:
+                self.conn.rollback()
+                _get_pool().putconn(self.conn)
+            except Exception:
+                # Connection is broken (e.g. DB restarted); close it and reset
+                # the pool so the next request gets fresh connections.
+                try:
+                    self.conn.close()
+                except Exception:
+                    pass
+                _pool = None
+        else:
+            _get_pool().putconn(self.conn)
 
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
