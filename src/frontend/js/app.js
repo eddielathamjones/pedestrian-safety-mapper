@@ -903,7 +903,14 @@ async function loadAnimData() {
     for (let y = Math.min(yearFrom, yearTo); y <= Math.max(yearFrom, yearTo); y++) years.push(y);
 
     const responses = await Promise.all(
-      years.map(y => fetch(`/api/incidents?year=${y}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }))
+      years.map(y => fetch(`/api/incidents?year=${y}`).then(async r => {
+        if (!r.ok) {
+          let detail = '';
+          try { detail = (await r.json()).error || ''; } catch { /* ignore parse errors */ }
+          throw new Error(`HTTP ${r.status}${detail ? ': ' + detail : ''}`);
+        }
+        return r.json();
+      }))
     );
     const allFeatures = responses.flatMap(r => r.features);
     allLoadedFeatures = allFeatures;
@@ -963,9 +970,9 @@ async function loadAnimData() {
       animFrame = requestAnimationFrame(animTick);
     }
   } catch (err) {
-    countEl.textContent = 'Error loading data';
+    countEl.textContent = `Error loading data — ${err.message}`;
     endLoad();
-    console.error(err);
+    console.error('[loadAnimData]', err.message);
   }
 }
 
