@@ -12,8 +12,11 @@ jobs:
       - name: Pull latest changes
         run: git -C ${{ vars.DEPLOY_PATH }} pull origin main
 
+      - name: Stop legacy container if running
+        run: docker stop pedestrian-safety-mapper 2>/dev/null && docker rm pedestrian-safety-mapper 2>/dev/null || true
+
       - name: Rebuild and restart
-        run: docker compose -f ${{ vars.DEPLOY_PATH }}/docker-compose.yml up -d --build
+        run: docker compose -f ${{ vars.DEPLOY_PATH }}/docker-compose.yml up -d --build --remove-orphans
 
       - name: Confirm
         run: |
