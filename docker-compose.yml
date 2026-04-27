@@ -20,7 +20,11 @@ services:
     build:
       context: .
       dockerfile: src/backend/Dockerfile
-    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/pedestrian_safety
+    env_file:
+      - path: .env
+        required: false
     ports:
       - "5001:5000"
     volumes:
