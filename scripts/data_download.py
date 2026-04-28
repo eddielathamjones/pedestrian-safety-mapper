@@ -134,7 +134,7 @@ def download_fars_data(years, base_dir="data/raw"):
 
 if __name__ == "__main__":
     # Years to download
-    years_to_download = range(1975, 2023)  # From 1975 to 2022
+    years_to_download = range(1975, 2025)  # From 1975 to 2024
     
     # Ensure path separators are correct for the operating system
     base_dir = os.path.join("data", "raw")

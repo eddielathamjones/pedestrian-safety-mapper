@@ -2,7 +2,7 @@
 
 // ── Config ────────────────────────────────────────────────────
 const YEAR_MIN = 2001;
-const YEAR_MAX = 2023;
+const YEAR_MAX = 2024;
 const DEFAULT_YEAR_FROM = YEAR_MAX - 4;  // last 5 years
 const DEFAULT_YEAR_TO   = YEAR_MAX;
 
