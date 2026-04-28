@@ -12,7 +12,7 @@ import sys
 import requests
 
 BASE_URL = "https://static.nhtsa.gov/nhtsa/downloads/FARS"
-DB_MAX_YEAR = 2023  # update this when new data is ingested
+DB_MAX_YEAR = 2024  # update this when new data is ingested
 
 
 def year_available(year: int, timeout: int = 10) -> bool:
