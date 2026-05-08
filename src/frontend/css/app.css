@@ -476,6 +476,42 @@ body {
 }
 .sv-link:hover { border-color: var(--accent); color: var(--text); }
 
+/* ── Solar methodology note ────────────────────────────────── */
+.solar-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.solar-info-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1.5;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.solar-info-btn:hover { opacity: 1; }
+
+.solar-methodology {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* Popup: FARS vs solar disagreement indicator */
+.solar-mismatch {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+}
+
 /* ── Sun HUD ───────────────────────────────────────────────── */
 #sun-hud {
   position: absolute;

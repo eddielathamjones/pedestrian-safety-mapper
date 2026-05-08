@@ -128,7 +128,13 @@
     </div>
 
     <div class="divider"></div>
-    <p id="solar-ref" class="subtitle solar-condition"></p>
+    <div class="solar-section">
+      <p id="solar-ref" class="subtitle solar-condition"></p>
+      <button id="solar-info-btn" class="solar-info-btn" title="About solar methodology">&#9432;</button>
+    </div>
+    <div id="solar-methodology" class="solar-methodology hidden">
+      Solar altitude is computed from incident lat/lng and date using SunCalc — independent of FARS lighting codes. The terminator line and night overlay show the day/night boundary at the selected time. FARS lgt_cond is observer-reported and coarse; SunCalc gives precise altitude but cannot account for streetlights, clouds, or local obstructions. Contradictions between the two are flagged in incident popups.
+    </div>
   </div>
 
   <div id="popup" class="hidden">
