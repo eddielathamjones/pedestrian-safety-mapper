@@ -432,11 +432,47 @@ map.on('load', () => {
     const row = (label, val) =>
       `<div class="row"><span class="label">${label}</span><span class="value">${val}</span></div>`;
 
+    // Solar context at actual incident time and location using SunCalc
+    let solarRows = '';
+    if (props.year && props.month && props.day && props.hour != null && props.hour <= 23) {
+      const utcOffset = Math.round(lngLat.lng / 15);
+      const utcH = ((props.hour - utcOffset) % 24 + 24) % 24;
+      const incidentDate = new Date(Date.UTC(
+        props.year, props.month - 1, props.day,
+        Math.floor(utcH), Math.round((utcH % 1) * 60)
+      ));
+      const sunPos = SunCalc.getPosition(incidentDate, lngLat.lat, lngLat.lng);
+      const altDeg = sunPos.altitude * (180 / Math.PI);
+
+      const solarLabel = altDeg > 6   ? 'Daytime'
+                       : altDeg > 0   ? 'Sunrise / Sunset'
+                       : altDeg > -6  ? 'Civil twilight'
+                       : altDeg > -12 ? 'Nautical twilight'
+                       :                'Night';
+      const altSign = altDeg >= 0 ? '+' : '−';
+      const altStr  = `${altSign}${Math.abs(altDeg).toFixed(1)}°`;
+
+      // Flag clear contradictions between FARS observer code and computed solar position
+      const farsCode = props.lgt_cond;
+      let mismatch = '';
+      if (farsCode === 1 && altDeg < -6) {
+        mismatch = ' <span class="solar-mismatch">⚠ FARS: Daylight</span>';
+      } else if ((farsCode === 2 || farsCode === 3 || farsCode === 6) && altDeg > 6) {
+        mismatch = ' <span class="solar-mismatch">⚠ FARS: Dark</span>';
+      }
+
+      solarRows = [
+        row('Sun altitude', altStr),
+        `<div class="row"><span class="label">Solar</span><span class="value">${solarLabel}${mismatch}</span></div>`,
+      ].join('');
+    }
+
     popupContent.innerHTML = [
       row('Date',     date),
       row('Time',     time),
       row('Lighting', LGT[props.lgt_cond]   || 'Unknown'),
       row('Weather',  WEATHER[props.weather] || 'Unknown'),
+      solarRows,
       props.age && props.age < 998 ? row('Age', props.age) : '',
       SEX[props.sex] ? row('Sex', SEX[props.sex]) : '',
       `<button class="sv-link" id="sv-open-btn">Open Street View →</button>`,
@@ -1128,6 +1164,11 @@ document.getElementById('heat-off').addEventListener('click', () => {
   ['road-heat', 'road-heat-glow'].forEach(id => map.setLayoutProperty(id, 'visibility', 'none'));
   document.getElementById('heat-off').classList.add('active');
   document.getElementById('heat-on').classList.remove('active');
+});
+
+// ── Solar methodology toggle ──────────────────────────────────
+document.getElementById('solar-info-btn')?.addEventListener('click', () => {
+  document.getElementById('solar-methodology')?.classList.toggle('hidden');
 });
 
 // ── Visible feature counter ───────────────────────────────────
