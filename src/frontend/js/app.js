@@ -1432,47 +1432,46 @@ function endLoad() {
 }
 
 /* ─── Report modal ─────────────────────────────────────────────────── */
+const _modal = document.getElementById('report-modal');
 document.getElementById('report-btn').addEventListener('click', () => {
-  document.getElementById('report-modal').classList.remove('hidden');
+  _modal.style.display = 'flex';
   setTimeout(() => document.getElementById('report-text').focus(), 60);
 });
-document.getElementById('report-close').addEventListener('click', () => {
-  document.getElementById('report-modal').classList.add('hidden');
-});
-document.getElementById('report-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('report-modal'))
-    document.getElementById('report-modal').classList.add('hidden');
-});
-document.getElementById('report-submit').addEventListener('click', submitReport);
-
-function buildIssueUrl(description) {
-  const firstLine = description.split('\n', 1)[0].trim();
-  const title = (firstLine.length > 80 ? firstLine.slice(0, 77) + '…' : firstLine) || 'Site feedback';
+document.getElementById('report-close').addEventListener('click', () => { _modal.style.display = 'none'; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') _modal.style.display = 'none'; });
+_modal.addEventListener('click', e => { if (e.target === _modal) _modal.style.display = 'none'; });
+document.getElementById('report-submit').addEventListener('click', () => {
+  const desc = document.getElementById('report-text').value.trim();
+  if (!desc) { document.getElementById('report-text').focus(); return; }
+  const btn = document.getElementById('report-submit');
   const view = document.getElementById('view-animate').classList.contains('active') ? 'animate' : 'static';
   const heatOn = document.getElementById('heat-on').classList.contains('active');
-  const fH = filterFrom % 24, tH = filterTo % 24;
-  const body = [
-    description, '',
-    '---',
-    '<sub>',
+  const context = [
     `Reported from ${location.href}`,
     `· view: ${view}`,
     `· year range: ${yearFrom}–${yearTo}`,
-    `· time window: ${fH}:00–${tH}:00`,
+    `· time window: ${filterFrom % 24}:00–${filterTo % 24}:00`,
     `· anim mode: ${animMode}`,
     `· road heat: ${heatOn ? 'on' : 'off'}`,
     `· viewport: ${window.innerWidth}×${window.innerHeight}`,
-    `· user-agent: ${navigator.userAgent}`,
-    '</sub>',
   ].join('\n');
-  const params = new URLSearchParams({ title, body, labels: 'claude' });
-  return `https://github.com/eddielathamjones/pedestrian-safety-mapper/issues/new?${params}`;
-}
-
-function submitReport() {
-  const desc = document.getElementById('report-text').value.trim();
-  if (!desc) { document.getElementById('report-text').focus(); return; }
-  window.open(buildIssueUrl(desc), '_blank', 'noopener');
-  document.getElementById('report-modal').classList.add('hidden');
-  document.getElementById('report-text').value = '';
-}
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  fetch('/api/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ description: desc, context }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        btn.textContent = 'Sent ✓';
+        document.getElementById('report-text').value = '';
+        setTimeout(() => { _modal.style.display = 'none'; btn.textContent = 'Send report →'; btn.disabled = false; }, 1200);
+      } else {
+        btn.textContent = 'Send report →'; btn.disabled = false;
+        alert(data.error || 'Something went wrong.');
+      }
+    })
+    .catch(() => { btn.textContent = 'Send report →'; btn.disabled = false; alert('Network error — try again.'); });
+});
