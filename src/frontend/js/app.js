@@ -1430,3 +1430,49 @@ function endLoad() {
   countEl.classList.remove('loading');
   setTimeout(() => loadingBar.classList.add('hidden'), 500);
 }
+
+/* ─── Report modal ─────────────────────────────────────────────────── */
+document.getElementById('report-btn').addEventListener('click', () => {
+  document.getElementById('report-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('report-text').focus(), 60);
+});
+document.getElementById('report-close').addEventListener('click', () => {
+  document.getElementById('report-modal').classList.add('hidden');
+});
+document.getElementById('report-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('report-modal'))
+    document.getElementById('report-modal').classList.add('hidden');
+});
+document.getElementById('report-submit').addEventListener('click', submitReport);
+
+function buildIssueUrl(description) {
+  const firstLine = description.split('\n', 1)[0].trim();
+  const title = (firstLine.length > 80 ? firstLine.slice(0, 77) + '…' : firstLine) || 'Site feedback';
+  const view = document.getElementById('view-animate').classList.contains('active') ? 'animate' : 'static';
+  const heatOn = document.getElementById('heat-on').classList.contains('active');
+  const fH = filterFrom % 24, tH = filterTo % 24;
+  const body = [
+    description, '',
+    '---',
+    '<sub>',
+    `Reported from ${location.href}`,
+    `· view: ${view}`,
+    `· year range: ${yearFrom}–${yearTo}`,
+    `· time window: ${fH}:00–${tH}:00`,
+    `· anim mode: ${animMode}`,
+    `· road heat: ${heatOn ? 'on' : 'off'}`,
+    `· viewport: ${window.innerWidth}×${window.innerHeight}`,
+    `· user-agent: ${navigator.userAgent}`,
+    '</sub>',
+  ].join('\n');
+  const params = new URLSearchParams({ title, body, labels: 'claude' });
+  return `https://github.com/eddielathamjones/pedestrian-safety-mapper/issues/new?${params}`;
+}
+
+function submitReport() {
+  const desc = document.getElementById('report-text').value.trim();
+  if (!desc) { document.getElementById('report-text').focus(); return; }
+  window.open(buildIssueUrl(desc), '_blank', 'noopener');
+  document.getElementById('report-modal').classList.add('hidden');
+  document.getElementById('report-text').value = '';
+}

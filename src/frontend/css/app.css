@@ -552,6 +552,93 @@ body {
 [data-tooltip]:hover::after { opacity: 1; }
 
 /* ── MapLibre attribution ──────────────────────────────────── */
+/* ── Report button ─────────────────────────────────────────── */
+.report-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  text-align: left;
+}
+.report-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── Report modal ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(15,23,42,0.82);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-overlay.hidden { display: none; }
+.modal-box {
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: min(520px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.modal-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--bg-raise); z-index: 2;
+}
+.modal-eyebrow {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 5px;
+}
+.modal-title { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.modal-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.modal-close-btn {
+  background: transparent; border: none;
+  color: var(--text-muted); font-size: 14px;
+  cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
+}
+.modal-close-btn:hover { color: var(--text); }
+.modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+.modal-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-muted);
+}
+.report-textarea {
+  width: 100%; margin-top: 6px; padding: 10px 12px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: var(--font); font-size: 13px;
+  line-height: 1.55; resize: vertical; min-height: 110px;
+}
+.report-textarea:focus { outline: none; border-color: var(--accent); }
+.report-textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+.report-footer {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; margin-top: 14px;
+}
+.report-context-note {
+  font-size: 10px; color: var(--text-muted);
+  line-height: 1.5; font-family: monospace;
+}
+.btn-submit {
+  padding: 8px 18px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.btn-submit:hover { opacity: 0.85; }
+
 .maplibregl-ctrl-attrib {
   background: rgba(15,23,42,0.8) !important;
   color: #94a3b8 !important;

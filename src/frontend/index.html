@@ -135,6 +135,31 @@
     <div id="solar-methodology" class="solar-methodology hidden">
       Solar altitude is computed from incident lat/lng and date using SunCalc — independent of FARS lighting codes. The terminator line and night overlay show the day/night boundary at the selected time. FARS lgt_cond is observer-reported and coarse; SunCalc gives precise altitude but cannot account for streetlights, clouds, or local obstructions. Contradictions between the two are flagged in incident popups.
     </div>
+    <div class="divider"></div>
+    <button id="report-btn" class="report-btn" title="Report an issue or suggestion">⚑ Report an issue</button>
+  </div>
+
+  <!-- ── Report issue modal ──────────────────────────────────────── -->
+  <div id="report-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-eyebrow">Report an issue</div>
+          <div class="modal-title">Tell me what's broken</div>
+          <div class="modal-sub">Posts to the GitHub repo. A nightly agent triages and proposes fixes.</div>
+        </div>
+        <button class="modal-close-btn" id="report-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="report-text" class="modal-label">What went wrong, or what would make this better?</label>
+        <textarea id="report-text" class="report-textarea" rows="6"
+          placeholder="e.g. The heatmap doesn't update when I change the year range. Or: the popup shows wrong lighting info. Or: the week animation stops mid-cycle…"></textarea>
+        <div class="report-footer">
+          <span class="report-context-note">Context (URL, viewport, filters, map state) is attached automatically.</span>
+          <button class="btn-submit" id="report-submit">Open GitHub →</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="popup" class="hidden">
