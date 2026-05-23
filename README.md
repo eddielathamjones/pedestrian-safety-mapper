@@ -105,6 +105,52 @@ Downloads all years to `data/raw/` as `FARS{year}NationalCSV.zip`. Decimal lat/l
 
 ---
 
+## Keeping Data Current
+
+NHTSA publishes updated FARS data annually, typically in August–October for the prior year. The database currently covers through **2024**.
+
+### Check for new data
+
+```bash
+python scripts/check_fars_update.py
+```
+
+Probes NHTSA with HEAD requests (no data downloaded). Exits 0 if the database is current; exits 1 and prints a message if a new year is available.
+
+### Ingest a new year
+
+When `check_fars_update.py` signals new data is available:
+
+```bash
+# 1. Download the new year's zip (already-downloaded years are skipped automatically)
+python scripts/data_download.py
+
+# 2. Run the ETL for the new year only
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
+  python -m src.data_processing.etl --years <NEW_YEAR> --data-dir data/raw
+```
+
+The ETL uses `INSERT ... ON CONFLICT DO NOTHING`, so re-running an already-loaded year is safe.
+
+### After ingestion
+
+1. Update `DB_MAX_YEAR` in `scripts/check_fars_update.py` to the new maximum year.
+2. Update `YEAR_MAX` in `src/frontend/js/app.js` to match.
+3. Commit and push both changes.
+
+### Automated check (cron on eddienet)
+
+To probe automatically once a year, add to the crontab on eddienet:
+
+```
+# 9am on Oct 1 — check whether NHTSA has published the prior year's FARS data
+0 9 1 10 * cd /path/to/pedestrian-safety-mapper && python scripts/check_fars_update.py >> /var/log/fars-check.log 2>&1
+```
+
+The PostGIS volume is `pedestrian-safety-mapper_postgres_data`; the ETL reads its connection string from `DATABASE_URL` in `.env`.
+
+---
+
 ## Project Structure
 
 ```
