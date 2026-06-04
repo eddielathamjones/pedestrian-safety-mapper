@@ -224,6 +224,42 @@ See [`docs/roadmap.md`](docs/roadmap.md) for design direction and priorities.
 
 ---
 
+## Keeping data current
+
+NHTSA publishes new FARS data annually, typically August–October for the prior calendar year.
+
+### Check for new data
+
+```bash
+python scripts/check_fars_update.py
+```
+
+Probes NHTSA with HEAD requests (no download). Exits 0 if current, exits 1 if new data is available. `DB_MAX_YEAR` at the top of the script tracks the highest year already ingested — update it after each ingest.
+
+For scheduled checking, add a cron entry on your host (e.g. run on October 1 each year):
+
+```cron
+0 9 1 10 * cd /path/to/pedestrian-safety-mapper && python scripts/check_fars_update.py >> logs/fars_check.log 2>&1
+```
+
+### Download and ingest a new year
+
+```bash
+# 1. Download the new year's NationalCSV zip
+python scripts/data_download.py          # downloads all missing years to data/raw/
+
+# 2. Load into PostGIS (ETL is idempotent — safe to re-run)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
+  python -m src.data_processing.etl --years 2024 --data-dir data/raw
+
+# 3. Update DB_MAX_YEAR in scripts/check_fars_update.py
+#    and update the data badge and year range in README.md
+```
+
+The ETL uses `INSERT ... ON CONFLICT DO NOTHING` (or equivalent) so re-running for an already-loaded year is safe.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
