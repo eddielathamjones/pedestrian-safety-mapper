@@ -142,7 +142,7 @@ pedestrian-safety-mapper/
 Returns a GeoJSON FeatureCollection of pedestrian fatalities.
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
+|-----------|------|----------|-----------|
 | `year` | integer | yes | Year to query (2001–2023) |
 | `bbox` | string | no | `minLon,minLat,maxLon,maxLat` |
 
@@ -199,6 +199,58 @@ The map applies a solar position overlay rather than using the FARS `lgt_cond` f
 For each hour slot, the app computes a centroid from all incidents at that hour, then uses SunCalc.js to calculate the sun's altitude at the equinox for that location. This produces a 24-element solar curve that drives the night overlay opacity and Sun HUD display.
 
 Full technical writeup — altitude formula, UTC offset approximation, smoothstep opacity mapping, per-slot centroid method, and known limitations — is in [`docs/solar-correction.md`](docs/solar-correction.md).
+
+---
+
+## Keeping data current
+
+NHTSA publishes updated FARS data annually, typically August–October for the prior calendar year.
+
+### 1. Check for new data
+
+```bash
+python scripts/check_fars_update.py
+```
+
+Exits `0` if the database is current through `DB_MAX_YEAR`; exits `1` (with a message) if a newer year is available on NHTSA. Probe NHTSA around October 1st each year.
+
+**Cron on eddienet** (checks once a year, logs result):
+```
+0 9 1 10 * cd ~/repos/pedestrian-safety-mapper && .venv/bin/python scripts/check_fars_update.py >> ~/logs/fars-check.log 2>&1
+```
+
+### 2. Download the new year's zip
+
+Place `FARS<year>NationalCSV.zip` at `data/raw/<year>/FARS<year>NationalCSV.zip`. Direct URL:
+
+```
+https://static.nhtsa.gov/nhtsa/downloads/FARS/<year>/National/FARS<year>NationalCSV.zip
+```
+
+Alternatively, `scripts/data_download.py` skips files that already exist, so re-running it will only fetch the new year.
+
+### 3. Run the ETL
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
+  python -m src.data_processing.etl --years <year> --data-dir data/raw
+```
+
+> **No deduplication:** the ETL uses plain `INSERT`. Run it once per new year. If you need to re-run for a year already in the database, clear it first: `DELETE FROM incidents WHERE year = <year>;`
+
+### 4. Update the max-year constants
+
+In `scripts/check_fars_update.py`:
+```python
+DB_MAX_YEAR = <new_year>  # bump to the year just ingested
+```
+
+In `src/frontend/js/app.js`:
+```javascript
+const YEAR_MAX = <new_year>;  // controls the year-range selector upper bound
+```
+
+Commit both changes and redeploy so the UI year selector reflects the new data.
 
 ---
 
