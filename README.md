@@ -1,10 +1,10 @@
 # Pedestrian Safety Mapper
 
-An interactive map of every recorded pedestrian fatality in the United States from 2001 to 2023 — over 123,000 incidents — drawn from the [NHTSA Fatality Analysis Reporting System (FARS)](https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars).
+An interactive map of every recorded pedestrian fatality in the United States from 2001 to 2024 — over 130,000 incidents — drawn from the [NHTSA Fatality Analysis Reporting System (FARS)](https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars).
 
 ![Project Status: Active](https://img.shields.io/badge/status-active-brightgreen)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
-![Data: NHTSA FARS 2001–2023](https://img.shields.io/badge/data-FARS%202001–2023-blue)
+![Data: NHTSA FARS 2001–2024](https://img.shields.io/badge/data-FARS%202001–2024-blue)
 
 ---
 
@@ -18,7 +18,7 @@ Each dot on the map is a person who died. The map makes two arguments visually:
 ### Features
 
 **Static mode** (default)
-- Browse the full 22-year dataset with time-of-day and day-of-week filters
+- Browse the full 23-year dataset with time-of-day and day-of-week filters
 - Presets: Day / Sunset / Night / Sunrise / All Day
 - Custom time window slider (noon-anchored, wraps midnight)
 - Solar-adjusted night overlay — background darkness matches actual sun position at the selected hour
@@ -39,8 +39,8 @@ Each dot on the map is a person who died. The map makes two arguments visually:
 - Toggleable; persists in both Static and Animate modes
 
 **Year range selector**
-- Multi-year queries: any range from 2001 to 2023
-- Defaults to last 5 years (2019–2023)
+- Multi-year queries: any range from 2001 to 2024
+- Defaults to last 5 years (2020–2024)
 
 ---
 
@@ -86,11 +86,11 @@ pip install -r requirements.txt
 
 # Single year
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
-  python -m src.data_processing.etl --years 2023 --data-dir data/raw
+  python -m src.data_processing.etl --years 2024 --data-dir data/raw
 
 # All years (requires full data/raw/ checkout)
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
-  python -m src.data_processing.etl --years 2001-2023 --data-dir data/raw
+  python -m src.data_processing.etl --years 2001-2024 --data-dir data/raw
 
 # 5. Open http://localhost:5001
 ```
@@ -102,52 +102,6 @@ python scripts/data_download.py
 ```
 
 Downloads all years to `data/raw/` as `FARS{year}NationalCSV.zip`. Decimal lat/lon coordinates are available from 2001 onwards; the ETL filters out records with missing or sentinel coordinates.
-
----
-
-## Keeping Data Current
-
-NHTSA publishes updated FARS data annually, typically in August–October for the prior year. The database currently covers through **2024**.
-
-### Check for new data
-
-```bash
-python scripts/check_fars_update.py
-```
-
-Probes NHTSA with HEAD requests (no data downloaded). Exits 0 if the database is current; exits 1 and prints a message if a new year is available.
-
-### Ingest a new year
-
-When `check_fars_update.py` signals new data is available:
-
-```bash
-# 1. Download the new year's zip (already-downloaded years are skipped automatically)
-python scripts/data_download.py
-
-# 2. Run the ETL for the new year only
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
-  python -m src.data_processing.etl --years <NEW_YEAR> --data-dir data/raw
-```
-
-The ETL uses `INSERT ... ON CONFLICT DO NOTHING`, so re-running an already-loaded year is safe.
-
-### After ingestion
-
-1. Update `DB_MAX_YEAR` in `scripts/check_fars_update.py` to the new maximum year.
-2. Update `YEAR_MAX` in `src/frontend/js/app.js` to match.
-3. Commit and push both changes.
-
-### Automated check (cron on eddienet)
-
-To probe automatically once a year, add to the crontab on eddienet:
-
-```
-# 9am on Oct 1 — check whether NHTSA has published the prior year's FARS data
-0 9 1 10 * cd /path/to/pedestrian-safety-mapper && python scripts/check_fars_update.py >> /var/log/fars-check.log 2>&1
-```
-
-The PostGIS volume is `pedestrian-safety-mapper_postgres_data`; the ETL reads its connection string from `DATABASE_URL` in `.env`.
 
 ---
 
@@ -173,7 +127,8 @@ pedestrian-safety-mapper/
 │   ├── future-ml-direction.md
 │   └── shaping/            # Product design decisions (R, shapes, slices)
 ├── scripts/
-│   └── data_download.py
+│   ├── check_fars_update.py  # probe NHTSA for new data (no download)
+│   └── data_download.py      # download FARS zips to data/raw/
 ├── docker-compose.yml
 ├── requirements.txt
 └── .env.example
@@ -189,7 +144,7 @@ Returns a GeoJSON FeatureCollection of pedestrian fatalities.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `year` | integer | yes | Year to query (2001–2023) |
+| `year` | integer | yes | Year to query (2001–2024) |
 | `bbox` | string | no | `minLon,minLat,maxLon,maxLat` |
 
 **Example response:**
@@ -253,10 +208,10 @@ Full technical writeup — altitude formula, UTC offset approximation, smoothste
 | Slice | Status | Description |
 |-------|--------|-------------|
 | V1 — Data on the map | ✅ Done | Fatalities as interactive points |
-| V2 — Year selector | ✅ Done | Multi-year filter (2001–2023) |
+| V2 — Year selector | ✅ Done | Multi-year filter (2001–2024) |
 | V3 — Incident popup | ✅ Done | Date, time, lighting, weather, demographics, Street View |
 | V4 — Viewport loading | ✅ Done | Fetch only visible incidents on pan/zoom |
-| V5 — Extended history | ✅ Done | Full 2001–2023 dataset (123k+ incidents) |
+| V5 — Extended history | ✅ Done | Full 2001–2024 dataset (130k+ incidents) |
 | V6 — Solar overlay + animation | ✅ Done | 24h and week animation, solar-corrected night overlay, Sun HUD |
 | V7 — Static filter mode | ✅ Done | Time window, day-of-week chips, presets, solar condition label |
 | V8 — Road heat layer | ✅ Done | Kernel-density heat lines on roads |
@@ -267,6 +222,47 @@ Full technical writeup — altitude formula, UTC offset approximation, smoothste
 | Phase 3 — Street View forensics | 💡 Planned | Embedded panel, thumbnails, vehicle direction |
 
 See [`docs/roadmap.md`](docs/roadmap.md) for design direction and priorities.
+
+---
+
+## Keeping Data Current
+
+NHTSA publishes new FARS data annually, typically in August–October for the prior calendar year. The database currently covers **2001–2024**.
+
+### Check for new data
+
+```bash
+python scripts/check_fars_update.py
+```
+
+Probes NHTSA with HEAD requests (no data downloaded). Exits 0 if the database is current, exits 1 if a newer year is available. The script reads `DB_MAX_YEAR` at the top of the file — update it after each successful ingest.
+
+### Ingest a new year
+
+```bash
+# 1. Download the new year's zip (already-present years are skipped)
+python scripts/data_download.py
+
+# 2. Run ETL for the new year only
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
+  python -m src.data_processing.etl --years <NEW_YEAR> --data-dir data/raw
+
+# 3. Bump DB_MAX_YEAR in scripts/check_fars_update.py to the new maximum
+# 4. Update YEAR_MAX in src/frontend/js/app.js to match
+```
+
+The ETL uses `INSERT ... ON CONFLICT DO NOTHING`, so re-running for years already loaded is safe.
+
+### Automated annual check (eddienet)
+
+To catch new releases without manual polling, add a cron entry on the eddienet host:
+
+```cron
+# 9 AM UTC on 1 Oct each year — NHTSA typically publishes Aug–Oct
+0 9 1 10 * <user> cd /path/to/repo && .venv/bin/python scripts/check_fars_update.py >> /var/log/fars-check.log 2>&1
+```
+
+The non-zero exit on new data is detectable by cron monitoring tools or a simple wrapper script that emails/alerts on failure.
 
 ---
 
