@@ -98,10 +98,14 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
 ### Download FARS Data
 
 ```bash
+# All years (1975–2024)
 python scripts/data_download.py
+
+# Single year only
+python scripts/data_download.py --years 2024
 ```
 
-Downloads all years to `data/raw/` as `FARS{year}NationalCSV.zip`. Decimal lat/lon coordinates are available from 2001 onwards; the ETL filters out records with missing or sentinel coordinates.
+Downloads to `data/raw/{year}/FARS{year}NationalCSV.zip`. Years already present are skipped. Decimal lat/lon coordinates are available from 2001 onwards; the ETL filters out records with missing or sentinel coordinates.
 
 ---
 
@@ -143,7 +147,7 @@ pedestrian-safety-mapper/
 Returns a GeoJSON FeatureCollection of pedestrian fatalities.
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
+|-----------|------|----------|-----------|
 | `year` | integer | yes | Year to query (2001–2024) |
 | `bbox` | string | no | `minLon,minLat,maxLon,maxLat` |
 
@@ -229,40 +233,47 @@ See [`docs/roadmap.md`](docs/roadmap.md) for design direction and priorities.
 
 NHTSA publishes new FARS data annually, typically in August–October for the prior calendar year. The database currently covers **2001–2024**.
 
-### Check for new data
+### 1. Check for new data
 
 ```bash
 python scripts/check_fars_update.py
 ```
 
-Probes NHTSA with HEAD requests (no data downloaded). Exits 0 if the database is current, exits 1 if a newer year is available. The script reads `DB_MAX_YEAR` at the top of the file — update it after each successful ingest.
+Probes NHTSA with HEAD requests (no data downloaded). Exits 0 if current, exits 1 if a newer year is available. Reads `DB_MAX_YEAR` from the top of the script — update it after each successful ingest.
 
-### Ingest a new year
+### 2. Download the new year
 
 ```bash
-# 1. Download the new year's zip (already-present years are skipped)
-python scripts/data_download.py
+# Download only the new year (fast — one zip instead of the full archive)
+python scripts/data_download.py --years 2025
+```
 
-# 2. Run ETL for the new year only
+Already-present years are skipped, so re-running is safe. To download a full range instead: `--years 2001-2025`.
+
+### 3. Load into PostGIS
+
+```bash
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
-  python -m src.data_processing.etl --years <NEW_YEAR> --data-dir data/raw
-
-# 3. Bump DB_MAX_YEAR in scripts/check_fars_update.py to the new maximum
-# 4. Update YEAR_MAX in src/frontend/js/app.js to match
+  python -m src.data_processing.etl --years 2025 --data-dir data/raw
 ```
 
 The ETL uses `INSERT ... ON CONFLICT DO NOTHING`, so re-running for years already loaded is safe.
 
-### Automated annual check (eddienet)
+### 4. Update version markers
 
-To catch new releases without manual polling, add a cron entry on the eddienet host:
+After ingesting:
+- Bump `DB_MAX_YEAR` in `scripts/check_fars_update.py` to the new max year.
+- Update `YEAR_MAX` in `src/frontend/js/app.js` to match.
+- Update the badge and year references at the top of this README.
+
+### Automated annual check (eddienet)
 
 ```cron
 # 9 AM UTC on 1 Oct each year — NHTSA typically publishes Aug–Oct
-0 9 1 10 * <user> cd /path/to/repo && .venv/bin/python scripts/check_fars_update.py >> /var/log/fars-check.log 2>&1
+0 9 1 10 * cd ~/repos/pedestrian-safety-mapper && .venv/bin/python scripts/check_fars_update.py >> ~/logs/fars-check.log 2>&1
 ```
 
-The non-zero exit on new data is detectable by cron monitoring tools or a simple wrapper script that emails/alerts on failure.
+A non-zero exit (new data found) appears in the log; run steps 2–4 manually when it fires.
 
 ---
 
