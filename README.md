@@ -105,6 +105,30 @@ Downloads all years to `data/raw/` as `FARS{year}NationalCSV.zip`. Decimal lat/l
 
 ---
 
+## Keeping Data Current
+
+NHTSA publishes new FARS data annually, typically August–October for the prior year. There's no automated ingestion yet — check and update manually:
+
+```bash
+# 1. Check whether NHTSA has published a year beyond what's loaded
+python scripts/check_fars_update.py
+# Exits 1 (and prints the new year) if an update is available, 0 if current.
+
+# 2. Download just the new year
+python scripts/data_download.py --years 2025
+
+# 3. Load the new year (the ETL has no dedup/upsert logic — only run it for
+#    years not already in the database, or you'll get duplicate rows)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pedestrian_safety \
+  python -m src.data_processing.etl --years 2025 --data-dir data/raw
+
+# 4. Bump DB_MAX_YEAR in scripts/check_fars_update.py to the new year
+```
+
+To automate the check, schedule `scripts/check_fars_update.py` as a yearly cron (e.g. `0 9 1 10 *` — 9am Oct 1) on whatever host runs the deploy; a non-zero exit means new data is available.
+
+---
+
 ## Project Structure
 
 ```
