@@ -133,13 +133,29 @@ def download_fars_data(years, base_dir="data/raw"):
                     time.sleep(1)
 
 if __name__ == "__main__":
-    # Years to download
-    years_to_download = range(1975, 2025)  # From 1975 to 2024
-    
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Download FARS data zips from NHTSA")
+    parser.add_argument(
+        "--years", type=str, default=None,
+        help="Year or range to download, e.g. '2024' or '2020-2024'. "
+             "Defaults to the full 1975-2024 archive."
+    )
+    args = parser.parse_args()
+
+    if args.years:
+        if "-" in args.years:
+            start, end = (int(y) for y in args.years.split("-", 1))
+            years_to_download = range(start, end + 1)
+        else:
+            years_to_download = [int(args.years)]
+    else:
+        years_to_download = range(1975, 2025)  # From 1975 to 2024
+
     # Ensure path separators are correct for the operating system
     base_dir = os.path.join("data", "raw")
-    
+
     # Download data
     download_fars_data(years_to_download, base_dir)
-    
+
     print("\nDownload process completed.")
