@@ -132,14 +132,34 @@ def download_fars_data(years, base_dir="data/raw"):
                     # Add a small delay to avoid overwhelming the server
                     time.sleep(1)
 
+def _parse_years(spec):
+    """Parse '2024' or '2020-2024' into a list of years."""
+    if "-" in spec:
+        start, end = spec.split("-")
+        return list(range(int(start), int(end) + 1))
+    return [int(spec)]
+
+
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Download FARS data zips")
+    parser.add_argument(
+        "--years",
+        type=str,
+        default=None,
+        help="Year or range to download, e.g. '2024' or '2020-2024'. "
+             "Defaults to the full 1975-2024 range.",
+    )
+    args = parser.parse_args()
+
     # Years to download
-    years_to_download = range(1975, 2025)  # From 1975 to 2024
-    
+    years_to_download = _parse_years(args.years) if args.years else range(1975, 2025)
+
     # Ensure path separators are correct for the operating system
     base_dir = os.path.join("data", "raw")
-    
+
     # Download data
     download_fars_data(years_to_download, base_dir)
-    
+
     print("\nDownload process completed.")
