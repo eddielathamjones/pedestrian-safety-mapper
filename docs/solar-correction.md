@@ -3,7 +3,7 @@
 
 **Project:** Pedestrian Safety Mapper
 **Branch:** `feature/lighting-focus`
-**Data source:** FARS (Fatality Analysis Reporting System), NHTSA, 2001–2022
+**Data source:** FARS (Fatality Analysis Reporting System), NHTSA, 2001–2023
 
 ---
 
@@ -263,7 +263,7 @@ For the continental US, the maximum error from DST is ±1 hour. Since FARS colle
 
 ### 9.2 Aggregated Time Zones
 
-FARS local hours are not standardised to a single time zone before aggregation. An incident at "hour 18" in New York City (solar altitude ≈ +5° at the equinox) and "hour 18" in Los Angeles (solar altitude ≈ +25°) both appear at the same point on the animation axis. The per-slot centroid partially corrects for this by weighting the reference location toward where 6 PM incidents actually cluster, but the individual-level solar conditions are not recovered.
+FARS local hours are not standardised to a single time zone before aggregation. An incident at "hour 18" in New York City (UTC−5, so UTC 23:00) and "hour 18" in Los Angeles (UTC−8, so UTC 02:00 next day) both appear at the same point on the animation axis. In practice, at the equinox these two cities produce nearly identical solar altitudes for the same wall-clock hour, because each city's UTC offset closely tracks its longitude — their hour angles from solar noon differ by only a few minutes. The aggregation problem therefore manifests less through east-west geographic spread and more through the seasonal limitation described in §9.3: a fatality at "hour 18" in January in Minnesota occurred in darkness, but the equinox baseline shows that hour as near sunset. The per-slot centroid partially corrects for this by weighting the reference location toward where 6 PM incidents actually cluster, but the individual-level solar conditions are not recovered.
 
 ### 9.3 Equinox vs. Actual Date
 
@@ -291,6 +291,6 @@ Compute `SunCalc.getPosition(date, lat, lon)` for each individual incident using
 ## References
 
 1. Meeus, J. (1998). *Astronomical Algorithms* (2nd ed.). Willmann-Bell.
-2. Mourner, V. *SunCalc.js* (v1.9.0). https://github.com/mourner/suncalc
+2. Agafonkin, V. *SunCalc.js* (v1.9.0). https://github.com/mourner/suncalc
 3. National Highway Traffic Safety Administration. *Fatality Analysis Reporting System (FARS) Analytical User's Manual*, 1975–2022.
 4. United States Naval Observatory. *The Astronomical Almanac*. Annual.
